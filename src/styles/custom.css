@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --sl-color-accent-low: #4c0519;
+  --sl-color-accent: #f43f5e;
+  --sl-color-accent-high: #fecdd3;
+
+  --sl-color-white: #e8e6e3;
+  --sl-color-gray-1: #9a9a9e;
+  --sl-color-gray-2: #5e5e63;
+  --sl-color-gray-3: #2a2a30;
+  --sl-color-gray-4: #1e1e23;
+  --sl-color-gray-5: #16161a;
+  --sl-color-gray-6: #111114;
+  --sl-color-black: #0a0a0b;
+
+  --sl-font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --sl-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+header.header {
+  border-bottom: 1px solid var(--sl-color-gray-4);
+  backdrop-filter: blur(12px);
+}
+
+code {
+  border-radius: 6px;
+}
+
+table {
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sl-color-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sl-color-gray-3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a40;
+}

@@ -1,0 +1,18 @@
+{
+  "name": "locopuente-docs",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.34",
+    "astro": "^5.7",
+    "sharp": "^0.33"
+  },
+  "overrides": {
+    "zod": "3.25.76",
+    "@astrojs/sitemap": "3.7.0"
+  }
+}
