@@ -2,7 +2,7 @@
 title: "LocoPuente"
 ---
 
-**Where the research meets the student.**
+**Local AI for everyone who can't -- or won't -- send their data to the cloud.**
 
 LocoPuente is the deployment layer of LocoLabo -- a student-facing local AI service that bridges the digital divide by bringing equitable, privacy-first AI access to every student, regardless of what they can afford.
 

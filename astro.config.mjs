@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'LocoPuente',
-      description: 'Where the research meets the student',
+      description: 'Local AI for everyone who can't — or won't — send their data to the cloud',
       favicon: '/favicon.svg',
       social: [
         { icon: 'external', label: 'Home', href: 'https://locopuente.org' },
