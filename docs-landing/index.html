@@ -126,48 +126,78 @@
     }
     .highlight-section .inner { max-width: 1100px; margin: 0 auto; }
 
-    .layer-diagram { display: flex; gap: 0; max-width: 780px; }
+    .bridge-diagram { max-width: 780px; }
 
-    .layer-stack { display: flex; flex-direction: column; gap: 1rem; flex: 1; }
+    /* Bridge deck across the top */
+    .bridge-deck {
+      position: relative; overflow: hidden;
+      background: var(--accent-glow); border: 2px solid var(--accent);
+      border-radius: 12px 12px 0 0; padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: center; gap: 1rem;
+      min-height: 80px;
+    }
+    .bridge-deck-label {
+      font-family: var(--font-mono); font-size: 1rem; font-weight: 700;
+      color: var(--accent); letter-spacing: 0.05em; z-index: 2;
+    }
+    .bridge-deck-icon { font-size: 1.5rem; z-index: 2; }
 
-    .layer-row {
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 1.5rem 2rem; border-left: 3px solid var(--border-light);
+    /* SVG bridge silhouette */
+    .bridge-svg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1; opacity: 0.15;
     }
-    .layer-label {
-      font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
+
+    /* Walking figure */
+    .bridge-walker {
+      position: absolute; bottom: 12px; z-index: 3;
+      font-size: 1.2rem; animation: walk 12s linear infinite;
+      opacity: 0;
     }
-    .layer-projects {
-      display: flex; gap: 1rem; flex-wrap: wrap;
+    @keyframes walk {
+      0%   { left: -5%; opacity: 0; }
+      5%   { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { left: 105%; opacity: 0; }
     }
-    .layer-projects a {
-      font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-primary);
-      text-decoration: none; padding: 0.3rem 0.75rem; border-radius: 6px;
+
+    /* Suspension cables */
+    .bridge-cables {
+      display: flex; justify-content: space-between; padding: 0 15%;
+      margin-top: -2px; position: relative; z-index: 1;
+    }
+    .cable {
+      width: 2px; height: 12px;
+      background: var(--accent); opacity: 0.3;
+    }
+
+    /* Three pillars */
+    .pillar-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+      margin-top: -2px;
+    }
+    .pillar {
+      background: var(--bg-card); border: 1px solid var(--border);
+      padding: 1.5rem; text-align: center;
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .pillar:first-child { border-radius: 0 0 0 12px; }
+    .pillar:last-child  { border-radius: 0 0 12px 0; }
+    .pillar-label {
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .pillar-projects { display: flex; flex-direction: column; gap: 0.5rem; }
+    .pillar-projects a {
+      font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary);
+      text-decoration: none; padding: 0.4rem 0.75rem; border-radius: 6px;
       background: var(--bg-card-hover); border: 1px solid var(--border-light);
       transition: all 0.2s;
     }
-    .layer-projects a:hover { border-color: var(--accent); color: var(--accent); }
-
-    .bridge-bar {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      width: 100px; margin-left: -1px;
-      background: var(--accent-glow); border: 2px solid var(--accent);
-      border-radius: 0 12px 12px 0;
-      position: relative; text-decoration: none; transition: all 0.3s;
-    }
-    .bridge-bar:hover { background: rgba(244, 63, 94, 0.25); }
-    .bridge-bar .bridge-text {
-      writing-mode: vertical-rl; text-orientation: mixed;
-      font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;
-      color: var(--accent); letter-spacing: 0.05em;
-    }
-    .bridge-bar .bridge-icon {
-      font-size: 1.5rem; margin-bottom: 0.5rem;
-    }
+    .pillar-projects a:hover { border-color: var(--accent); color: var(--accent); }
 
     .lab-row {
-      margin-top: 1rem; text-align: center; max-width: 780px;
+      margin-top: 1.5rem; text-align: center; max-width: 780px;
     }
     .lab-row a {
       font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);
@@ -176,8 +206,9 @@
     .lab-row a:hover { color: var(--text-primary); }
 
     @media (max-width: 768px) {
-      .bridge-bar { width: 60px; }
-      .bridge-bar .bridge-text { font-size: 0.75rem; }
+      .pillar-row { grid-template-columns: 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+      .pillar { border-radius: 8px !important; }
+      .bridge-deck { border-radius: 12px; }
     }
 
     .poc-table {
@@ -293,34 +324,58 @@
       <p class="section-desc fade-up">
         LocoPuente is where the entire LocoLabo research programme converges into something anyone can use.
       </p>
-      <div class="layer-diagram fade-up">
-        <div class="layer-stack">
-          <div class="layer-row">
-            <div class="layer-label">Experience</div>
-            <div class="layer-projects">
+      <div class="bridge-diagram fade-up">
+        <!-- Bridge deck (spans across the top) -->
+        <div class="bridge-deck">
+          <svg class="bridge-svg" viewBox="0 0 800 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Towers -->
+            <rect x="180" y="0" width="6" height="80" fill="currentColor"/>
+            <rect x="614" y="0" width="6" height="80" fill="currentColor"/>
+            <!-- Main cables (catenary curves) -->
+            <path d="M0,10 Q200,70 400,15 Q600,70 800,10" stroke="currentColor" stroke-width="2.5" fill="none"/>
+            <!-- Suspender cables -->
+            <line x1="100" y1="38" x2="100" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="150" y1="30" x2="150" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="250" y1="30" x2="250" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="320" y1="22" x2="320" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="400" y1="15" x2="400" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="480" y1="22" x2="480" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="550" y1="30" x2="550" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="650" y1="30" x2="650" y2="72" stroke="currentColor" stroke-width="1"/>
+            <line x1="700" y1="38" x2="700" y2="72" stroke="currentColor" stroke-width="1"/>
+            <!-- Road deck -->
+            <rect x="0" y="72" width="800" height="8" fill="currentColor" rx="2"/>
+          </svg>
+          <span class="bridge-walker">&#128694;</span>
+          <span class="bridge-deck-icon">&#9961;&#65039;</span>
+          <span class="bridge-deck-label">LocoPuente</span>
+        </div>
+
+        <!-- Three pillars supporting the bridge -->
+        <div class="pillar-row">
+          <div class="pillar">
+            <div class="pillar-label">Experience</div>
+            <div class="pillar-projects">
               <a href="https://locoensayo.org">LocoEnsayo</a>
             </div>
           </div>
-          <div class="layer-row">
-            <div class="layer-label">Intelligence</div>
-            <div class="layer-projects">
+          <div class="pillar">
+            <div class="pillar-label">Intelligence</div>
+            <div class="pillar-projects">
               <a href="https://locollm.org">LocoLLM</a>
               <a href="https://locoagente.org">LocoAgente</a>
             </div>
           </div>
-          <div class="layer-row">
-            <div class="layer-label">Infrastructure</div>
-            <div class="layer-projects">
+          <div class="pillar">
+            <div class="pillar-label">Infrastructure</div>
+            <div class="pillar-projects">
               <a href="https://locobench.org">LocoBench</a>
               <a href="https://lococonvoy.org">LocoConvoy</a>
             </div>
           </div>
         </div>
-        <a href="https://locopuente.org" class="bridge-bar">
-          <span class="bridge-icon">&#9961;&#65039;</span>
-          <span class="bridge-text">LocoPuente</span>
-        </a>
       </div>
+
       <div class="lab-row fade-up">
         <a href="https://locolabo.org">&#129322; LocoLab &mdash; the umbrella</a>
       </div>
