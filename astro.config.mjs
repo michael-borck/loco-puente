@@ -20,6 +20,7 @@ export default defineConfig({
           items: [
             { label: 'Student Services', slug: 'services' },
             { label: 'Architecture', slug: 'architecture' },
+            { label: 'Philosophy', slug: 'philosophy' },
           ],
         },
         {

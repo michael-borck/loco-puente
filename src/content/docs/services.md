@@ -2,7 +2,7 @@
 title: "Student Services"
 ---
 
-A single on-campus server. No subscriptions. No data leaving campus. Seven tools that every student can use.
+A single on-campus server. No subscriptions. No data leaving campus. Eight tools that every student can use.
 
 :::tip[No subscription required]
 Every service listed here runs on hardware the university owns. Students access them through a browser on the campus network. There is no account to create, no credit card to enter, and no data sent to any external provider.
@@ -21,6 +21,7 @@ Every service listed here runs on hardware the university owns. Students access 
 | **API Access** | For students building their own tools as part of assessed work or personal projects. OpenAI-compatible endpoints |
 | **Embedded Unit Assistants** | AI support embedded directly within course platforms, tailored to specific unit content and readings |
 | **Rehearsal Environments** | Simulated professional organisations where students practise audits, interviews, negotiations, and client interactions before the stakes are real |
+| **Coding Assistance** | Connect your editor to the local LLM. VS Code with Continue, CLI tools like OpenCode, or Claude Code with local models |
 
 ---
 
@@ -61,6 +62,28 @@ Fully local speech-to-text (Whisper) and text-to-speech (Kokoro) via [Speaches](
 Powered by [LocoEnsayo](https://locoensayo.org), these are AI-populated organisations that students can interrogate, interview, audit, and negotiate with. Each persona has a backstory, a role, and information constraints. The scenario is not a quiz. It is a rehearsal.
 
 Currently deployed: **CloudCore Networks** (IT services firm for security audits and systems analysis), **Pinnacle Tours** (hospitality and tourism), and **TalkBuddy** (high-stakes conversation practice).
+
+---
+
+## Coding Assistance
+
+The same Ollama instances that power the chat interface are accessible from your code editor via OpenAI-compatible API endpoints. No separate setup needed -- point your tool at the local Ollama URL and start coding.
+
+**Editor integrations:**
+- **[Continue](https://continue.dev)** -- VS Code / JetBrains extension. Autocomplete, chat, and inline editing backed by local models. The most mature option.
+- **[OpenCode](https://opencode.ai)** -- Terminal-based coding assistant. Lightweight, fast, connects to any OpenAI-compatible endpoint.
+- **[Claude Code](https://claude.ai/claude-code)** -- Anthropic's CLI tool. Can be configured to use local models via OpenAI-compatible endpoints for privacy-sensitive work.
+- **[Claude Desktop](https://claude.ai)** -- Can connect to local Ollama via MCP (Model Context Protocol) for a desktop AI assistant backed by your local stack.
+
+:::caution[A note on agents]
+Agentic coding tools (tools that autonomously write, run, and iterate on code in loops) are technically possible with local models. We recommend caution.
+
+**Agentic drift** is the compounding of errors across multi-step loops. A model that is 90% accurate per turn is only 59% accurate over five turns. Small local models amplify this -- they are less reliable per step than frontier models, and the errors compound faster.
+
+More fundamentally, agentic delegation bypasses the thinking that makes AI useful for learning. You get code in a folder; you don't get understanding in your head. The LocoPuente stack is designed for **conversation, not delegation** -- AI that amplifies your thinking rather than replacing it. See the [Philosophy](philosophy) page for more on this distinction.
+
+Use local models as a **coding conversation partner**: explain your approach, ask it to review your logic, brainstorm alternatives, generate test cases. That interaction makes you a better developer. Handing it autonomous control does not.
+:::
 
 ---
 
