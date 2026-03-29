@@ -71,7 +71,7 @@ These habits operationalise the philosophy:
 
 **VET** -- Verify, Explain, Test. Before acting on any AI output: verify the claims, explain the reasoning in your own words (if you cannot, you do not understand it), and test the output against reality. If it passes all three, use it. If not, the conversation continues.
 
-**RTCF** -- Role, Task, Context, Format. One prompt, one job. Give the model a role ("You are a security auditor"), a task ("Review this access control logic"), context ("This runs on a shared campus server"), and format ("List vulnerabilities as a numbered checklist"). Structured prompts produce structured outputs.
+**RTCF** -- Role, Task, Context, Format. One prompt, one job. Give the model a role ("You are a security auditor"), a task ("Review this access control logic"), context ("This runs on a shared local server"), and format ("List vulnerabilities as a numbered checklist"). Structured prompts produce structured outputs.
 
 **Two-Chat Workflow** -- separate thinking from building. Use one conversation to explore, brainstorm, and decide. Use a second conversation to execute. Mixing exploration and execution in a single thread produces muddled outputs and muddled thinking.
 

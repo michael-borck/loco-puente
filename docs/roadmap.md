@@ -12,7 +12,7 @@ LocoPuente's path from proof of concept to faculty-scale deployment. The softwar
 **Capacity:** 2-5 concurrent users
 **Status:** Running today
 
-The full stack is operational. Voice + LLM inference run concurrently on separate cards. Image generation shares GPU 0 with the primary LLM (not concurrent). All services are accessible on the campus network.
+The full stack is operational. Voice + LLM inference run concurrently on separate cards. Image generation shares GPU 0 with the primary LLM (not concurrent). All services are accessible on the local network.
 
 ---
 
@@ -67,7 +67,7 @@ At every phase, the fundamentals remain the same:
 
 - **All inference is local.** No data leaves the machine.
 - **All APIs are OpenAI-compatible.** Any component can be swapped independently.
-- **No subscriptions.** Students access everything through a browser on the campus network.
+- **No subscriptions.** Users access everything through a browser on the local network.
 - **No external dependencies.** The stack runs without internet access.
 
 The PoC proves the model. The roadmap scales it.

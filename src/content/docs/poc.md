@@ -53,7 +53,7 @@ The dual-GPU arrangement eliminates the sequential switching constraint of a sin
 | Web search in chat | Open WebUI + SearXNG | -- | Ready |
 | Cited AI web search | Perplexica + SearXNG | Pulpo | Ready |
 | Research nudge intervention | Custom chat | Pulpo | Ready |
-| Unit RAG chatbot (Blackboard) | AnythingLLM | Pulpo | Ready |
+| Domain RAG chatbot | AnythingLLM | Pulpo | Ready |
 | Voice input (STT) | Speaches + Whisper | Puente | Ready |
 | Voice output (TTS) | Speaches + Kokoro | Puente | Ready |
 | Research assistant + podcast | Open Notebook AI | Pulpo | Ready |
@@ -77,4 +77,4 @@ The dual-GPU arrangement eliminates the sequential switching constraint of a sin
 
 ## The Cost Argument
 
-The PoC hardware costs less than a single semester of commercial AI subscriptions for a cohort of students. Two secondhand consumer GPUs. Running the full stack. Today.
+The PoC hardware costs less than a year of commercial AI subscriptions for a small team. Two secondhand consumer GPUs. Running the full stack. Today.

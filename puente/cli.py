@@ -316,6 +316,71 @@ def gpu():
     print_gpu_table(gpus)
 
 
+# -- connect -------------------------------------------------------------------
+
+
+@app.command()
+def connect():
+    """Show connection details for external tools (editors, CLI clients)."""
+    config = _require_config()
+
+    import socket
+    try:
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+    except socket.gaierror:
+        local_ip = "127.0.0.1"
+
+    console.print("\n[bold]Puente Stack — Connection Details[/bold]\n")
+
+    # Ollama instances
+    if config.services.ollama.enabled:
+        for inst in config.services.ollama.instances:
+            console.print(f"  [cyan]Ollama ({inst.name})[/cyan]")
+            console.print(f"    Local:   http://127.0.0.1:{inst.port}")
+            console.print(f"    Network: http://{local_ip}:{inst.port}")
+            console.print()
+
+    # Other services with APIs
+    api_services = [
+        ("open_webui", "Open WebUI"),
+        ("speaches", "Speaches (TTS/STT)"),
+        ("searxng", "SearXNG"),
+    ]
+    for svc_name, display in api_services:
+        svc_config = getattr(config.services, svc_name, None)
+        if svc_config and svc_config.enabled:
+            port = svc_config.port
+            console.print(f"  [cyan]{display}[/cyan]")
+            console.print(f"    http://{local_ip}:{port}")
+            console.print()
+
+    # Editor connection guides
+    primary_port = 11434
+    if config.services.ollama.enabled and config.services.ollama.instances:
+        primary_port = config.services.ollama.instances[0].port
+
+    base_url = f"http://{local_ip}:{primary_port}"
+
+    console.print("[bold]Connect your editor:[/bold]\n")
+    console.print(f"  [green]Continue[/green] (VS Code / JetBrains)")
+    console.print(f"    Set API base to: {base_url}")
+    console.print()
+    console.print(f"  [green]OpenCode[/green]")
+    console.print(f"    OPENAI_API_BASE={base_url}/v1 opencode")
+    console.print()
+    console.print(f"  [green]Claude Code[/green]")
+    console.print(f"    Use --api-base {base_url}/v1")
+    console.print()
+    console.print(f"  [green]Claude Desktop[/green]")
+    console.print(f"    Configure MCP to connect to {base_url}")
+    console.print()
+    console.print(f"  [green]Any OpenAI-compatible client[/green]")
+    console.print(f"    OPENAI_API_BASE={base_url}/v1")
+    console.print(f"    OPENAI_API_KEY=not-needed")
+    console.print()
+
+
 # -- version -------------------------------------------------------------------
 
 

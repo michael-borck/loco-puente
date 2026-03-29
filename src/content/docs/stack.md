@@ -13,7 +13,7 @@ Every tool in the LocoPuente stack, its role, its port, and how it connects.
 │                            User Interfaces                               │
 │                                                                          │
 │  Custom Chat    Open WebUI   Perplexica   AnythingLLM   Open Notebook   │
-│  (NBF Study)    (General)    (AI Search)  (Blackboard)  (Research)      │
+│  (NBF Study)    (General)    (AI Search)  (RAG)  (Research)      │
 │                                                                          │
 │  ComfyUI        Stirling PDF   Excalidraw   CiteSight                   │
 │  (Images)       (PDF Tools)    (Whiteboard)  (Citations)                │
@@ -38,9 +38,9 @@ Every tool in the LocoPuente stack, its role, its port, and how it connects.
 | Tool | Purpose | Audience | Key Feature |
 |---|---|---|---|
 | Custom chat | NBF research / Keep Asking study | Research participants | Consent, exit survey, turn logging |
-| Open WebUI | General student AI access | All students | Full-featured: voice, images, web search |
-| Perplexica | Cited AI-powered web search | Research-focused students | Perplexity-style cited answers, academic mode |
-| AnythingLLM | Unit-specific RAG chatbots | Students per unit | Embeds in Blackboard, per-unit document workspaces |
+| Open WebUI | General AI access | All users | Full-featured: voice, images, web search |
+| Perplexica | Cited AI-powered web search | Research-focused users | Perplexity-style cited answers, academic mode |
+| AnythingLLM | Unit-specific RAG chatbots | Per-workspace users | Embeddable, per-domain document workspaces |
 
 Open WebUI and Perplexica are complementary -- Open WebUI is the general AI assistant, Perplexica is specifically for "find me cited information from the web." Both share the same SearXNG instance as their search backend.
 
@@ -67,7 +67,7 @@ Shared private web search backend on port 8888. Aggregates 70+ search engines wi
 
 ### ComfyUI -- Image Generation
 
-Local image generation on port 8188. Dual role as backend API (serving Open WebUI's in-chat image generation) and direct student UI (for advanced workflows).
+Local image generation on port 8188. Dual role as backend API (serving Open WebUI's in-chat image generation) and direct UI (for advanced workflows).
 
 | Model | VRAM | Resolution | Gen Time |
 |---|---|---|---|
@@ -83,9 +83,9 @@ Local image generation on port 8188. Dual role as backend API (serving Open WebU
 |---|---|---|---|
 | Ollama instance 0 | 11434 | Pulpo / RTX 3060 | Primary LLM API |
 | Ollama instance 1 | 11435 | Puente / RTX 2060 Super | Secondary LLM API |
-| Open WebUI | 3000 | -- | General student chat |
+| Open WebUI | 3000 | -- | General chat |
 | Perplexica | 3001 | -- | Cited AI web search |
-| AnythingLLM | 3002 | -- | Blackboard RAG chatbots |
+| AnythingLLM | 3002 | -- | Domain RAG chatbots |
 | Speaches | 8000 | Puente / RTX 2060 Super | TTS/STT API |
 | Open Notebook AI | 8080 | -- | Research, notes, podcast |
 | Stirling PDF | 8089 | -- | PDF tools |
