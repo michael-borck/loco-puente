@@ -148,29 +148,6 @@
       z-index: 1; opacity: 0.15;
     }
 
-    /* Walking figure */
-    .bridge-walker {
-      position: absolute; bottom: 12px; z-index: 3;
-      font-size: 1.2rem; animation: walk 12s linear infinite;
-      opacity: 0;
-    }
-    @keyframes walk {
-      0%   { left: -5%; opacity: 0; }
-      5%   { opacity: 1; }
-      90%  { opacity: 1; }
-      100% { left: 105%; opacity: 0; }
-    }
-
-    /* Suspension cables */
-    .bridge-cables {
-      display: flex; justify-content: space-between; padding: 0 15%;
-      margin-top: -2px; position: relative; z-index: 1;
-    }
-    .cable {
-      width: 2px; height: 12px;
-      background: var(--accent); opacity: 0.3;
-    }
-
     /* Three pillars */
     .pillar-row {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
@@ -187,14 +164,16 @@
       font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 0.1em;
     }
-    .pillar-projects { display: flex; flex-direction: column; gap: 0.5rem; }
-    .pillar-projects a {
-      font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary);
-      text-decoration: none; padding: 0.4rem 0.75rem; border-radius: 6px;
+    .pillar-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+    .pillar-cards a {
       background: var(--bg-card-hover); border: 1px solid var(--border-light);
+      border-radius: 8px; padding: 0.75rem; text-decoration: none; color: inherit;
       transition: all 0.2s;
     }
-    .pillar-projects a:hover { border-color: var(--accent); color: var(--accent); }
+    .pillar-cards a:hover { border-color: var(--card-accent, var(--accent)); transform: translateY(-1px); }
+    .pillar-cards .lc-icon { font-size: 1.1rem; margin-bottom: 0.15rem; }
+    .pillar-cards .lc-name { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+    .pillar-cards .lc-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; margin-top: 0.15rem; }
 
     .lab-row {
       margin-top: 1.5rem; text-align: center; max-width: 780px;
@@ -346,7 +325,6 @@
             <!-- Road deck -->
             <rect x="0" y="72" width="800" height="8" fill="currentColor" rx="2"/>
           </svg>
-          <span class="bridge-walker">&#128694;</span>
           <span class="bridge-deck-icon">&#9961;&#65039;</span>
           <span class="bridge-deck-label">LocoPuente</span>
         </div>
@@ -355,22 +333,42 @@
         <div class="pillar-row">
           <div class="pillar">
             <div class="pillar-label">Experience</div>
-            <div class="pillar-projects">
-              <a href="https://locoensayo.org">LocoEnsayo</a>
+            <div class="pillar-cards">
+              <a href="https://locoensayo.org" style="--card-accent: #eab308;">
+                <div class="lc-icon">&#127917;</div>
+                <div class="lc-name">LocoEnsayo</div>
+                <div class="lc-desc">AI-populated rehearsal environments</div>
+              </a>
             </div>
           </div>
           <div class="pillar">
             <div class="pillar-label">Intelligence</div>
-            <div class="pillar-projects">
-              <a href="https://locollm.org">LocoLLM</a>
-              <a href="https://locoagente.org">LocoAgente</a>
+            <div class="pillar-cards">
+              <a href="https://locollm.org" style="--card-accent: #f97316;">
+                <div class="lc-icon">&#128302;</div>
+                <div class="lc-name">LocoLLM</div>
+                <div class="lc-desc">Routed specialist model swarm</div>
+              </a>
+              <a href="https://locoagente.org" style="--card-accent: #06b6d4;">
+                <div class="lc-icon">&#129302;</div>
+                <div class="lc-name">LocoAgente</div>
+                <div class="lc-desc">Agentic scaffolding for SLMs</div>
+              </a>
             </div>
           </div>
           <div class="pillar">
             <div class="pillar-label">Infrastructure</div>
-            <div class="pillar-projects">
-              <a href="https://locobench.org">LocoBench</a>
-              <a href="https://lococonvoy.org">LocoConvoy</a>
+            <div class="pillar-cards">
+              <a href="https://locobench.org" style="--card-accent: #22c55e;">
+                <div class="lc-icon">&#128736;</div>
+                <div class="lc-name">LocoBench</div>
+                <div class="lc-desc">VRAM tier benchmarking</div>
+              </a>
+              <a href="https://lococonvoy.org" style="--card-accent: #a855f7;">
+                <div class="lc-icon">&#128666;</div>
+                <div class="lc-name">LocoConvoy</div>
+                <div class="lc-desc">Multi-GPU parallelism</div>
+              </a>
             </div>
           </div>
         </div>
