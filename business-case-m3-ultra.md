@@ -86,17 +86,17 @@ The server would host several services accessible to students on the Curtin netw
 
 | Service | What It Means for Students |
 |---|---|
-| **AI Chat Interface** | A chat experience comparable to commercial tools (Open WebUI), with cited AI web search (Perplexica). Designed to encourage critical thinking rather than passive use |
-| **Voice Interaction** | Speak to the system, hear responses. Fully local speech-to-text (Whisper) and text-to-speech (Kokoro) via Speaches |
-| **Research and Notes** | AI-powered research assistant (Open Notebook AI) for reading, annotating, synthesising sources, and generating podcasts from notes |
-| **AI Image Generation** | Local image generation (ComfyUI) for presentations, projects, and creative work. Multiple model tiers from fast drafts to high quality |
-| **API Access for Developers** | OpenAI-compatible endpoints for students building their own tools as part of assessed work or personal projects |
-| **Domain Assistants** | AI support embedded in Blackboard (AnythingLLM), tailored to specific unit content and document collections |
-| **Rehearsal Environments** | AI-populated simulated organisations (LocoEnsayo) for professional practice -- audits, interviews, negotiations, client interactions |
-| **Coding Assistance** | Connect editors to local LLMs via VS Code (Continue), CLI tools (OpenCode), or Claude Code with local models |
-| **Productivity Tools** | PDF toolkit (Stirling PDF), collaborative whiteboard (Excalidraw), citation and writing checker (CiteSight) |
+| **AI Chat** | A chat experience comparable to ChatGPT or Claude, with the ability to search the web and cite sources. Designed to encourage critical thinking rather than passive use |
+| **Voice Interaction** | Speak to the system and hear responses. Fully local -- no audio data leaves the machine |
+| **Research and Notes** | An AI-powered environment for reading, annotating, and synthesising sources. Can generate audio summaries from research notes |
+| **Image Generation** | Generate images for presentations, projects, and creative work. Multiple quality levels from quick drafts to high resolution |
+| **Coding Assistance** | AI-assisted coding for Information Systems students, integrated directly into their development tools |
+| **Unit Assistants** | AI support embedded directly within Blackboard, tailored to specific unit content. A student asking about ISYS6020 gets answers grounded in ISYS6020 materials, not generic responses |
+| **Rehearsal Environments** | AI-populated simulated organisations where students practise professional skills -- conducting audits, interviewing stakeholders, handling client negotiations -- before the stakes are real |
+| **Productivity Tools** | PDF tools (merge, split, annotate), collaborative whiteboard for group work, and a citation checker that catches referencing errors before submission |
+| **API Access** | For students in technical units who are building their own applications as part of assessed work |
 
-All services are backed by local LLM inference via Ollama (OpenAI-compatible API) and private web search via SearXNG (no external search API keys required). All run on two load-balanced machines. Students access them through a browser. There is nothing to install.
+All services run on two load-balanced machines. Students access them through a browser. There is nothing to install, nothing to subscribe to, and nothing that sends data outside the University.
 
 ---
 
@@ -236,11 +236,11 @@ The cloud comparison also misses two less quantifiable points. First, locally ho
 
 ## Why Not Wait for the M5 Ultra?
 
-In the interest of transparency, Apple is expected to release the M5 Ultra chip in 2026, likely in the first half of the year. Industry commentary suggests it may restore a 512 GB or higher unified memory option, which would reopen the possibility of a single, larger machine.
+In the interest of transparency, Apple is expected to release the M5 Ultra chip in late 2026. Industry commentary suggests it may offer a 512 GB or higher unified memory option, which would reopen the possibility of a single, larger machine.
 
 This proposal recommends proceeding with the M3 Ultra now, for three reasons:
 
-1. **The M3 Ultra is a known quantity.** It is shipping, benchmarked, and available for purchase today. The M5 Ultra timeline is speculative and subject to change, particularly given ongoing global DRAM supply constraints that have already affected Apple's product roadmap.
+1. **The M3 Ultra is a known quantity.** It is shipping, benchmarked, and available for purchase today. The M5 Ultra timeline is speculative and subject to change.
 2. **Waiting has a real cost.** Every semester that passes without this infrastructure is another semester where the equity gap widens. Students who cannot afford commercial AI subscriptions right now are not helped by hardware that might be available later.
 3. **The two-machine M3 Ultra configuration is arguably stronger than a single M5 Ultra would be.** Even if the M5 Ultra ships with 512 GB, a single machine is still a single point of failure. Two M3 Ultra machines provide redundancy, load balancing, and double the concurrent capacity. There is no configuration of a single machine, regardless of how powerful, that offers these operational advantages.
 
@@ -307,21 +307,20 @@ If demand grows beyond comfortable capacity, there are straightforward options: 
 
 ## Proof of Concept: Starting Small and Fast
 
-Rather than committing to a full Faculty-wide deployment immediately, the recommended path is a structured proof of concept run from within the School of Marketing and Management, where the technical expertise and the motivation to move quickly already exist.
+Rather than committing to a full Faculty-wide deployment immediately, the recommended path is a structured proof of concept -- and one is already running.
 
-The FLX project team is understood to have a Mac Studio available. This machine, while less powerful than the proposed M3 Ultra, is sufficient to demonstrate the core services, test the network configuration, and gather real usage data from a small student cohort.
+The School of Marketing and Management currently operates a proof of concept on existing consumer hardware. The full service stack -- AI chat, voice interaction, image generation, unit assistants, research tools, and productivity tools -- is running and accessible for one to two concurrent users. This is not a plan. It is a working system.
 
-A proof of concept would take approximately four to eight weeks to produce meaningful evidence, including:
+The PoC demonstrates that:
 
-- Core services running and accessible on the Curtin network
-- Student-facing interfaces deployed and tested
-- Usage logs and concurrent user data
-- Initial student feedback
-- A preliminary acceptable use framework
+- The full service stack works end-to-end on modest hardware
+- The software configuration is stable and reproducible
+- The user experience is comparable to commercial tools for typical academic tasks
+- No data leaves the machine, verifiable by inspection
 
-This evidence then supports a formal Faculty-level proposal for the full M3 Ultra deployment, grounded in real numbers rather than estimates. It also gives every stakeholder group (DTS, cybersecurity, data governance, academic governance) something concrete to evaluate.
+What the PoC cannot demonstrate at this scale is concurrent capacity. Serving one to two users proves the model works. Serving a cohort of fifty requires the M3 Ultra hardware. The proof of concept converts "could this work?" into "this works -- now we need the capacity."
 
-*Note: FLX team availability and hardware access would be confirmed before this timeline is formalised.*
+A structured evaluation period of four to eight weeks, using the existing PoC with a small student cohort, would produce the usage data, student feedback, and acceptable use framework needed to support a formal Faculty-level proposal. This requires no new hardware and no DTS involvement beyond a network address.
 
 ---
 
@@ -357,7 +356,7 @@ If the proof of concept succeeds, the invitation to DTS, to IT governance, and t
 
 | | |
 |---|---|
-| **Immediate request** | Faculty endorsement of a proof of concept using existing FLX hardware, requiring only a fixed IP address from DTS |
+| **Immediate request** | Faculty endorsement of a structured PoC evaluation using existing hardware already running within SoMM |
 | **Medium-term request** | Approval and funding for two Apple M3 Ultra machines (256 GB each), approximately AUD $18,000–22,000 |
 | **What it delivers** | Equitable, sovereign, cost-effective, and redundant AI access for all Faculty of Business and Law students |
 | **What it avoids** | Ongoing cloud subscription costs, external data exposure, subscription dependency, single points of failure, and a widening AI access gap between students |
@@ -367,13 +366,11 @@ If the proof of concept succeeds, the invitation to DTS, to IT governance, and t
 
 ## Next Steps
 
-1. Faculty leadership endorses the proposal and scope of the proof of concept
-2. Confirm FLX team availability and hardware access
-3. Submit a fixed IP address request to DTS
-4. Run a four-to-eight week proof of concept with a small student cohort from SoMM
-5. Compile usage data, acceptable use framework, and stakeholder responses
-6. Present evidence-based case for full two-machine M3 Ultra deployment at Faculty level
-7. Invite DTS and broader University engagement on the basis of demonstrated outcomes
+1. Faculty leadership endorses the proposal and scope of the proof of concept evaluation
+2. Open the existing PoC to a small student cohort from SoMM for a four-to-eight week evaluation period
+3. Compile usage data, acceptable use framework, and stakeholder feedback
+4. Present evidence-based case for full two-machine M3 Ultra deployment at Faculty level
+5. Invite DTS and broader University engagement on the basis of demonstrated outcomes
 
 ---
 
