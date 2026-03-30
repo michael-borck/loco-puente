@@ -26,7 +26,7 @@ At the same time, the University is actively promoting AI literacy as a graduate
 
 ## Why Not Just Subsidise Student Subscriptions?
 
-This is the obvious alternative and it deserves a direct answer before it becomes the default counter-argument.
+This is the obvious alternative and it deserves a direct answer.
 
 Subsidising student subscriptions to commercial AI services would be cheaper in the short term and require no infrastructure investment. But it would also:
 
@@ -161,13 +161,12 @@ Acceptable use policies governing what the service can and cannot be used for in
 
 There is currently no Curtin policy that explicitly prohibits a deployment of this kind, and none that explicitly authorises it. This ambiguity has, informally, been treated as a barrier.
 
-The position here is that absence of prohibition is not prohibition. This machine would:
+This deployment sits comfortably within the scope of research and teaching infrastructure that Schools and Faculties routinely acquire and manage. The machine would:
 
 - Operate within Curtin's physical and network infrastructure
 - Comply with existing cybersecurity standards
 - Handle no personally identifiable information beyond what is already managed under existing University data governance frameworks
 - Require no integration with core University systems for a proof of concept
-- Sit well within the category of research and teaching infrastructure that Schools and Faculties routinely acquire and manage
 
 The appropriate path forward is not to wait for policy to catch up, but to demonstrate responsible implementation and allow policy to form around evidence. The proof of concept is how that evidence is created.
 
@@ -177,7 +176,7 @@ For the proof of concept stage, the only infrastructure requirement from DTS wou
 
 ## The Integration Risk: How Good Intentions Become Two-Year Delays
 
-There is a predictable institutional response to proposals like this, and it is worth naming it honestly rather than discovering it mid-process.
+Proposals that touch infrastructure, cybersecurity, and data governance tend to accumulate review stages. This is worth acknowledging honestly rather than discovering it mid-process.
 
 Once a proposal touches departments responsible for cybersecurity, data governance, authentication, and network management, each group applies its own rigour. Each group is doing its job correctly. The problem is not bad faith; it is sequencing. Individually reasonable requirements, applied in series, can turn a four-week project into an eighteen-month review process.
 
@@ -204,7 +203,7 @@ The ask is not to skip the governance process. It is to do the governance proces
 
 A common response to proposals like this is: *why not just use the cloud?*
 
-The honest answer is that cloud solutions are not cheaper when you account for sustained, high-volume use. The table below provides indicative figures for comparison over a three-year period.
+Cloud solutions are not cheaper when you account for sustained, high-volume use. The table below provides indicative figures for comparison over a three-year period.
 
 | | **2× Local M3 Ultra (256 GB each)** | **Equivalent Cloud Service** |
 |---|---|---|
@@ -289,7 +288,7 @@ The crux of the matter is straightforward: students who can afford frontier AI t
 
 If demand grows beyond comfortable capacity, there are straightforward options: add a third machine (the software stack scales horizontally), or implement a queuing system that manages peak load gracefully. Neither requires starting again.
 
-**On redundancy:** Two machines means the service does not have a single point of failure. If one machine requires maintenance, encounters a hardware issue, or needs a software update, the other continues serving students without interruption. This is not a theoretical benefit; it is what any governance committee will expect from a service that students are told to rely on. The two-machine architecture answers the availability question from day one, rather than deferring it to a future phase.
+**On redundancy:** Two machines means the service does not have a single point of failure. If one machine requires maintenance, encounters a hardware issue, or needs a software update, the other continues serving students without interruption. This is not a theoretical benefit; it is a reasonable expectation for any service that students are asked to rely on. The two-machine architecture answers the availability question from day one, rather than deferring it to a future phase.
 
 ---
 
@@ -318,7 +317,7 @@ A structured proof of concept period of eight to twelve weeks, with a student co
 
 ## What About Long-Term Support?
 
-This is the most legitimate concern and it deserves a direct answer.
+This is an important concern and it deserves a direct answer.
 
 For the proof of concept phase, support would be handled by the team that built it, within the School of Marketing and Management. This is appropriate for a research and development activity and requires no DTS involvement.
 
@@ -336,7 +335,7 @@ It is also worth noting that the Faculty of Business and Law managing applied te
 
 ## Positioning: A Faculty Initiative, Not Shadow IT
 
-It would be easy to read a School-initiated technology project as shadow IT, a workaround built outside proper governance channels. That framing would be incorrect, and it is worth addressing directly.
+It would be easy to read a School-initiated technology project as shadow IT, a workaround built outside proper governance channels. That is not the intent, and it is worth addressing directly.
 
 This proposal is a Faculty-level initiative, prepared and presented through Faculty leadership, motivated by a Faculty-wide equity challenge. The School of Marketing and Management is the natural home for the proof of concept because the expertise and the urgency both exist there. But the intent, from the outset, is to demonstrate a model that serves the whole Faculty and, if successful, the whole University.
 
