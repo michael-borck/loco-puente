@@ -18,9 +18,11 @@ The solution is two purpose-built AI servers housed within Curtin's own infrastr
 
 The total cost is approximately AUD $18,000 to $22,000, paid once. The equivalent commercial cloud service would cost that much every two to three months.
 
-Critically, this is not a proposal to build something from scratch. The School of Marketing and Management has been running a version of this service for two years, on minimal hardware, across six units, serving hundreds of students per semester. The track record is real. The demand is proven. The team has the skills. What is missing is the hardware to do it properly and the Faculty endorsement to do it at scale.
+Critically, this is not a proposal to build something from scratch. The School of Marketing and Management has been running a version of this service for two years, on minimal hardware, across six units, serving hundreds of students per semester. The software stack is proven. The demand is proven. The team has the skills.
 
-The proposal has one immediate ask: support for a short proof of concept (likely eight weeks) using hardware that already exists, requiring nothing from central IT beyond a network address. Every governance question, every cybersecurity concern, every data management question gets answered by a working machine that stakeholders can actually inspect, rather than a document they are asked to approve on faith.
+What is missing is the hardware to run the larger AI models that match commercial frontier tools in quality. The existing prototype demonstrates that the architecture works. The M3 Ultra proof of concept demonstrates that the *models* are good enough -- that open-source AI running locally can genuinely match the experience students currently pay for. That is a qualitatively different proposition, and it requires hardware with enough memory to run the same class of models that power ChatGPT and Claude.
+
+The proposal has one immediate ask: funding for a proof of concept using two M3 Ultra machines, run as a structured pilot within the School of Marketing and Management. Every governance question, every cybersecurity concern, every data management question gets answered by a working machine that stakeholders can actually inspect, rather than a document they are asked to approve on faith.
 
 The Faculty of Business and Law trains the next generation of business leaders. Those leaders will work in organisations shaped by AI. Giving all of our students, not just the ones who can afford it, the tools and the critical thinking skills to engage with AI on their own terms is not a technology project. It is a statement about what this Faculty believes.
 
@@ -208,7 +210,7 @@ A cybersecurity team that can interrogate an actual running service, on an actua
 
 The proof of concept converts hypothetical risk into manageable evidence. Without it, the proposal is at the mercy of every stakeholder's worst-case assumptions. With it, the conversation changes from *"what might go wrong"* to *"here is what is actually happening, and here is how we address it."*
 
-The ask is not to skip the governance process. It is to do the governance process on something real. Enterprises call it a "proof of concept" for exactly this reason: it is standard practice for managing integration risk in large organisations, not a shortcut.
+The ask is not to skip the governance process. It is to do the governance process on something real. Every major enterprise manages integration risk through proof of concept deployments for exactly this reason: it is standard practice, not a shortcut.
 
 ---
 
@@ -305,22 +307,26 @@ If demand grows beyond comfortable capacity, there are straightforward options: 
 
 ---
 
-## Proof of Concept: Starting Small and Fast
+## From Working Prototype to Proof of Concept
 
-Rather than committing to a full Faculty-wide deployment immediately, the recommended path is a structured proof of concept -- and one is already running.
+The software stack is not theoretical. The School of Marketing and Management already operates a working prototype on consumer-grade hardware. The full service stack -- AI chat, voice interaction, image generation, unit assistants, research tools, and productivity tools -- is running today and accessible for one to two concurrent users.
 
-The School of Marketing and Management currently operates a proof of concept on existing consumer hardware. The full service stack -- AI chat, voice interaction, image generation, unit assistants, research tools, and productivity tools -- is running and accessible for one to two concurrent users. This is not a plan. It is a working system.
+The prototype demonstrates that:
 
-The PoC demonstrates that:
-
-- The full service stack works end-to-end on modest hardware
+- The full service stack works end-to-end
 - The software configuration is stable and reproducible
-- The user experience is comparable to commercial tools for typical academic tasks
 - No data leaves the machine, verifiable by inspection
+- The architecture scales -- the same software runs identically on more powerful hardware
 
-What the PoC cannot demonstrate at this scale is concurrent capacity. Serving one to two users proves the model works. Serving a cohort of fifty requires the M3 Ultra hardware. The proof of concept converts "could this work?" into "this works -- now we need the capacity."
+What the prototype *cannot* demonstrate is the quality gap. The small AI models that fit on consumer hardware are useful for many tasks, but they are visibly weaker than the commercial frontier tools students are paying for. A 4-billion-parameter model running on a gaming GPU is not the same experience as ChatGPT Plus or Claude Pro. It is good enough to prove the architecture; it is not good enough to close the equity gap.
 
-A structured evaluation period of four to eight weeks, using the existing PoC with a small student cohort, would produce the usage data, student feedback, and acceptable use framework needed to support a formal Faculty-level proposal. This requires no new hardware and no DTS involvement beyond a network address.
+That is what the M3 Ultra proof of concept is for.
+
+With 256 GB of memory per machine, the M3 Ultra can run the largest openly available AI models -- the same class of models that power the commercial tools. The proof of concept answers the question the prototype cannot: **are open-source models, running locally on hardware the University owns, genuinely comparable to the commercial services students are currently paying for?**
+
+If the answer is yes -- and the existing evidence strongly suggests it will be -- the path to Faculty-wide deployment is straightforward. If it is not, the investment is two machines, not a multi-year commitment.
+
+A structured proof of concept period of eight to twelve weeks, with a student cohort from the School of Marketing and Management, would produce the usage data, quality comparisons, student feedback, and acceptable use framework needed to support a Faculty-wide deployment decision.
 
 ---
 
@@ -356,8 +362,8 @@ If the proof of concept succeeds, the invitation to DTS, to IT governance, and t
 
 | | |
 |---|---|
-| **Immediate request** | Faculty endorsement of a structured PoC evaluation using existing hardware already running within SoMM |
-| **Medium-term request** | Approval and funding for two Apple M3 Ultra machines (256 GB each), approximately AUD $18,000–22,000 |
+| **Immediate request** | Approval and funding for two Apple M3 Ultra machines (256 GB each), approximately AUD $18,000–22,000, for a structured proof of concept within SoMM |
+| **Medium-term request** | Faculty-wide deployment based on PoC evidence |
 | **What it delivers** | Equitable, sovereign, cost-effective, and redundant AI access for all Faculty of Business and Law students |
 | **What it avoids** | Ongoing cloud subscription costs, external data exposure, subscription dependency, single points of failure, and a widening AI access gap between students |
 | **What it builds** | Faculty capability, research infrastructure, and a replicable model for the broader University |
@@ -366,11 +372,12 @@ If the proof of concept succeeds, the invitation to DTS, to IT governance, and t
 
 ## Next Steps
 
-1. Faculty leadership endorses the proposal and scope of the proof of concept evaluation
-2. Open the existing PoC to a small student cohort from SoMM for a four-to-eight week evaluation period
-3. Compile usage data, acceptable use framework, and stakeholder feedback
-4. Present evidence-based case for full two-machine M3 Ultra deployment at Faculty level
-5. Invite DTS and broader University engagement on the basis of demonstrated outcomes
+1. Approve funding for two M3 Ultra machines (~AUD $18,000–22,000)
+2. Deploy the proven software stack on the new hardware (days, not months -- the software is ready)
+3. Run a structured proof of concept with a student cohort from SoMM (eight to twelve weeks)
+4. Compile usage data, quality comparisons, student feedback, and acceptable use framework
+5. Present evidence-based case for Faculty-wide deployment
+6. Invite DTS and broader University engagement on the basis of demonstrated outcomes
 
 ---
 
