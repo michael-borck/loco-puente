@@ -8,23 +8,9 @@
 
 ## Executive Summary
 
-Right now, some of our students have access to powerful AI tools and some do not. The difference is not aptitude, motivation, or academic preparation. It is money.
+Students who can afford premium AI subscriptions have a genuine academic advantage over those who cannot. This proposal closes that gap with two locally hosted AI servers (~AUD $18,000–22,000, one-time) that give every student access to equivalent capability — no subscription fees, no data leaving the University, no external dependency.
 
-Students who can afford a monthly subscription to a premium AI service have a genuine academic advantage over those who cannot. That gap is growing, and it runs directly against everything the Faculty stands for in terms of equity, access, and preparing all of our graduates for the world they are entering.
-
-This proposal asks the Faculty to close that gap.
-
-The solution is two purpose-built AI servers housed within Curtin's own infrastructure, giving every student in the Faculty access to AI capability equivalent to the commercial tools their wealthier peers are already using. No subscription fees. No data leaving the University. No dependency on external providers who can change their pricing at any time. Two machines rather than one means the service is always available, even during maintenance or hardware failure.
-
-The total cost is approximately AUD $18,000 to $22,000, paid once. The equivalent commercial cloud service would cost that much every two to three months.
-
-Critically, this is not a proposal to build something from scratch. The School of Marketing and Management has been running a version of this service for two years, on minimal hardware, across six units, serving hundreds of students per semester. The software stack is proven. The demand is proven. The team has the skills.
-
-What is missing is the hardware to run the larger AI models that match commercial frontier tools in quality. The existing prototype demonstrates that the architecture works. The M3 Ultra proof of concept demonstrates that the *models* are good enough -- that open-source AI running locally can genuinely match the experience students currently pay for. That is a qualitatively different proposition, and it requires hardware with enough memory to run the same class of models that power ChatGPT and Claude.
-
-The proposal has one immediate ask: funding for a proof of concept using two M3 Ultra machines, run as a structured pilot within the School of Marketing and Management. Every governance question, every cybersecurity concern, every data management question gets answered by a working machine that stakeholders can actually inspect, rather than a document they are asked to approve on faith.
-
-The Faculty of Business and Law trains the next generation of business leaders. Those leaders will work in organisations shaped by AI. Giving all of our students, not just the ones who can afford it, the tools and the critical thinking skills to engage with AI on their own terms is not a technology project. It is a statement about what this Faculty believes.
+The software stack is already proven: SoMM has run a version of this service for two years across six units. What is missing is the hardware to run the larger models that match commercial tools in quality. This proposal funds that hardware and a structured proof of concept.
 
 ---
 
