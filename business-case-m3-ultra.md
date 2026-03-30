@@ -75,12 +75,12 @@ The server would host several services accessible to students on the Curtin netw
 | Service | What It Means for Students |
 |---|---|
 | **AI Chat** | A chat experience comparable to ChatGPT or Claude, with the ability to search the web and cite sources. Designed to encourage critical thinking rather than passive use |
-| **Voice Interaction** | Speak to the system and hear responses. Fully local -- no audio data leaves the machine |
+| **Voice Interaction** | Speak to the system and hear responses. Fully local. No audio data leaves the machine |
 | **Research and Notes** | An AI-powered environment for reading, annotating, and synthesising sources. Can generate audio summaries from research notes |
 | **Image Generation** | Generate images for presentations, projects, and creative work. Multiple quality levels from quick drafts to high resolution |
 | **Coding Assistance** | AI-assisted coding for Information Systems students, integrated directly into their development tools |
 | **Unit Assistants** | AI support embedded directly within Blackboard, tailored to specific unit content. A student asking about ISYS6020 gets answers grounded in ISYS6020 materials, not generic responses |
-| **Rehearsal Environments** | AI-populated simulated organisations where students practise professional skills -- conducting audits, interviewing stakeholders, handling client negotiations -- before the stakes are real |
+| **Rehearsal Environments** | AI-populated simulated organisations where students practise professional skills (audits, interviews, client negotiations) before the stakes are real |
 | **Productivity Tools** | PDF tools (merge, split, annotate), collaborative whiteboard for group work, and a citation checker that catches referencing errors before submission |
 | **API Access** | For students in technical units who are building their own applications as part of assessed work |
 
@@ -294,22 +294,22 @@ If demand grows beyond comfortable capacity, there are straightforward options: 
 
 ## From Working Prototype to Proof of Concept
 
-The software stack is not theoretical. The School of Marketing and Management already operates a working prototype on consumer-grade hardware. The full service stack -- AI chat, voice interaction, image generation, unit assistants, research tools, and productivity tools -- is running today and accessible for one to two concurrent users.
+The software stack is not theoretical. The School of Marketing and Management already operates a working prototype on consumer-grade hardware. The full service stack is running today and accessible for one to two concurrent users. This includes AI chat, voice interaction, image generation, unit assistants, research tools, and productivity tools.
 
 The prototype demonstrates that:
 
 - The full service stack works end-to-end
 - The software configuration is stable and reproducible
 - No data leaves the machine, verifiable by inspection
-- The architecture scales -- the same software runs identically on more powerful hardware
+- The architecture scales: the same software runs identically on more powerful hardware
 
 What the prototype *cannot* demonstrate is the quality gap. The small AI models that fit on consumer hardware are useful for many tasks, but they are visibly weaker than the commercial frontier tools students are paying for. A 4-billion-parameter model running on a gaming GPU is not the same experience as ChatGPT Plus or Claude Pro. It is good enough to prove the architecture; it is not good enough to close the equity gap.
 
 That is what the M3 Ultra proof of concept is for.
 
-With 256 GB of memory per machine, the M3 Ultra can run the largest openly available AI models -- the same class of models that power the commercial tools. The proof of concept answers the question the prototype cannot: **are open-source models, running locally on hardware the University owns, genuinely comparable to the commercial services students are currently paying for?**
+With 256 GB of memory per machine, the M3 Ultra can run the largest openly available AI models, the same class of models that power the commercial tools. The proof of concept answers the question the prototype cannot: **are open-source models, running locally on hardware the University owns, genuinely comparable to the commercial services students are currently paying for?**
 
-If the answer is yes -- and the existing evidence strongly suggests it will be -- the path to Faculty-wide deployment is straightforward. If it is not, the investment is two machines, not a multi-year commitment.
+If the answer is yes, and the existing evidence strongly suggests it will be, the path to Faculty-wide deployment is straightforward. If it is not, the investment is two machines, not a multi-year commitment.
 
 A structured proof of concept period of eight to twelve weeks, with a student cohort from the School of Marketing and Management, would produce the usage data, quality comparisons, student feedback, and acceptable use framework needed to support a Faculty-wide deployment decision.
 
@@ -358,7 +358,7 @@ If the proof of concept succeeds, the invitation to DTS, to IT governance, and t
 ## Next Steps
 
 1. Approve funding for two M3 Ultra machines (~AUD $18,000–22,000)
-2. Deploy the proven software stack on the new hardware (days, not months -- the software is ready)
+2. Deploy the proven software stack on the new hardware (days, not months; the software is ready)
 3. Run a structured proof of concept with a student cohort from SoMM (eight to twelve weeks)
 4. Compile usage data, quality comparisons, student feedback, and acceptable use framework
 5. Present evidence-based case for Faculty-wide deployment
