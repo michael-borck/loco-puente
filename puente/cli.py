@@ -462,6 +462,59 @@ def connect():
     console.print()
 
 
+# -- portal --------------------------------------------------------------------
+
+
+@app.command()
+def portal(
+    host: str = typer.Option("localhost", help="Hostname or IP for service URLs"),
+    serve: bool = typer.Option(False, help="Add a portal container to docker-compose"),
+    port: int = typer.Option(8080, help="Port for the portal (when using --serve)"),
+):
+    """Generate a service launcher page from your config."""
+    from puente.portal import write_portal
+
+    config = _require_config()
+    data_dir = config.resolved_data_dir()
+
+    # Auto-detect host IP if "localhost"
+    if host == "localhost":
+        import socket
+        try:
+            hostname = socket.gethostname()
+            detected = socket.gethostbyname(hostname)
+            if detected != "127.0.0.1":
+                host = detected
+        except socket.gaierror:
+            pass
+
+    portal_path = write_portal(config, host)
+    console.print(f"[green]Portal generated:[/green] {portal_path}")
+
+    if serve:
+        # Add portal nginx container to compose
+        compose_path = data_dir / "docker-compose.yml"
+        if compose_path.exists():
+            import yaml
+            compose_data = yaml.safe_load(compose_path.read_text()) or {}
+            compose_data.setdefault("services", {})
+            compose_data["services"]["portal"] = {
+                "image": "nginx:alpine",
+                "container_name": "puente-portal",
+                "ports": [f"{port}:80"],
+                "volumes": [f"{data_dir}/portal:/usr/share/nginx/html:ro"],
+                "restart": "unless-stopped",
+            }
+            compose_path.write_text(yaml.dump(compose_data, default_flow_style=False, sort_keys=False))
+            console.print(f"[green]Portal container added to docker-compose.yml (port {port})[/green]")
+            console.print(f"  Run [bold cyan]puente up[/bold cyan] to start it.")
+    else:
+        console.print(f"\n  Open the file directly: file://{portal_path}")
+        console.print(f"  Or use [bold]--serve[/bold] to add an nginx container to your stack.")
+
+    console.print()
+
+
 # -- version -------------------------------------------------------------------
 
 
