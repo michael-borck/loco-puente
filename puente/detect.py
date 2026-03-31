@@ -82,7 +82,7 @@ def detect_all() -> list[ExistingInstall]:
         "vane": ("vane", 3005),
         "anythingllm": ("anythingllm", 3001),
         "speaches": ("speaches", 8000),
-        "open-notebook": ("open-notebook", 8080),
+        "open-notebook": ("open-notebook", 8502),
         "stirling-pdf": ("stirling", 8089),
         "searxng": ("searxng", 8888),
         "excalidraw": ("excalidraw", 3333),

@@ -55,7 +55,7 @@ class StackConfig(BaseModel):
         default_factory=lambda: ServiceConfig(port=3001, enabled=False)
     )
     open_notebook: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=8080, enabled=False)
+        default_factory=lambda: ServiceConfig(port=8502, enabled=False)
     )
     stirling_pdf: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=8089, enabled=False)
