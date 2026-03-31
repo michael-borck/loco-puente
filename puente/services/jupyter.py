@@ -12,7 +12,7 @@ from .base import ServiceBase
 class JupyterService(ServiceBase):
     name = "jupyter"
     description = "Browser-based Python notebook (JupyterLab)"
-    default_port = 8888
+    default_port = 8899
     install_method = "docker"
     docker_image = "jupyter/minimal-notebook:latest"
     requires_gpu = False

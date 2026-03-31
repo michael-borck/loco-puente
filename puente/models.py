@@ -67,7 +67,7 @@ class StackConfig(BaseModel):
         default_factory=lambda: ServiceConfig(port=3010, enabled=False)
     )
     jupyter: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=8888, enabled=False)
+        default_factory=lambda: ServiceConfig(port=8899, enabled=False)
     )
 
 
