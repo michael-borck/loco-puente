@@ -19,7 +19,13 @@ class ComfyUIService(ServiceBase):
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
-        env = {"USE_UV": "true"}
+        env = {
+            "USE_UV": "true",
+            "WANTED_UID": "1000",
+            "WANTED_GID": "1000",
+            "BASE_DIRECTORY": "/basedir",
+            "SECURITY_LEVEL": "normal",
+        }
         env.update(config.environment)
 
         fragment: dict[str, Any] = {
@@ -28,8 +34,8 @@ class ComfyUIService(ServiceBase):
                 "container_name": "puente-comfyui",
                 "ports": [f"{port}:8188"],
                 "volumes": [
-                    f"{data_dir}/comfyui-run:/comfyui-run",
-                    f"{data_dir}/comfyui-basedir:/comfyui-basedir",
+                    f"{data_dir}/comfyui-run:/comfy/mnt",
+                    f"{data_dir}/comfyui-basedir:/basedir",
                 ],
                 "environment": env,
                 "restart": "unless-stopped",
