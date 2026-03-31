@@ -14,7 +14,7 @@ class SpeachesService(ServiceBase):
     description = "Voice: speech-to-text (Whisper) and text-to-speech (Kokoro)"
     default_port = 8000
     install_method = "docker"
-    docker_image = "ghcr.io/speaches-ai/speaches:latest"
+    docker_image = "ghcr.io/speaches-ai/speaches:latest-cuda"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:

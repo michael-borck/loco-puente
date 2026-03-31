@@ -14,7 +14,7 @@ class OpenNotebookService(ServiceBase):
     description = "Research assistant (PDF ingestion, notes, podcast generation)"
     default_port = 8080
     install_method = "docker"
-    docker_image = "lfnovo/open-notebook:latest"
+    docker_image = "lfnovo/open_notebook:v1-latest-single"
     requires_gpu = False
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
