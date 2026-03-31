@@ -91,7 +91,7 @@ def init():
         is_existing = any(e.service == svc_name.replace("_", "-") or e.service == svc_name for e in existing)
 
         if is_existing:
-            marker = " [dim](already installed)[/dim]"
+            marker = " (already installed)"
         else:
             marker = ""
 

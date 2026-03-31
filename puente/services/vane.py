@@ -12,7 +12,7 @@ from .base import ServiceBase
 class VaneService(ServiceBase):
     name = "vane"
     description = "Cited AI web search (Perplexity-style, formerly Perplexica)"
-    default_port = 3001
+    default_port = 3005
     install_method = "docker"
     docker_image = "itzcrazykns1337/vane:slim-latest"
     requires_gpu = False

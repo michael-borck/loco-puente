@@ -49,7 +49,7 @@ class StackConfig(BaseModel):
         default_factory=lambda: ServiceConfig(port=8888)
     )
     vane: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=3001, enabled=False)
+        default_factory=lambda: ServiceConfig(port=3005, enabled=False)
     )
     anythingllm: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3002, enabled=False)
