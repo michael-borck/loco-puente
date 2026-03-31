@@ -317,6 +317,10 @@ def status():
     table.add_column("Managed")
 
     for svc_name, svc_class in ALL_SERVICES.items():
+        # Skip generic Ollama row — instances are shown separately below
+        if svc_name == "ollama":
+            continue
+
         svc_config = getattr(config.services, svc_name, None)
         if svc_config is None or not svc_config.enabled:
             continue
