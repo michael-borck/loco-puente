@@ -42,7 +42,7 @@ class StackConfig(BaseModel):
     )
     comfyui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(
-            port=8188, install_method="native", enabled=False
+            port=8188, install_method="docker", enabled=False
         )
     )
     searxng: ServiceConfig = Field(
