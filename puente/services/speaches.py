@@ -40,7 +40,7 @@ class SpeachesService(ServiceBase):
                             {
                                 "driver": "nvidia",
                                 "device_ids": [str(config.gpu)],
-                                "capabilities": [["gpu"]],
+                                "capabilities": ["gpu"],
                             }
                         ]
                     }
