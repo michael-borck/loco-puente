@@ -55,7 +55,7 @@ STUDENT_SERVICES = {
     },
     "tools": {
         "label": "Tools",
-        "services": ["searxng", "stirling_pdf", "excalidraw", "citesight", "jupyter"],
+        "services": ["stirling_pdf", "excalidraw", "citesight"],
     },
 }
 
@@ -67,7 +67,11 @@ BACKEND_SERVICES = {
     },
     "backends": {
         "label": "Backend Services",
-        "services": ["speaches", "comfyui", "anythingllm", "searxng"],
+        "services": ["speaches", "comfyui", "anythingllm"],
+    },
+    "power_tools": {
+        "label": "Power Tools",
+        "services": ["searxng", "jupyter"],
     },
 }
 
