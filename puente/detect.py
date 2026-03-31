@@ -80,7 +80,7 @@ def detect_all() -> list[ExistingInstall]:
     docker_services = {
         "open-webui": ("open-webui", 3000),
         "vane": ("vane", 3005),
-        "anythingllm": ("anythingllm", 3002),
+        "anythingllm": ("anythingllm", 3001),
         "speaches": ("speaches", 8000),
         "open-notebook": ("open-notebook", 8080),
         "stirling-pdf": ("stirling", 8089),

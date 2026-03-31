@@ -12,7 +12,7 @@ from .base import ServiceBase
 class AnythingLLMService(ServiceBase):
     name = "anythingllm"
     description = "RAG chatbots (embeds in Blackboard, per-unit workspaces)"
-    default_port = 3002
+    default_port = 3001
     install_method = "docker"
     docker_image = "mintplexlabs/anythingllm:latest"
     requires_gpu = False
