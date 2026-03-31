@@ -38,6 +38,9 @@ SERVICE_META = {
     "searxng": ("🌐", "Web Search", "Private search engine"),
     "citesight": ("📝", "Citation Checker", "Verify references and writing quality"),
     "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
+    "talkbuddy": ("🗣️", "TalkBuddy", "Conversation practice partner"),
+    "studybuddy": ("🎓", "StudyBuddy", "AI-powered study companion"),
+    "careercompass": ("🧭", "CareerCompass", "Career guidance and planning"),
 }
 
 # Student-facing portal: what users see
@@ -49,6 +52,10 @@ STUDENT_SERVICES = {
     "tools": {
         "label": "Tools",
         "services": ["searxng", "stirling_pdf", "excalidraw", "citesight", "jupyter"],
+    },
+    "learning": {
+        "label": "Learning",
+        "services": ["talkbuddy", "studybuddy", "careercompass"],
     },
 }
 
@@ -65,8 +72,23 @@ BACKEND_SERVICES = {
 }
 
 
+# External apps — not in the stack, just portal links
+EXTERNAL_APPS = {
+    "talkbuddy": "https://talkbuddy.borck.education",
+    "studybuddy": "https://studybuddy.borck.education",
+    "careercompass": "https://careercompass.borck.education",
+}
+
+
 def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalService | None:
     """Build a PortalService for a given service name."""
+    # External apps (not in the stack)
+    if svc_name in EXTERNAL_APPS:
+        icon, display_name, desc = SERVICE_META.get(svc_name, ("🔧", svc_name, ""))
+        return PortalService(
+            name=display_name, icon=icon, description=desc, url=EXTERNAL_APPS[svc_name],
+        )
+
     if svc_name == "ollama":
         # Special case: show Ollama instances
         if not config.services.ollama.enabled:
