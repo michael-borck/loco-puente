@@ -19,6 +19,8 @@ def generate_compose(config: PuenteConfig) -> dict:
         svc_config = getattr(config.services, svc_name, None)
         if svc_config is None or not svc_config.enabled:
             continue
+        if not svc_config.managed:
+            continue
         if svc_config.install_method != "docker":
             continue
 
