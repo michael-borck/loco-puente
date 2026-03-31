@@ -9,10 +9,10 @@ from .excalidraw import ExcalidrawService
 from .ollama import OllamaService
 from .open_notebook import OpenNotebookService
 from .open_webui import OpenWebUIService
-from .perplexica import PerplexicaService
 from .searxng import SearXNGService
 from .speaches import SpeachesService
 from .stirling_pdf import StirlingPDFService
+from .vane import VaneService
 
 ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "ollama": OllamaService,
@@ -20,7 +20,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "speaches": SpeachesService,
     "comfyui": ComfyUIService,
     "searxng": SearXNGService,
-    "perplexica": PerplexicaService,
+    "vane": VaneService,
     "anythingllm": AnythingLLMService,
     "open_notebook": OpenNotebookService,
     "stirling_pdf": StirlingPDFService,

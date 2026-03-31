@@ -41,7 +41,7 @@ DISPLAY_NAMES = {
     "speaches": "Speaches",
     "comfyui": "ComfyUI",
     "searxng": "SearXNG",
-    "perplexica": "Perplexica",
+    "vane": "Vane (AI Search)",
     "anythingllm": "AnythingLLM",
     "open_notebook": "Open Notebook AI",
     "stirling_pdf": "Stirling PDF",
@@ -175,6 +175,87 @@ def init():
     _print_config_summary(config)
 
     console.print(f"\nRun [bold cyan]puente up[/bold cyan] to start your stack.")
+
+
+# -- install -------------------------------------------------------------------
+
+
+@app.command()
+def install():
+    """Install native services (Ollama, models, ComfyUI) and pull Docker images."""
+    config = _require_config()
+    data_dir = config.resolved_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # -- Ollama --
+    if config.services.ollama.enabled and config.services.ollama.managed:
+        from puente.detect import check_binary, check_systemd
+
+        if check_binary("ollama"):
+            console.print("[green]Ollama already installed[/green]")
+        else:
+            console.print("[cyan]Installing Ollama...[/cyan]")
+            result = subprocess.run(
+                ["bash", "-c", "curl -fsSL https://ollama.com/install.sh | sh"],
+                capture_output=False,
+            )
+            if result.returncode == 0:
+                console.print("[green]Ollama installed[/green]")
+            else:
+                console.print("[red]Ollama install failed[/red]")
+
+        # Ensure Ollama is running before pulling models
+        if not check_systemd("ollama"):
+            console.print("[cyan]Starting Ollama service...[/cyan]")
+            subprocess.run(["sudo", "systemctl", "enable", "--now", "ollama"], capture_output=False)
+
+        # Pull models
+        for inst in config.services.ollama.instances:
+            for model in inst.models:
+                console.print(f"[cyan]Pulling model: {model}...[/cyan]")
+                subprocess.run(["ollama", "pull", model], capture_output=False)
+
+    # -- Docker images (pre-pull) --
+    console.print("\n[cyan]Pulling Docker images...[/cyan]")
+    for svc_name, svc_class in ALL_SERVICES.items():
+        svc_config = getattr(config.services, svc_name, None)
+        if svc_config is None or not svc_config.enabled:
+            continue
+        if svc_config.install_method != "docker":
+            continue
+
+        svc = svc_class()
+        if svc.docker_image:
+            console.print(f"  Pulling {svc.docker_image}...")
+            subprocess.run(["docker", "pull", svc.docker_image], capture_output=False)
+
+    # -- SearXNG config (needs JSON format enabled for Vane) --
+    if config.services.searxng.enabled:
+        searxng_dir = data_dir / "searxng"
+        settings_file = searxng_dir / "settings.yml"
+        if not settings_file.exists():
+            console.print("[cyan]Creating SearXNG config (JSON format enabled)...[/cyan]")
+            searxng_dir.mkdir(parents=True, exist_ok=True)
+            settings_file.write_text(
+                "use_default_settings: true\n"
+                "\n"
+                "search:\n"
+                "  formats:\n"
+                "    - html\n"
+                "    - json\n"
+                "\n"
+                "server:\n"
+                "  secret_key: puente-searxng-secret\n"
+                "  limiter: false\n"
+            )
+            console.print("[green]SearXNG config written[/green]")
+
+    # -- Generate docker-compose.yml --
+    compose_path = data_dir / "docker-compose.yml"
+    write_compose(config, compose_path)
+    console.print(f"\n[green]docker-compose.yml written to {compose_path}[/green]")
+
+    console.print("\n[bold]Install complete.[/bold] Run [bold cyan]puente up[/bold cyan] to start.")
 
 
 # -- up / down -----------------------------------------------------------------

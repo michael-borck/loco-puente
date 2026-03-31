@@ -11,7 +11,7 @@ from .base import ServiceBase
 
 class SearXNGService(ServiceBase):
     name = "searxng"
-    description = "Private web search (serves Open WebUI and Perplexica)"
+    description = "Private web search (serves Open WebUI and Vane)"
     default_port = 8888
     install_method = "docker"
     docker_image = "searxng/searxng:latest"

@@ -48,7 +48,7 @@ class StackConfig(BaseModel):
     searxng: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=8888)
     )
-    perplexica: ServiceConfig = Field(
+    vane: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3001, enabled=False)
     )
     anythingllm: ServiceConfig = Field(
