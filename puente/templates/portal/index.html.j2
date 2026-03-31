@@ -77,7 +77,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.25rem;
       width: 100%;
     }
@@ -124,6 +124,7 @@
 
     @media (max-width: 600px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
+      .header h1 { font-size: 1.5rem; }
     }
   </style>
 </head>

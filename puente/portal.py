@@ -49,13 +49,13 @@ STUDENT_SERVICES = {
         "label": "AI",
         "services": ["open_webui", "vane", "open_notebook"],
     },
-    "tools": {
-        "label": "Tools",
-        "services": ["searxng", "stirling_pdf", "excalidraw", "citesight", "jupyter"],
-    },
     "learning": {
         "label": "Learning",
         "services": ["talkbuddy", "studybuddy", "careercompass"],
+    },
+    "tools": {
+        "label": "Tools",
+        "services": ["searxng", "stirling_pdf", "excalidraw", "citesight", "jupyter"],
     },
 }
 
