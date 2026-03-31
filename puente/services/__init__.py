@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from .anythingllm import AnythingLLMService
 from .base import ServiceBase
+from .citesight import CiteSightService
 from .comfyui import ComfyUIService
 from .excalidraw import ExcalidrawService
+from .jupyter import JupyterService
 from .ollama import OllamaService
 from .open_notebook import OpenNotebookService
 from .open_webui import OpenWebUIService
@@ -25,4 +27,6 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "open_notebook": OpenNotebookService,
     "stirling_pdf": StirlingPDFService,
     "excalidraw": ExcalidrawService,
+    "citesight": CiteSightService,
+    "jupyter": JupyterService,
 }

@@ -63,6 +63,12 @@ class StackConfig(BaseModel):
     excalidraw: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3333, enabled=False)
     )
+    citesight: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=3010, enabled=False)
+    )
+    jupyter: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=8888, enabled=False)
+    )
 
 
 class PuenteConfig(BaseModel):

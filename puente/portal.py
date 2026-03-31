@@ -1,4 +1,4 @@
-"""Portal page generator — creates a service launcher from puente.yml."""
+"""Portal page generator — creates service launcher pages from puente.yml."""
 
 from __future__ import annotations
 
@@ -19,6 +19,12 @@ class PortalService:
     url: str
 
 
+@dataclass
+class PortalSection:
+    label: str
+    services: list[PortalService]
+
+
 # Icons and descriptions for the portal cards
 SERVICE_META = {
     "open_webui": ("💬", "AI Chat", "Chat, voice, images, web search"),
@@ -30,56 +36,124 @@ SERVICE_META = {
     "stirling_pdf": ("📄", "PDF Tools", "Merge, split, OCR, convert"),
     "excalidraw": ("✏️", "Whiteboard", "Collaborative diagrams"),
     "searxng": ("🌐", "Web Search", "Private search engine"),
+    "citesight": ("📝", "Citation Checker", "Verify references and writing quality"),
+    "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
+}
+
+# Student-facing portal: what users see
+STUDENT_SERVICES = {
+    "ai": {
+        "label": "AI",
+        "services": ["open_webui", "vane", "open_notebook"],
+    },
+    "tools": {
+        "label": "Tools",
+        "services": ["searxng", "stirling_pdf", "excalidraw", "citesight", "jupyter"],
+    },
+}
+
+# Backend portal: admin/infrastructure services
+BACKEND_SERVICES = {
+    "inference": {
+        "label": "Inference",
+        "services": ["ollama"],
+    },
+    "backends": {
+        "label": "Backend Services",
+        "services": ["speaches", "comfyui", "anythingllm", "searxng"],
+    },
 }
 
 
-def collect_services(config: PuenteConfig, host: str = "localhost") -> list[PortalService]:
-    """Build a list of enabled services with their portal URLs."""
-    services = []
-
-    for svc_name, svc_class in ALL_SERVICES.items():
-        if svc_name == "ollama":
-            continue  # Ollama is a backend, not user-facing
-
-        svc_config = getattr(config.services, svc_name, None)
-        if svc_config is None or not svc_config.enabled:
-            continue
-
-        icon, display_name, desc = SERVICE_META.get(
-            svc_name, ("🔧", svc_name, "")
+def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalService | None:
+    """Build a PortalService for a given service name."""
+    if svc_name == "ollama":
+        # Special case: show Ollama instances
+        if not config.services.ollama.enabled:
+            return None
+        ports = [str(i.port) for i in config.services.ollama.instances]
+        return PortalService(
+            name="Ollama",
+            icon="🧠",
+            description=f"LLM inference (ports {', '.join(ports)})",
+            url=f"http://{host}:{config.services.ollama.instances[0].port}",
         )
-        port = svc_config.port or svc_class.default_port
-        url = f"http://{host}:{port}"
 
-        services.append(PortalService(
-            name=display_name,
-            icon=icon,
-            description=desc,
-            url=url,
-        ))
+    svc_config = getattr(config.services, svc_name, None)
+    if svc_config is None or not svc_config.enabled:
+        return None
 
-    return services
+    svc_class = ALL_SERVICES.get(svc_name)
+    if not svc_class:
+        return None
+
+    icon, display_name, desc = SERVICE_META.get(svc_name, ("🔧", svc_name, ""))
+    port = svc_config.port or svc_class.default_port
+    url = f"http://{host}:{port}"
+
+    return PortalService(name=display_name, icon=icon, description=desc, url=url)
 
 
-def generate_portal(config: PuenteConfig, host: str = "localhost") -> str:
-    """Render the portal HTML from the Jinja2 template."""
-    services = collect_services(config, host)
+def collect_sections(
+    config: PuenteConfig, host: str, layout: dict[str, dict]
+) -> list[PortalSection]:
+    """Build sections of services for a portal view."""
+    sections = []
+    for section_info in layout.values():
+        svcs = []
+        for svc_name in section_info["services"]:
+            svc = _build_service(svc_name, config, host)
+            if svc:
+                svcs.append(svc)
+        if svcs:
+            sections.append(PortalSection(label=section_info["label"], services=svcs))
+    return sections
+
+
+def generate_portal(
+    config: PuenteConfig,
+    host: str = "localhost",
+    variant: str = "student",
+) -> str:
+    """Render a portal HTML page."""
+    layout = STUDENT_SERVICES if variant == "student" else BACKEND_SERVICES
+    sections = collect_sections(config, host, layout)
+
+    if variant == "student":
+        title = "LocoPuente"
+        subtitle = "Local AI services. All data stays on this machine."
+    else:
+        title = "LocoPuente — Backend"
+        subtitle = "Infrastructure and backend services."
 
     templates_dir = Path(__file__).parent / "templates" / "portal"
     env = Environment(loader=FileSystemLoader(str(templates_dir)))
     template = env.get_template("index.html.j2")
 
     return template.render(
-        machine_name="LocoPuente",
-        services=services,
+        machine_name=title,
+        subtitle=subtitle,
+        sections=sections,
     )
 
 
-def write_portal(config: PuenteConfig, host: str = "localhost", output_dir: Path | None = None) -> Path:
-    """Generate and write the portal index.html."""
-    html = generate_portal(config, host)
+def write_portal(
+    config: PuenteConfig,
+    host: str = "localhost",
+    output_dir: Path | None = None,
+) -> Path:
+    """Generate and write both portal pages."""
     out_dir = output_dir or config.resolved_data_dir() / "portal"
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / "index.html"
-    path.write_text(html)
-    return path
+
+    # Student portal (default)
+    student_html = generate_portal(config, host, "student")
+    (out_dir / "index.html").write_text(student_html)
+
+    # Backend portal
+    backend_html = generate_portal(config, host, "backend")
+    backend_dir = out_dir / "backend"
+    backend_dir.mkdir(parents=True, exist_ok=True)
+    (backend_dir / "index.html").write_text(backend_html)
+
+    return out_dir

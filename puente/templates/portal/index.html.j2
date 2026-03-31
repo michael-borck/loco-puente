@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ machine_name }} — Local AI Services</title>
+  <title>{{ machine_name }}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛩️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,6 @@
       --text-secondary: #9a9a9e;
       --text-muted: #5e5e63;
       --accent: #f43f5e;
-      --accent-glow: rgba(244, 63, 94, 0.15);
       --border: #1e1e23;
       --border-light: #2a2a30;
       --font-mono: 'JetBrains Mono', monospace;
@@ -47,7 +46,7 @@
 
     .header {
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
     }
     .header h1 {
       font-family: var(--font-mono);
@@ -61,11 +60,25 @@
       font-size: 0.95rem;
     }
 
+    .section {
+      max-width: 900px;
+      width: 100%;
+      margin-bottom: 2.5rem;
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+      padding-left: 0.25rem;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 1.25rem;
-      max-width: 900px;
       width: 100%;
     }
 
@@ -101,7 +114,7 @@
     }
 
     .footer {
-      margin-top: 3rem;
+      margin-top: 1rem;
       text-align: center;
       color: var(--text-muted);
       font-size: 0.8rem;
@@ -117,18 +130,23 @@
 <body>
   <div class="header">
     <h1><span class="accent">⛩️</span> {{ machine_name }}</h1>
-    <p>Local AI services. All data stays on this machine.</p>
+    <p>{{ subtitle }}</p>
   </div>
 
-  <div class="grid">
-    {% for svc in services %}
-    <a href="{{ svc.url }}" class="card" target="_blank" rel="noopener">
-      <div class="card-icon">{{ svc.icon }}</div>
-      <div class="card-name">{{ svc.name }}</div>
-      <div class="card-desc">{{ svc.description }}</div>
-    </a>
-    {% endfor %}
+  {% for section in sections %}
+  <div class="section">
+    <div class="section-label">{{ section.label }}</div>
+    <div class="grid">
+      {% for svc in section.services %}
+      <a href="{{ svc.url }}" class="card" target="_blank" rel="noopener">
+        <div class="card-icon">{{ svc.icon }}</div>
+        <div class="card-name">{{ svc.name }}</div>
+        <div class="card-desc">{{ svc.description }}</div>
+      </a>
+      {% endfor %}
+    </div>
   </div>
+  {% endfor %}
 
   <div class="footer">
     Powered by <a href="https://locopuente.org">LocoPuente</a> — privacy-first local AI
