@@ -179,7 +179,7 @@
   <div class="content">
     {% for view in views %}
     {% for section in view.sections %}
-    <div class="section{% if loop.parent.loop.first %} visible{% endif %}" data-view="{{ view.id }}">
+    <div class="section{% if view.id == views[0].id %} visible{% endif %}" data-view="{{ view.id }}">
       {% if section.label %}
       <div class="section-label">{{ section.label }}</div>
       {% endif %}
