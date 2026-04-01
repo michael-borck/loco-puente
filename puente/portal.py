@@ -1,8 +1,8 @@
-"""Portal page generator — creates service launcher pages from puente.yml."""
+"""Portal page generator — creates a service launcher from puente.yml."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -25,6 +25,13 @@ class PortalSection:
     services: list[PortalService]
 
 
+@dataclass
+class PortalView:
+    id: str
+    label: str
+    sections: list[PortalSection] = field(default_factory=list)
+
+
 # Icons and descriptions for the portal cards
 SERVICE_META = {
     "open_webui": ("💬", "AI Chat", "Chat, voice, images, web search"),
@@ -43,58 +50,51 @@ SERVICE_META = {
     "careercompass": ("🧭", "CareerCompass", "Career guidance and planning"),
 }
 
-# Student-facing portal: what users see
-STUDENT_SERVICES = {
-    "ai": {
-        "label": "AI",
-        "services": ["open_webui", "vane", "open_notebook"],
-    },
-    "learning": {
-        "label": "Learning",
-        "services": ["talkbuddy", "studybuddy", "careercompass"],
-    },
-    "tools": {
-        "label": "Tools",
-        "services": ["stirling_pdf", "excalidraw", "citesight"],
-    },
-}
-
-# Backend portal: admin/infrastructure services
-BACKEND_SERVICES = {
-    "inference": {
-        "label": "Inference",
-        "services": ["ollama"],
-    },
-    "backends": {
-        "label": "Backend Services",
-        "services": ["speaches", "comfyui", "anythingllm"],
-    },
-    "power_tools": {
-        "label": "Power Tools",
-        "services": ["searxng", "jupyter"],
-    },
-}
-
-
-# External apps — not in the stack, just portal links
+# External apps (not in the stack, just portal links)
 EXTERNAL_APPS = {
     "talkbuddy": "https://talkbuddy.borck.education",
     "studybuddy": "https://studybuddy.borck.education",
     "careercompass": "https://careercompass.borck.education",
 }
 
+# View definitions
+VIEWS = {
+    "poc": {
+        "label": "PoC",
+        "sections": [
+            {"label": "", "services": ["open_webui", "vane", "open_notebook"]},
+        ],
+    },
+    "student": {
+        "label": "Student",
+        "sections": [
+            {"label": "AI", "services": ["open_webui", "vane", "open_notebook"]},
+            {"label": "Learning", "services": ["talkbuddy", "studybuddy", "careercompass"]},
+            {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
+        ],
+    },
+    "backend": {
+        "label": "Backend",
+        "sections": [
+            {"label": "Inference", "services": ["ollama"]},
+            {"label": "Backend Services", "services": ["speaches", "comfyui", "anythingllm"]},
+            {"label": "Power Tools", "services": ["searxng", "jupyter"]},
+        ],
+    },
+}
+
 
 def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalService | None:
     """Build a PortalService for a given service name."""
-    # External apps (not in the stack)
+    # External apps
     if svc_name in EXTERNAL_APPS:
         icon, display_name, desc = SERVICE_META.get(svc_name, ("🔧", svc_name, ""))
         return PortalService(
             name=display_name, icon=icon, description=desc, url=EXTERNAL_APPS[svc_name],
         )
 
+    # Ollama (special case)
     if svc_name == "ollama":
-        # Special case: show Ollama instances
         if not config.services.ollama.enabled:
             return None
         ports = [str(i.port) for i in config.services.ollama.instances]
@@ -105,6 +105,7 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
             url=f"http://{host}:{config.services.ollama.instances[0].port}",
         )
 
+    # Stack services
     svc_config = getattr(config.services, svc_name, None)
     if svc_config is None or not svc_config.enabled:
         return None
@@ -120,46 +121,36 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
     return PortalService(name=display_name, icon=icon, description=desc, url=url)
 
 
-def collect_sections(
-    config: PuenteConfig, host: str, layout: dict[str, dict]
-) -> list[PortalSection]:
-    """Build sections of services for a portal view."""
-    sections = []
-    for section_info in layout.values():
-        svcs = []
-        for svc_name in section_info["services"]:
-            svc = _build_service(svc_name, config, host)
-            if svc:
-                svcs.append(svc)
-        if svcs:
-            sections.append(PortalSection(label=section_info["label"], services=svcs))
-    return sections
+def build_views(config: PuenteConfig, host: str) -> list[PortalView]:
+    """Build all portal views with their sections and services."""
+    views = []
+    for view_id, view_def in VIEWS.items():
+        sections = []
+        for section_def in view_def["sections"]:
+            svcs = []
+            for svc_name in section_def["services"]:
+                svc = _build_service(svc_name, config, host)
+                if svc:
+                    svcs.append(svc)
+            if svcs:
+                sections.append(PortalSection(label=section_def["label"], services=svcs))
+        if sections:
+            views.append(PortalView(id=view_id, label=view_def["label"], sections=sections))
+    return views
 
 
-def generate_portal(
-    config: PuenteConfig,
-    host: str = "localhost",
-    variant: str = "student",
-) -> str:
-    """Render a portal HTML page."""
-    layout = STUDENT_SERVICES if variant == "student" else BACKEND_SERVICES
-    sections = collect_sections(config, host, layout)
-
-    if variant == "student":
-        title = "LocoPuente"
-        subtitle = "Local AI services. All data stays on this machine."
-    else:
-        title = "LocoPuente — Backend"
-        subtitle = "Infrastructure and backend services."
+def generate_portal(config: PuenteConfig, host: str = "localhost") -> str:
+    """Render the portal HTML."""
+    views = build_views(config, host)
 
     templates_dir = Path(__file__).parent / "templates" / "portal"
     env = Environment(loader=FileSystemLoader(str(templates_dir)))
     template = env.get_template("index.html.j2")
 
     return template.render(
-        machine_name=title,
-        subtitle=subtitle,
-        sections=sections,
+        title="Closing the Gap",
+        subtitle="Local AI. All data stays on this machine.",
+        views=views,
     )
 
 
@@ -168,18 +159,18 @@ def write_portal(
     host: str = "localhost",
     output_dir: Path | None = None,
 ) -> Path:
-    """Generate and write both portal pages."""
+    """Generate and write the portal page."""
     out_dir = output_dir or config.resolved_data_dir() / "portal"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Student portal (default)
-    student_html = generate_portal(config, host, "student")
-    (out_dir / "index.html").write_text(student_html)
+    html = generate_portal(config, host)
+    path = out_dir / "index.html"
+    path.write_text(html)
 
-    # Backend portal
-    backend_html = generate_portal(config, host, "backend")
+    # Clean up old backend subdirectory if it exists
     backend_dir = out_dir / "backend"
-    backend_dir.mkdir(parents=True, exist_ok=True)
-    (backend_dir / "index.html").write_text(backend_html)
+    if backend_dir.exists():
+        import shutil
+        shutil.rmtree(backend_dir)
 
     return out_dir

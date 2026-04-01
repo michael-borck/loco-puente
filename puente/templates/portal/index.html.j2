@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ machine_name }}</title>
+  <title>{{ title }}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛩️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +17,7 @@
       --text-secondary: #9a9a9e;
       --text-muted: #5e5e63;
       --accent: #f43f5e;
+      --accent-glow: rgba(244, 63, 94, 0.15);
       --border: #1e1e23;
       --border-light: #2a2a30;
       --font-mono: 'JetBrains Mono', monospace;
@@ -31,7 +32,7 @@
       color: var(--text-primary);
       min-height: 100vh;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center;
       padding: 2rem;
     }
 
@@ -46,7 +47,8 @@
 
     .header {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-top: 3rem;
+      margin-bottom: 1.5rem;
     }
     .header h1 {
       font-family: var(--font-mono);
@@ -60,11 +62,44 @@
       font-size: 0.95rem;
     }
 
-    .section {
-      max-width: 900px;
-      width: 100%;
+    /* Filter buttons */
+    .filters {
+      display: flex;
+      gap: 0.5rem;
       margin-bottom: 2.5rem;
     }
+    .filter-btn {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      border: 1px solid var(--border-light);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+    .filter-btn.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .content {
+      max-width: 740px;
+      width: 100%;
+    }
+
+    .section {
+      margin-bottom: 2.5rem;
+      display: none;
+    }
+    .section.visible { display: block; }
+
     .section-label {
       font-family: var(--font-mono);
       font-size: 0.7rem;
@@ -114,7 +149,7 @@
     }
 
     .footer {
-      margin-top: 1rem;
+      margin-top: 2rem;
       text-align: center;
       color: var(--text-muted);
       font-size: 0.8rem;
@@ -125,32 +160,58 @@
     @media (max-width: 600px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
       .header h1 { font-size: 1.5rem; }
+      .filters { flex-wrap: wrap; justify-content: center; }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1><span class="accent">⛩️</span> {{ machine_name }}</h1>
+    <h1><span class="accent">⛩️</span> {{ title }}</h1>
     <p>{{ subtitle }}</p>
   </div>
 
-  {% for section in sections %}
-  <div class="section">
-    <div class="section-label">{{ section.label }}</div>
-    <div class="grid">
-      {% for svc in section.services %}
-      <a href="{{ svc.url }}" class="card" target="_blank" rel="noopener">
-        <div class="card-icon">{{ svc.icon }}</div>
-        <div class="card-name">{{ svc.name }}</div>
-        <div class="card-desc">{{ svc.description }}</div>
-      </a>
-      {% endfor %}
-    </div>
+  <div class="filters">
+    {% for view in views %}
+    <button class="filter-btn{% if loop.first %} active{% endif %}" data-view="{{ view.id }}">{{ view.label }}</button>
+    {% endfor %}
   </div>
-  {% endfor %}
+
+  <div class="content">
+    {% for view in views %}
+    {% for section in view.sections %}
+    <div class="section{% if loop.parent.loop.first %} visible{% endif %}" data-view="{{ view.id }}">
+      {% if section.label %}
+      <div class="section-label">{{ section.label }}</div>
+      {% endif %}
+      <div class="grid">
+        {% for svc in section.services %}
+        <a href="{{ svc.url }}" class="card" target="_blank" rel="noopener">
+          <div class="card-icon">{{ svc.icon }}</div>
+          <div class="card-name">{{ svc.name }}</div>
+          <div class="card-desc">{{ svc.description }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    {% endfor %}
+  </div>
 
   <div class="footer">
-    Powered by <a href="https://locopuente.org">LocoPuente</a> — privacy-first local AI
+    Powered by <a href="https://locopuente.org">LocoPuente</a> — local AI, all data stays on this machine
   </div>
+
+  <script>
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => {
+          s.classList.toggle('visible', s.dataset.view === view);
+        });
+      });
+    });
+  </script>
 </body>
 </html>

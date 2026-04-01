@@ -495,9 +495,8 @@ def portal(
             pass
 
     portal_dir = write_portal(config, host)
-    console.print(f"[green]Portal generated:[/green] {portal_dir}")
-    console.print(f"  Student portal: {portal_dir}/index.html")
-    console.print(f"  Backend portal: {portal_dir}/backend/index.html")
+    console.print(f"[green]Portal generated:[/green] {portal_dir}/index.html")
+    console.print(f"  Views: PoC (default) | Student | Backend")
 
     if serve:
         # Add portal nginx container to compose
@@ -515,8 +514,6 @@ def portal(
             }
             compose_path.write_text(yaml.dump(compose_data, default_flow_style=False, sort_keys=False))
             console.print(f"[green]Portal container added to docker-compose.yml (port {port})[/green]")
-            console.print(f"  Student: http://localhost:{port}/")
-            console.print(f"  Backend: http://localhost:{port}/backend/")
             console.print(f"  Run [bold cyan]puente up[/bold cyan] to start it.")
     else:
         console.print(f"\n  Open the file directly: file://{portal_path}")
