@@ -26,6 +26,7 @@ class OpenNotebookService(ServiceBase):
             "SURREAL_NAMESPACE": "open_notebook",
             "SURREAL_DATABASE": "open_notebook",
             "OPEN_NOTEBOOK_ENCRYPTION_KEY": "puente-notebook-secret-change-me",
+            "API_URL": "https://notes-api.locopuente.org",
         }
         env.update(config.environment)
 
