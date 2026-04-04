@@ -10,6 +10,7 @@ from .excalidraw import ExcalidrawService
 from .jupyter import JupyterService
 from .ollama import OllamaService
 from .open_notebook import OpenNotebookService
+from .open_terminal import OpenTerminalService
 from .open_webui import OpenWebUIService
 from .searxng import SearXNGService
 from .speaches import SpeachesService
@@ -25,6 +26,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "vane": VaneService,
     "anythingllm": AnythingLLMService,
     "open_notebook": OpenNotebookService,
+    "open_terminal": OpenTerminalService,
     "stirling_pdf": StirlingPDFService,
     "excalidraw": ExcalidrawService,
     "citesight": CiteSightService,

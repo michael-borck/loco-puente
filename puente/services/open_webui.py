@@ -37,6 +37,9 @@ class OpenWebUIService(ServiceBase):
             # ComfyUI for image generation (container name on compose network)
             "IMAGE_GENERATION_ENGINE": "comfyui",
             "COMFYUI_BASE_URL": "http://puente-comfyui:8188",
+            # Open Terminal for code execution (PDF/DOCX/chart generation)
+            "OPEN_TERMINAL_URL": "http://puente-open-terminal:8000",
+            "OPEN_TERMINAL_API_KEY": "puente-terminal-key",
         }
         env.update(config.environment)
 

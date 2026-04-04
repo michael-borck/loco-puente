@@ -45,6 +45,7 @@ SERVICE_META = {
     "searxng": ("🌐", "Web Search", "Private search engine"),
     "citesight": ("📝", "Citation Checker", "Verify references and writing quality"),
     "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
+    "open_terminal": ("⚡", "Code Sandbox", "Python execution, PDF/DOCX generation"),
     "talkbuddy": ("🗣️", "TalkBuddy", "Conversation practice partner"),
     "studybuddy": ("🎓", "StudyBuddy", "AI-powered study companion"),
     "careercompass": ("🧭", "CareerCompass", "Career guidance and planning"),
@@ -87,7 +88,7 @@ VIEWS = {
         "label": "Backend",
         "sections": [
             {"label": "Inference", "services": ["ollama"]},
-            {"label": "Backend Services", "services": ["speaches", "comfyui", "anythingllm"]},
+            {"label": "Backend Services", "services": ["speaches", "comfyui", "anythingllm", "open_terminal"]},
             {"label": "Power Tools", "services": ["searxng", "jupyter"]},
         ],
     },

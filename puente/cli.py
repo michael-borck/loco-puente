@@ -46,6 +46,7 @@ DISPLAY_NAMES = {
     "open_notebook": "Open Notebook AI",
     "stirling_pdf": "Stirling PDF",
     "excalidraw": "Excalidraw",
+    "open_terminal": "Open Terminal",
     "citesight": "CiteSight",
     "jupyter": "JupyterLab",
 }

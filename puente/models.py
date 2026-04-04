@@ -63,6 +63,9 @@ class StackConfig(BaseModel):
     excalidraw: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3333, enabled=False)
     )
+    open_terminal: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=8100, enabled=False)
+    )
     citesight: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3010, enabled=False)
     )
