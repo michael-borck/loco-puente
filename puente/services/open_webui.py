@@ -23,7 +23,7 @@ class OpenWebUIService(ServiceBase):
             # Ollama runs on the host, not in Docker
             "OLLAMA_BASE_URL": "http://host.docker.internal:11434",
             # Disable auth for PoC (network access controls who can reach it)
-            "WEBUI_AUTH": "false",
+            "WEBUI_AUTH": "true",
             # SearXNG for web search in chat (container name on compose network)
             "RAG_WEB_SEARCH_ENGINE": "searxng",
             "SEARXNG_QUERY_URL": "http://puente-searxng:8080/search?q=<query>&format=json",

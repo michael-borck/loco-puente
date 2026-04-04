@@ -159,11 +159,23 @@ def init():
         instances=instances,
     )
 
-    # 4. Build config
+    # 4. Authentication
+    console.print("\n[bold cyan]Step 4:[/bold cyan] Authentication\n")
+
+    enable_auth = typer.confirm("  Enable user authentication?", default=True)
+
+    if enable_auth and "open_webui" in services_config and services_config["open_webui"].enabled:
+        services_config["open_webui"].environment["WEBUI_AUTH"] = "true"
+        console.print("    Open WebUI: auth enabled (first signup = admin)")
+    elif "open_webui" in services_config and services_config["open_webui"].enabled:
+        services_config["open_webui"].environment["WEBUI_AUTH"] = "false"
+        console.print("    Open WebUI: auth disabled (demo mode)")
+
+    # 5. Build config
     stack = StackConfig(ollama=ollama_config, **services_config)
     config = PuenteConfig(services=stack)
 
-    # 5. Write config + compose
+    # 6. Write config + compose
     config_path = save_config(config)
     console.print(f"\n[green]Wrote {config_path}[/green]")
 
@@ -172,7 +184,7 @@ def init():
         compose_path = write_compose(config)
         console.print(f"[green]Wrote {compose_path}[/green]")
 
-    # 6. Summary
+    # 7. Summary
     console.print("\n[bold]Stack summary:[/bold]")
     _print_config_summary(config)
 
