@@ -64,13 +64,13 @@ VIEWS = {
     "poc": {
         "label": "PoC",
         "sections": [
-            {"label": "", "services": ["open_webui", "vane", "open_notebook"]},
+            {"label": "", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
         ],
     },
     "student": {
         "label": "Student",
         "sections": [
-            {"label": "AI", "services": ["open_webui", "vane", "open_notebook"]},
+            {"label": "AI", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
             {"label": "Learning", "services": ["deeptutor"]},
             {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
         ],
