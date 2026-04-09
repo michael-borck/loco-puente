@@ -72,6 +72,9 @@ class StackConfig(BaseModel):
     jupyter: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=8899, enabled=False)
     )
+    deeptutor: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=3782, enabled=False)
+    )
 
 
 class PuenteConfig(BaseModel):

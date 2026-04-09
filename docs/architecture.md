@@ -32,7 +32,7 @@ Rather than routing every request through one large model, LocoLLM's swarm of sm
 
 ### LocoAgente powers the sophisticated tools
 
-The Study Buddy, the Curriculum Explainer, the research assistant that can read a PDF and generate a structured summary -- these require more than single-turn chat. LocoAgente's research into agentic scaffolding on small models is what makes these tools viable without frontier hardware.
+DeepTutor, the Curriculum Explainer, the research assistant that can read a PDF and generate a structured summary -- these require more than single-turn chat. LocoAgente's research into agentic scaffolding on small models is what makes these tools viable without frontier hardware.
 
 ### LocoEnsayo supplies the experiences
 

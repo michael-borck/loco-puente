@@ -5,6 +5,7 @@ from __future__ import annotations
 from .anythingllm import AnythingLLMService
 from .base import ServiceBase
 from .citesight import CiteSightService
+from .deeptutor import DeepTutorService
 from .comfyui import ComfyUIService
 from .excalidraw import ExcalidrawService
 from .jupyter import JupyterService
@@ -31,4 +32,5 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "excalidraw": ExcalidrawService,
     "citesight": CiteSightService,
     "jupyter": JupyterService,
+    "deeptutor": DeepTutorService,
 }

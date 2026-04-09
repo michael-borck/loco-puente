@@ -46,16 +46,7 @@ SERVICE_META = {
     "citesight": ("📝", "Citation Checker", "Verify references and writing quality"),
     "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
     "open_terminal": ("⚡", "Code Sandbox", "Python execution, PDF/DOCX generation"),
-    "talkbuddy": ("🗣️", "TalkBuddy", "Conversation practice partner"),
-    "studybuddy": ("🎓", "StudyBuddy", "AI-powered study companion"),
-    "careercompass": ("🧭", "CareerCompass", "Career guidance and planning"),
-}
-
-# External apps (not in the stack, just portal links)
-EXTERNAL_APPS = {
-    "talkbuddy": "https://talkbuddy.borck.education",
-    "studybuddy": "https://studybuddy.borck.education",
-    "careercompass": "https://careercompass.borck.education",
+    "deeptutor": ("🎓", "DeepTutor", "Personalised learning — quizzes, deep solve, research"),
 }
 
 # Proxy URLs — services accessible via reverse proxy (overrides host:port)
@@ -80,7 +71,7 @@ VIEWS = {
         "label": "Student",
         "sections": [
             {"label": "AI", "services": ["open_webui", "vane", "open_notebook"]},
-            {"label": "Learning", "services": ["talkbuddy", "studybuddy", "careercompass"]},
+            {"label": "Learning", "services": ["deeptutor"]},
             {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
         ],
     },
@@ -97,13 +88,6 @@ VIEWS = {
 
 def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalService | None:
     """Build a PortalService for a given service name."""
-    # External apps
-    if svc_name in EXTERNAL_APPS:
-        icon, display_name, desc = SERVICE_META.get(svc_name, ("🔧", svc_name, ""))
-        return PortalService(
-            name=display_name, icon=icon, description=desc, url=EXTERNAL_APPS[svc_name],
-        )
-
     # Ollama (special case)
     if svc_name == "ollama":
         if not config.services.ollama.enabled:

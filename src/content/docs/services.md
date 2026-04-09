@@ -61,7 +61,7 @@ Fully local speech-to-text (Whisper) and text-to-speech (Kokoro) via [Speaches](
 
 Powered by [LocoEnsayo](https://locoensayo.org), these are AI-populated organisations that users can interrogate, interview, audit, and negotiate with. Each persona has a backstory, a role, and information constraints. The scenario is not a quiz. It is a rehearsal.
 
-Currently deployed: **CloudCore Networks** (IT services firm for security audits and systems analysis), **Pinnacle Tours** (hospitality and tourism), and **TalkBuddy** (high-stakes conversation practice).
+Currently deployed: **CloudCore Networks** (IT services firm for security audits and systems analysis) and **Pinnacle Tours** (hospitality and tourism).
 
 ---
 
