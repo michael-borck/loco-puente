@@ -49,6 +49,7 @@ DISPLAY_NAMES = {
     "open_terminal": "Open Terminal",
     "citesight": "CiteSight",
     "jupyter": "JupyterLab",
+    "deeptutor": "DeepTutor",
 }
 
 
