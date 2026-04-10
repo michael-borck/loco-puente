@@ -284,8 +284,11 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
     data_dir = config.resolved_data_dir()
     compose_path = data_dir / "docker-compose.yml"
 
-    if not compose_path.exists():
-        write_compose(config, compose_path)
+    # Always regenerate so upstream changes to compose.py / service fragments
+    # are picked up without requiring users to manually delete the file.
+    write_compose(config, compose_path)
+
+    _ufw_warning_if_needed()
 
     # Start Docker services
     if compose_path.exists() and compose_path.stat().st_size > 20:
@@ -557,6 +560,34 @@ def version():
 
 
 # -- helpers -------------------------------------------------------------------
+
+
+def _ufw_warning_if_needed() -> None:
+    """On Linux, warn if UFW is active without a rule for the puente bridge.
+
+    Puente's containers live on a custom bridge named `puente0`. UFW's default
+    policy drops inbound traffic on unknown interfaces, which silently breaks
+    container-to-host connections (e.g. Open WebUI → native Ollama on the host).
+    One rule fixes it: `sudo ufw allow in on puente0`.
+    """
+    try:
+        result = subprocess.run(
+            ["ufw", "status"], capture_output=True, text=True, timeout=2
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return
+    if result.returncode != 0:
+        return
+    output = result.stdout
+    if "Status: active" not in output:
+        return
+    if "puente0" in output:
+        return
+    console.print(
+        "[yellow]UFW is active but has no rule for the puente0 bridge.[/yellow]\n"
+        "[yellow]Containers may be unable to reach host services (e.g. native Ollama).[/yellow]\n"
+        "[yellow]Fix with:[/yellow] [bold]sudo ufw allow in on puente0[/bold]"
+    )
 
 
 def _require_config() -> PuenteConfig:

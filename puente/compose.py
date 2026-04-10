@@ -9,6 +9,34 @@ import yaml
 from puente.models import PuenteConfig
 from puente.services import ALL_SERVICES
 
+# Stable bridge for all puente containers.
+#
+# We pin the bridge name, subnet, and gateway so that:
+#   1. UFW can allow traffic on a stable interface name: `sudo ufw allow in on puente0`
+#   2. `host.docker.internal` can be mapped to a reachable gateway IP on Linux,
+#      where Docker's built-in `host-gateway` alias only resolves to docker0
+#      (172.17.0.1) and is unreachable from custom bridge networks.
+PUENTE_NETWORK_BRIDGE_NAME = "puente0"
+PUENTE_NETWORK_SUBNET = "172.28.0.0/24"
+PUENTE_NETWORK_GATEWAY = "172.28.0.1"
+
+
+def _rewrite_host_gateway(services: dict) -> None:
+    """Replace `host-gateway` in extra_hosts with the puente network gateway.
+
+    Docker's `host-gateway` alias works on Docker Desktop but on Linux it always
+    points at the docker0 bridge IP, which is unreachable from containers on a
+    custom bridge network. Substituting the puente network's own gateway IP
+    ensures `host.docker.internal` resolves to a reachable address regardless.
+    """
+    for svc in services.values():
+        extra_hosts = svc.get("extra_hosts")
+        if not extra_hosts:
+            continue
+        svc["extra_hosts"] = [
+            h.replace("host-gateway", PUENTE_NETWORK_GATEWAY) for h in extra_hosts
+        ]
+
 
 def generate_compose(config: PuenteConfig) -> dict:
     """Collect compose fragments from all enabled Docker services."""
@@ -29,7 +57,30 @@ def generate_compose(config: PuenteConfig) -> dict:
         if fragment:
             services.update(fragment)
 
-    return {"services": services} if services else {}
+    if not services:
+        return {}
+
+    _rewrite_host_gateway(services)
+
+    return {
+        "services": services,
+        "networks": {
+            "default": {
+                "driver": "bridge",
+                "driver_opts": {
+                    "com.docker.network.bridge.name": PUENTE_NETWORK_BRIDGE_NAME,
+                },
+                "ipam": {
+                    "config": [
+                        {
+                            "subnet": PUENTE_NETWORK_SUBNET,
+                            "gateway": PUENTE_NETWORK_GATEWAY,
+                        }
+                    ]
+                },
+            }
+        },
+    }
 
 
 def write_compose(config: PuenteConfig, output_path: Path | None = None) -> Path:
