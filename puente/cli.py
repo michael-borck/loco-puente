@@ -288,6 +288,12 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
     # are picked up without requiring users to manually delete the file.
     write_compose(config, compose_path)
 
+    # Keep the portal launcher page in sync with current config.
+    if config.services.portal.enabled:
+        from puente.portal import write_portal
+
+        write_portal(config, config.services.portal.host)
+
     _ufw_warning_if_needed()
 
     # Start Docker services
@@ -502,14 +508,13 @@ def connect():
 @app.command()
 def portal(
     host: str = typer.Option("localhost", help="Hostname or IP for service URLs"),
-    serve: bool = typer.Option(False, help="Add a portal container to docker-compose"),
+    serve: bool = typer.Option(False, help="Enable the portal nginx container in the stack"),
     port: int = typer.Option(8080, help="Port for the portal (when using --serve)"),
 ):
     """Generate a service launcher page from your config."""
     from puente.portal import write_portal
 
     config = _require_config()
-    data_dir = config.resolved_data_dir()
 
     # Auto-detect host IP if "localhost"
     if host == "localhost":
@@ -527,23 +532,20 @@ def portal(
     console.print(f"  Views: PoC (default) | Student | Backend")
 
     if serve:
-        # Add portal nginx container to compose
-        compose_path = data_dir / "docker-compose.yml"
-        if compose_path.exists():
-            import yaml
-            compose_data = yaml.safe_load(compose_path.read_text()) or {}
-            compose_data.setdefault("services", {})
-            compose_data["services"]["portal"] = {
-                "image": "nginx:alpine",
-                "container_name": "puente-portal",
-                "ports": [f"{port}:80"],
-                "volumes": [f"{data_dir}/portal:/usr/share/nginx/html:ro"],
-                "restart": "unless-stopped",
-            }
-            compose_path.write_text(yaml.dump(compose_data, default_flow_style=False, sort_keys=False))
-            console.print(f"[green]Portal container added to docker-compose.yml (port {port})[/green]")
-            console.print(f"  Run [bold cyan]puente up[/bold cyan] to start it.")
+        # Persist portal config so compose generation picks it up on every
+        # `puente up`, instead of hand-patching docker-compose.yml (which gets
+        # regenerated each run).
+        config.services.portal.enabled = True
+        config.services.portal.port = port
+        config.services.portal.host = host
+        save_config(config)
+        write_compose(config)
+        console.print(
+            f"[green]Portal enabled in puente.yml (port {port})[/green]"
+        )
+        console.print(f"  Run [bold cyan]puente up[/bold cyan] to start it.")
     else:
+        portal_path = portal_dir / "index.html"
         console.print(f"\n  Open the file directly: file://{portal_path}")
         console.print(f"  Or use [bold]--serve[/bold] to add an nginx container to your stack.")
 

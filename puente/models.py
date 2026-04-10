@@ -41,6 +41,10 @@ class SpeachesConfig(ServiceConfig):
     )
 
 
+class PortalConfig(ServiceConfig):
+    host: str = "localhost"  # hostname/IP used in generated service URLs
+
+
 class StackConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     open_webui: ServiceConfig = Field(
@@ -83,6 +87,9 @@ class StackConfig(BaseModel):
     )
     deeptutor: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3782, enabled=False)
+    )
+    portal: PortalConfig = Field(
+        default_factory=lambda: PortalConfig(port=8080, enabled=False)
     )
 
 

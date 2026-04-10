@@ -13,6 +13,7 @@ from .ollama import OllamaService
 from .open_notebook import OpenNotebookService
 from .open_terminal import OpenTerminalService
 from .open_webui import OpenWebUIService
+from .portal import PortalService
 from .searxng import SearXNGService
 from .speaches import SpeachesService
 from .stirling_pdf import StirlingPDFService
@@ -33,4 +34,5 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "citesight": CiteSightService,
     "jupyter": JupyterService,
     "deeptutor": DeepTutorService,
+    "portal": PortalService,
 }
