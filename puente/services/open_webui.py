@@ -24,6 +24,15 @@ class OpenWebUIService(ServiceBase):
             "OLLAMA_BASE_URL": "http://host.docker.internal:11434",
             # Disable auth for PoC (network access controls who can reach it)
             "WEBUI_AUTH": "true",
+            # Force the non-Socket.IO streaming path. When Open WebUI's WS
+            # handshake fails (e.g. through a reverse proxy without Websocket
+            # Support enabled), it falls back to a broken code path that
+            # mis-parses Ollama's SSE stream and surfaces as:
+            #   Unexpected token 'd', "data: {"id"... is not valid JSON
+            # Disabling WS here is the resilient default; ticking NPM's
+            # Websockets Support on the chat proxy host is still recommended
+            # as the proper fix for the whole stack.
+            "ENABLE_WEBSOCKET_SUPPORT": "false",
             # SearXNG for web search in chat (container name on compose network)
             "RAG_WEB_SEARCH_ENGINE": "searxng",
             "SEARXNG_QUERY_URL": "http://puente-searxng:8080/search?q=<query>&format=json",
