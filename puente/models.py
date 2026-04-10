@@ -32,13 +32,22 @@ class OllamaConfig(ServiceConfig):
     )
 
 
+class SpeachesConfig(ServiceConfig):
+    models: list[str] = Field(
+        default_factory=lambda: [
+            "Systran/faster-whisper-small",
+            "speaches-ai/Kokoro-82M-v1.0-ONNX",
+        ]
+    )
+
+
 class StackConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     open_webui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3000)
     )
-    speaches: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=8000, enabled=False)
+    speaches: SpeachesConfig = Field(
+        default_factory=lambda: SpeachesConfig(port=8000, enabled=False)
     )
     comfyui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(

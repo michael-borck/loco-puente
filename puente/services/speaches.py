@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import time
+import urllib.error
+import urllib.request
 from typing import Any
 
-from puente.models import ServiceConfig
+from rich.console import Console
+
+from puente.models import ServiceConfig, SpeachesConfig
 
 from .base import ServiceBase
+
+console = Console()
 
 
 class SpeachesService(ServiceBase):
@@ -48,3 +55,58 @@ class SpeachesService(ServiceBase):
             }
 
         return fragment
+
+    def post_start(self, config: ServiceConfig, data_dir: str) -> None:
+        if not isinstance(config, SpeachesConfig) or not config.models:
+            return
+
+        port = config.port or self.default_port
+        base_url = f"http://127.0.0.1:{port}"
+
+        if not self._wait_for_ready(base_url, timeout=120):
+            console.print(
+                f"[yellow]Speaches did not become ready on {base_url}; skipping model pre-pull.[/yellow]"
+            )
+            return
+
+        try:
+            installed = self._list_installed_models(base_url)
+        except Exception:
+            installed = set()
+
+        for model_id in config.models:
+            if model_id in installed:
+                console.print(f"  [green]Speaches model already present:[/green] {model_id}")
+                continue
+            console.print(f"  [cyan]Pulling Speaches model:[/cyan] {model_id} (this may take a while)")
+            try:
+                req = urllib.request.Request(
+                    f"{base_url}/v1/models/{model_id}", method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=1800) as resp:
+                    resp.read()
+                console.print(f"  [green]Pulled:[/green] {model_id}")
+            except urllib.error.HTTPError as e:
+                console.print(f"  [red]Failed ({e.code}):[/red] {model_id} — {e.reason}")
+            except Exception as e:  # noqa: BLE001
+                console.print(f"  [red]Failed:[/red] {model_id} — {e}")
+
+    def _wait_for_ready(self, base_url: str, timeout: int = 120) -> bool:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                with urllib.request.urlopen(f"{base_url}/v1/models", timeout=5) as resp:
+                    if resp.status == 200:
+                        return True
+            except Exception:
+                pass
+            time.sleep(2)
+        return False
+
+    def _list_installed_models(self, base_url: str) -> set[str]:
+        import json
+
+        with urllib.request.urlopen(f"{base_url}/v1/models", timeout=10) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+        data = payload.get("data", []) if isinstance(payload, dict) else []
+        return {item.get("id") for item in data if isinstance(item, dict) and item.get("id")}

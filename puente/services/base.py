@@ -55,3 +55,7 @@ class ServiceBase(ABC):
     def health_check(self, config: ServiceConfig) -> bool:
         port = config.port or self.default_port
         return self.is_port_active(port)
+
+    def post_start(self, config: ServiceConfig, data_dir: str) -> None:
+        """Hook invoked after `docker compose up -d`. Override for model pulls, etc."""
+        return None

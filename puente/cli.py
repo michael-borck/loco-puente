@@ -296,6 +296,17 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
         console.print(f"[cyan]Starting Docker services...[/cyan]")
         subprocess.run(cmd)
 
+    # Per-service post-start hooks (e.g. model pre-pull)
+    for svc_name, svc_class in ALL_SERVICES.items():
+        if service and svc_name != service:
+            continue
+        svc_config = getattr(config.services, svc_name, None)
+        if svc_config is None or not svc_config.enabled:
+            continue
+        if svc_config.install_method != "docker":
+            continue
+        svc_class().post_start(svc_config, str(data_dir))
+
     console.print("[green]Done.[/green] Run [bold]puente status[/bold] to check.")
 
 
