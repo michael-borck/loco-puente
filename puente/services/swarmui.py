@@ -14,13 +14,11 @@ class SwarmUIService(ServiceBase):
     description = "Friendly image generation UI (uses ComfyUI backend)"
     default_port = 7801
     install_method = "docker"
-    # Built locally from puente/dockerfiles/swarmui — SwarmUI ships installer
-    # scripts but no Docker image. We build from source against the official
-    # mcr.microsoft.com/dotnet/sdk:8.0 base. Configure to talk to the
-    # existing puente-comfyui container instead of spinning up its own
-    # bundled ComfyUI (set via the Data/Settings.fds file on first run, or
-    # via UI settings).
-    docker_image = None
+    # Pull-first, build-fallback. Built and pushed to GHCR by the
+    # .github/workflows/build-images.yml workflow. Configure SwarmUI to
+    # talk to the existing puente-comfyui container instead of spinning
+    # up its own bundled ComfyUI via the UI settings on first run.
+    docker_image = "ghcr.io/michael-borck/puente-swarmui:latest"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -29,8 +27,8 @@ class SwarmUIService(ServiceBase):
 
         fragment: dict[str, Any] = {
             "swarmui": {
+                "image": self.docker_image,
                 "build": {"context": "./dockerfiles/swarmui"},
-                "image": "puente-swarmui:local",
                 "container_name": "puente-swarmui",
                 "ports": [f"{port}:7801"],
                 "volumes": [

@@ -14,9 +14,12 @@ class MusicGenService(ServiceBase):
     description = "Local music generation (MusicGen / AudioCraft)"
     default_port = 7860
     install_method = "docker"
-    # Built locally from puente/dockerfiles/musicgen — Meta's AudioCraft has
-    # no published Docker image, so we wrap their bundled Gradio demo.
-    docker_image = None
+    # Pull-first, build-fallback. The image is built and pushed by the
+    # .github/workflows/build-images.yml workflow on changes to
+    # puente/dockerfiles/musicgen/Dockerfile. If the image isn't available
+    # (forks, dev, first run before CI lands) docker compose falls back to
+    # the bundled Dockerfile via the `build:` directive below.
+    docker_image = "ghcr.io/michael-borck/puente-musicgen:latest"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -25,8 +28,8 @@ class MusicGenService(ServiceBase):
 
         fragment: dict[str, Any] = {
             "musicgen": {
+                "image": self.docker_image,
                 "build": {"context": "./dockerfiles/musicgen"},
-                "image": "puente-musicgen:local",
                 "container_name": "puente-musicgen",
                 "ports": [f"{port}:7860"],
                 "volumes": [

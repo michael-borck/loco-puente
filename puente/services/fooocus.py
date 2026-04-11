@@ -14,11 +14,11 @@ class FooocusService(ServiceBase):
     description = "Opinionated SDXL UI with auto-enhancement"
     default_port = 7865
     install_method = "docker"
-    # Built locally from puente/dockerfiles/fooocus — lllyasviel ships
-    # installer scripts but no Docker image. The volume layout below
-    # mirrors what Fooocus expects internally so model downloads persist
-    # across restarts.
-    docker_image = None
+    # Pull-first, build-fallback. Built and pushed to GHCR by the
+    # .github/workflows/build-images.yml workflow. The volume layout
+    # below mirrors what Fooocus expects internally so model downloads
+    # persist across restarts.
+    docker_image = "ghcr.io/michael-borck/puente-fooocus:latest"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -27,8 +27,8 @@ class FooocusService(ServiceBase):
 
         fragment: dict[str, Any] = {
             "fooocus": {
+                "image": self.docker_image,
                 "build": {"context": "./dockerfiles/fooocus"},
-                "image": "puente-fooocus:local",
                 "container_name": "puente-fooocus",
                 "ports": [f"{port}:7865"],
                 "volumes": [
