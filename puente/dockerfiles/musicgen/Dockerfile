@@ -19,10 +19,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         ffmpeg \
         libsndfile1 \
-        # pkg-config + libav* dev headers are required because audiocraft
-        # pins av==11.0.0 and the conda-based pytorch base image doesn't
-        # match a manylinux wheel for that exact version, so pip falls
-        # back to building PyAV from source.
+        # build-essential gives us gcc/g++/make. Several audiocraft deps
+        # have no manylinux wheels matching the conda-based pytorch base
+        # (av==11.0.0, pesq) and fall back to building C extensions from
+        # source. The pytorch:2.1.0-cuda12.1-cudnn8-runtime image
+        # deliberately excludes build tools to keep size down — re-add
+        # them here so the source builds succeed.
+        build-essential \
+        # pkg-config + libav* dev headers are required by PyAV's
+        # source build to discover ffmpeg's library paths.
         pkg-config \
         libavformat-dev \
         libavcodec-dev \
