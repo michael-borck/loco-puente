@@ -64,22 +64,6 @@ PROXY_URLS = {
 
 # View definitions
 VIEWS = {
-    "poc": {
-        "label": "PoC",
-        "sections": [
-            {
-                "label": "",
-                "services": [
-                    "open_webui",
-                    "vane",
-                    "open_notebook",
-                    "deeptutor",
-                    "swarmui",
-                    "musicgen",
-                ],
-            },
-        ],
-    },
     "student": {
         "label": "Student",
         "sections": [
@@ -88,8 +72,8 @@ VIEWS = {
             {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
         ],
     },
-    "backend": {
-        "label": "Backend",
+    "admin": {
+        "label": "Admin",
         "sections": [
             {"label": "Inference", "services": ["ollama"]},
             {
