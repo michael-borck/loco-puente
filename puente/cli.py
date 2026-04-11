@@ -50,6 +50,9 @@ DISPLAY_NAMES = {
     "citesight": "CiteSight",
     "jupyter": "JupyterLab",
     "deeptutor": "DeepTutor",
+    "musicgen": "MusicGen",
+    "swarmui": "SwarmUI",
+    "fooocus": "Fooocus",
 }
 
 

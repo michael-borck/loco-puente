@@ -23,6 +23,7 @@ class ServiceConfig(BaseModel):
     gpu: int | None = None
     managed: bool = True  # False = coexist with existing install
     environment: dict[str, str] = Field(default_factory=dict)
+    review: bool = False  # True = surface in portal "Under Evaluation" section
 
 
 class OllamaConfig(ServiceConfig):
@@ -87,6 +88,15 @@ class StackConfig(BaseModel):
     )
     deeptutor: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3782, enabled=False)
+    )
+    musicgen: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=7860, enabled=False)
+    )
+    swarmui: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=7801, enabled=False)
+    )
+    fooocus: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=7865, enabled=False, review=True)
     )
     portal: PortalConfig = Field(
         default_factory=lambda: PortalConfig(port=8080, enabled=False)

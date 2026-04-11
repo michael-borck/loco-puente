@@ -39,7 +39,10 @@ SERVICE_META = {
     "speaches": ("🎙️", "Voice", "Speech-to-text and text-to-speech"),
     "anythingllm": ("📚", "Knowledge Base", "Document Q&A workspaces"),
     "open_notebook": ("📓", "Research Notes", "Read, annotate, synthesise, podcast"),
-    "comfyui": ("🎨", "Image Gen", "SD, SDXL, FLUX workflows"),
+    "comfyui": ("🎨", "Image Workflows", "Node-based SD, SDXL, FLUX workflows"),
+    "swarmui": ("🖼️", "Image Gen", "Friendly image generation (uses ComfyUI)"),
+    "musicgen": ("🎵", "Music Gen", "Local music generation (MusicGen)"),
+    "fooocus": ("🪄", "Fooocus", "Opinionated SDXL with auto-enhancement"),
     "stirling_pdf": ("📄", "PDF Tools", "Merge, split, OCR, convert"),
     "excalidraw": ("✏️", "Whiteboard", "Collaborative diagrams"),
     "searxng": ("🌐", "Web Search", "Private search engine"),
@@ -64,13 +67,24 @@ VIEWS = {
     "poc": {
         "label": "PoC",
         "sections": [
-            {"label": "", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
+            {
+                "label": "",
+                "services": [
+                    "open_webui",
+                    "vane",
+                    "open_notebook",
+                    "deeptutor",
+                    "swarmui",
+                    "musicgen",
+                ],
+            },
         ],
     },
     "student": {
         "label": "Student",
         "sections": [
             {"label": "AI", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
+            {"label": "Creative", "services": ["swarmui", "musicgen"]},
             {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
         ],
     },
@@ -78,8 +92,16 @@ VIEWS = {
         "label": "Backend",
         "sections": [
             {"label": "Inference", "services": ["ollama"]},
-            {"label": "Backend Services", "services": ["speaches", "comfyui", "anythingllm", "open_terminal"]},
+            {
+                "label": "Backend Services",
+                "services": ["speaches", "comfyui", "anythingllm", "open_terminal"],
+            },
             {"label": "Power Tools", "services": ["searxng", "jupyter"]},
+            # The "Under Evaluation" section auto-collects any enabled service
+            # whose config has `review: true`. The list is filled at build time
+            # by `build_views` so adding/removing review services requires no
+            # changes here.
+            {"label": "Under Evaluation", "services": "__review__"},
         ],
     },
 }
@@ -120,14 +142,31 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
     return PortalService(name=display_name, icon=icon, description=desc, url=url)
 
 
+def _review_service_names(config: PuenteConfig) -> list[str]:
+    """Names of every enabled service whose config has `review: true`."""
+    out = []
+    for svc_name in ALL_SERVICES:
+        if svc_name == "ollama":
+            continue
+        svc_config = getattr(config.services, svc_name, None)
+        if svc_config is None or not svc_config.enabled:
+            continue
+        if getattr(svc_config, "review", False):
+            out.append(svc_name)
+    return out
+
+
 def build_views(config: PuenteConfig, host: str) -> list[PortalView]:
     """Build all portal views with their sections and services."""
     views = []
     for view_id, view_def in VIEWS.items():
         sections = []
         for section_def in view_def["sections"]:
+            service_names = section_def["services"]
+            if service_names == "__review__":
+                service_names = _review_service_names(config)
             svcs = []
-            for svc_name in section_def["services"]:
+            for svc_name in service_names:
                 svc = _build_service(svc_name, config, host)
                 if svc:
                     svcs.append(svc)

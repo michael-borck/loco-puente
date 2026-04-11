@@ -8,7 +8,9 @@ from .citesight import CiteSightService
 from .deeptutor import DeepTutorService
 from .comfyui import ComfyUIService
 from .excalidraw import ExcalidrawService
+from .fooocus import FooocusService
 from .jupyter import JupyterService
+from .musicgen import MusicGenService
 from .ollama import OllamaService
 from .open_notebook import OpenNotebookService
 from .open_terminal import OpenTerminalService
@@ -17,6 +19,7 @@ from .portal import PortalService
 from .searxng import SearXNGService
 from .speaches import SpeachesService
 from .stirling_pdf import StirlingPDFService
+from .swarmui import SwarmUIService
 from .vane import VaneService
 
 ALL_SERVICES: dict[str, type[ServiceBase]] = {
@@ -34,5 +37,8 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "citesight": CiteSightService,
     "jupyter": JupyterService,
     "deeptutor": DeepTutorService,
+    "musicgen": MusicGenService,
+    "swarmui": SwarmUIService,
+    "fooocus": FooocusService,
     "portal": PortalService,
 }
