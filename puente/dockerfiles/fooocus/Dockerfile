@@ -7,6 +7,11 @@
 # /content/Fooocus/outputs as volumes to persist downloads + generations.
 FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
+# Avoid the tzdata interactive timezone prompt that hangs container
+# builds without a TTY (transitive dep of several X11/glib packages).
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         wget \

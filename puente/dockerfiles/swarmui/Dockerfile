@@ -15,6 +15,11 @@
 # compiles the .NET project, fetches the dotnet runtime layers.
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
+# Avoid the tzdata interactive timezone prompt that hangs container
+# builds without a TTY (transitive dep on Debian-based images).
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         python3 \
