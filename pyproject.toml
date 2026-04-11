@@ -25,4 +25,4 @@ puente = "puente.cli:app"
 include = ["puente*"]
 
 [tool.setuptools.package-data]
-puente = ["templates/*"]
+puente = ["templates/*", "templates/**/*", "dockerfiles/**/*"]

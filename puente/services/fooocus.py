@@ -14,11 +14,11 @@ class FooocusService(ServiceBase):
     description = "Opinionated SDXL UI with auto-enhancement"
     default_port = 7865
     install_method = "docker"
-    # Community-maintained Fooocus container. Fooocus has no official
-    # Docker image — verify this tag (or pin to a specific digest) before
-    # treating as production-stable. The volume layout below mirrors what
-    # Fooocus expects internally so model downloads persist across restarts.
-    docker_image = "ghcr.io/lllyasviel/fooocus:latest"
+    # Built locally from puente/dockerfiles/fooocus — lllyasviel ships
+    # installer scripts but no Docker image. The volume layout below
+    # mirrors what Fooocus expects internally so model downloads persist
+    # across restarts.
+    docker_image = None
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -27,7 +27,8 @@ class FooocusService(ServiceBase):
 
         fragment: dict[str, Any] = {
             "fooocus": {
-                "image": self.docker_image,
+                "build": {"context": "./dockerfiles/fooocus"},
+                "image": "puente-fooocus:local",
                 "container_name": "puente-fooocus",
                 "ports": [f"{port}:7865"],
                 "volumes": [

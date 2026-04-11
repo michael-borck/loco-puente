@@ -14,11 +14,9 @@ class MusicGenService(ServiceBase):
     description = "Local music generation (MusicGen / AudioCraft)"
     default_port = 7860
     install_method = "docker"
-    # Community Gradio wrapper around Meta's AudioCraft / MusicGen.
-    # Verify the tag and image source before pinning for production —
-    # community AudioCraft images come and go, and you may want to swap
-    # to a self-built image or a different community wrapper over time.
-    docker_image = "ghcr.io/audiocraftplus/audiocraft-plus:latest"
+    # Built locally from puente/dockerfiles/musicgen — Meta's AudioCraft has
+    # no published Docker image, so we wrap their bundled Gradio demo.
+    docker_image = None
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -27,11 +25,12 @@ class MusicGenService(ServiceBase):
 
         fragment: dict[str, Any] = {
             "musicgen": {
-                "image": self.docker_image,
+                "build": {"context": "./dockerfiles/musicgen"},
+                "image": "puente-musicgen:local",
                 "container_name": "puente-musicgen",
                 "ports": [f"{port}:7860"],
                 "volumes": [
-                    f"{data_dir}/musicgen:/data",
+                    f"{data_dir}/musicgen:/root/.cache/huggingface",
                 ],
                 "environment": env,
                 "restart": "unless-stopped",

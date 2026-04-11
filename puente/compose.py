@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import yaml
@@ -83,11 +84,36 @@ def generate_compose(config: PuenteConfig) -> dict:
     }
 
 
+def _install_dockerfiles(target_root: Path) -> None:
+    """Mirror the bundled puente/dockerfiles tree into ``{data_dir}/dockerfiles``.
+
+    Services that build from source (musicgen, swarmui, fooocus) reference
+    ``./dockerfiles/<name>`` as their compose build context — that path is
+    relative to docker-compose.yml, which lives in ``data_dir``. Copying the
+    bundled Dockerfiles here on every ``write_compose`` call keeps them in
+    sync with whatever version of puente is installed without requiring the
+    user to think about it.
+    """
+    source_root = Path(__file__).parent / "dockerfiles"
+    if not source_root.exists():
+        return
+    target_root.mkdir(parents=True, exist_ok=True)
+    for entry in source_root.iterdir():
+        if not entry.is_dir():
+            continue
+        dest = target_root / entry.name
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(entry, dest)
+
+
 def write_compose(config: PuenteConfig, output_path: Path | None = None) -> Path:
     """Generate and write docker-compose.yml."""
     compose_data = generate_compose(config)
     path = output_path or config.resolved_data_dir() / "docker-compose.yml"
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    _install_dockerfiles(path.parent / "dockerfiles")
 
     path.write_text(yaml.dump(compose_data, default_flow_style=False, sort_keys=False))
     return path
