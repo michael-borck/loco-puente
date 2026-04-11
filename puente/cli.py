@@ -343,6 +343,69 @@ def down(service: str | None = typer.Argument(None, help="Stop a specific servic
     console.print("[green]Done.[/green]")
 
 
+# -- enable / disable ----------------------------------------------------------
+
+
+def _resolve_service(service: str) -> str:
+    """Validate and normalize a service name argument."""
+    normalized = service.lower().replace("-", "_")
+    if normalized not in ALL_SERVICES:
+        valid = ", ".join(sorted(ALL_SERVICES.keys()))
+        console.print(f"[red]Unknown service:[/red] {service}")
+        console.print(f"[dim]Valid services:[/dim] {valid}")
+        raise typer.Exit(1)
+    if normalized == "ollama":
+        console.print(
+            "[yellow]Ollama uses a multi-instance config — edit puente.yml or run "
+            "puente init to reconfigure it.[/yellow]"
+        )
+        raise typer.Exit(1)
+    return normalized
+
+
+@app.command()
+def enable(
+    service: str = typer.Argument(..., help="Service name (e.g. musicgen, swarmui)"),
+    port: int | None = typer.Option(None, help="Override the service port"),
+    gpu: int | None = typer.Option(None, help="GPU id to assign (for GPU services)"),
+    review: bool = typer.Option(
+        False,
+        "--review",
+        help="Mark the service as Under Evaluation in the portal",
+    ),
+):
+    """Enable a service in puente.yml without touching other config."""
+    name = _resolve_service(service)
+    config = _require_config()
+    svc_config = getattr(config.services, name)
+    svc_config.enabled = True
+    if port is not None:
+        svc_config.port = port
+    if gpu is not None:
+        svc_config.gpu = gpu
+    if review:
+        svc_config.review = True
+    save_config(config)
+    write_compose(config)
+    console.print(f"[green]Enabled[/green] {DISPLAY_NAMES.get(name, name)} in puente.yml")
+    console.print(f"  Run [bold cyan]puente up {name}[/bold cyan] to start it.")
+
+
+@app.command()
+def disable(
+    service: str = typer.Argument(..., help="Service name (e.g. musicgen, swarmui)"),
+):
+    """Disable a service in puente.yml without touching other config."""
+    name = _resolve_service(service)
+    config = _require_config()
+    svc_config = getattr(config.services, name)
+    svc_config.enabled = False
+    save_config(config)
+    write_compose(config)
+    console.print(f"[green]Disabled[/green] {DISPLAY_NAMES.get(name, name)} in puente.yml")
+    console.print(f"  Run [bold cyan]puente down {name}[/bold cyan] to stop the container.")
+
+
 # -- status --------------------------------------------------------------------
 
 
