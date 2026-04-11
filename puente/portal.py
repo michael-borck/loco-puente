@@ -60,6 +60,9 @@ PROXY_URLS = {
     "stirling_pdf": "https://pdf.locopuente.org",
     "excalidraw": "https://whiteboard.locopuente.org",
     "citesight": "https://cite.locopuente.org",
+    "swarmui": "https://swarmui.locopuente.org",
+    "musicgen": "https://musicgen.locopuente.org",
+    "fooocus": "https://fooocus.locopuente.org",
 }
 
 # View definitions
