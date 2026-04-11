@@ -19,6 +19,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         ffmpeg \
         libsndfile1 \
+        # pkg-config + libav* dev headers are required because audiocraft
+        # pins av==11.0.0 and the conda-based pytorch base image doesn't
+        # match a manylinux wheel for that exact version, so pip falls
+        # back to building PyAV from source.
+        pkg-config \
+        libavformat-dev \
+        libavcodec-dev \
+        libavdevice-dev \
+        libavutil-dev \
+        libswscale-dev \
+        libswresample-dev \
+        libavfilter-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone audiocraft for the bundled demo app + install in editable mode so
