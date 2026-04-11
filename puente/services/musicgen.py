@@ -27,12 +27,16 @@ class MusicGenService(ServiceBase):
     # silently re-pull a different image under us — bump this tag in
     # follow-up commits when adopting newer releases.
     #
-    # Pinned to 5.0.3 rather than 5.1.x because the 5.1 series bumped
-    # its bundled CUDA runtime to >= 12.8, which requires NVIDIA driver
-    # 570+. Driver 550 (and most currently-deployed drivers) max out at
-    # CUDA 12.4. Bump to 5.1.x / 6.x once operators have upgraded past
-    # driver 570.
-    docker_image = "ashleykza/tts-webui:5.0.3"
+    # Pinned to 4.1.0 because the entire 5.x+ series uses CUDA 12.8.1,
+    # which requires NVIDIA driver 570+. 4.x uses CUDA 12.4.1 (and torch
+    # 2.6.0), which is the newest release compatible with the PoC box's
+    # driver 550.163.01 (max CUDA 12.4). Bump to 5.x / 6.x once operators
+    # have upgraded drivers. Confirmed by reading docker-bake.hcl variables
+    # across upstream release tags:
+    #   4.0.0, 4.1.0    → CUDA 12.4.1, torch 2.6.0
+    #   5.0.x, 5.1.x    → CUDA 12.8.1, torch 2.7.0  (requires driver 570+)
+    #   6.0.0           → CUDA 12.8.1+
+    docker_image = "ashleykza/tts-webui:4.1.0"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
