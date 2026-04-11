@@ -1,46 +1,63 @@
 # SwarmUI — friendly image-gen front-end (mcmonkeyprojects/SwarmUI).
 #
-# SwarmUI is a .NET 8 web app that bundles its own ComfyUI backend by
-# default but supports talking to an external ComfyUI instance — which is
-# what we want, so it shares puente-comfyui's GPU and checkpoint cache
-# instead of duplicating them.
+# This Dockerfile mirrors SwarmUI's own launchtools/StandardDockerfile.docker,
+# adjusted for a self-contained build (git clone inside the Dockerfile
+# rather than relying on a COPY from the user's local SwarmUI checkout).
+# The upstream entrypoint — docker-standard-inner.sh — handles the dotnet
+# build at container start time, which is why we don't pre-build here.
 #
-# Upstream ships build/launch scripts under launchtools/. We use those
-# rather than reverse-engineering the dotnet build, because the project
-# layout (src paths, project file names) has changed across releases.
-# .NET 8 + python3 are required because SwarmUI shells out to python for
-# some helper scripts even when its own ComfyUI bundle is disabled.
-#
-# First build is slow (~5–10 min): clones repo, restores nuget packages,
-# compiles the .NET project, fetches the dotnet runtime layers.
-FROM mcr.microsoft.com/dotnet/sdk:8.0
+# First container start is slow (~2–5 min): dotnet restore + compile the
+# SwarmUI project inside the running container. Subsequent starts reuse
+# the built binaries in the container's layer.
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
 
-# Avoid the tzdata interactive timezone prompt that hangs container
-# builds without a TTY (transitive dep on Debian-based images).
+# Avoid the tzdata interactive timezone prompt during apt installs.
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
+ARG UID=1000
+
+# Runtime + build dependencies required by SwarmUI's upstream Dockerfile:
+# python3.11 for backend scripts, build-essential for any native deps,
+# ffmpeg for media handling, libglib2.0-0 + libgl1 for controlnet
+# preprocessors.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
-        python3 \
-        python3-venv \
-        python3-pip \
         wget \
+        build-essential \
+        python3.11 \
+        python3.11-venv \
+        python3.11-dev \
+        python3-pip \
+        ffmpeg \
+        libglib2.0-0 \
+        libgl1 \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /SwarmUI
-RUN git clone --depth 1 https://github.com/mcmonkeyprojects/SwarmUI.git .
-RUN chmod +x launchtools/*.sh
+# Pull SwarmUI into /SwarmUI. The upstream Dockerfile uses COPY from the
+# checked-out repo; we git clone instead so this Dockerfile is
+# self-contained and builds from a clean environment.
+RUN git clone --depth 1 https://github.com/mcmonkeyprojects/SwarmUI.git /SwarmUI
 
-# Build the .NET project ahead of time so first-run is just app startup.
-# `make-build.sh` is SwarmUI's documented build entrypoint.
-RUN ./launchtools/make-build.sh || true
+# Allow the build UID to own the SwarmUI tree (upstream pattern).
+RUN chown -R $UID:$UID /SwarmUI
+
+# Stupidproof git calls that happen from inside the container (upstream).
+RUN git config --global --add safe.directory '*'
+
+# Ensure a user exists for the given UID so docker-standard-inner.sh
+# can drop privileges cleanly.
+RUN useradd -u $UID -m swarmui || true
+
+# If any built binaries slipped into the clone, wipe them — SwarmUI
+# rebuilds inside the container so extensions link correctly.
+RUN rm -rf /SwarmUI/src/bin /SwarmUI/src/obj
 
 EXPOSE 7801
 
-# launch-linux.sh handles environment setup, dependency checks, and starts
-# the .NET app. --launch_mode none disables the auto-open browser. The host
-# / port flags make the dotnet listener bind to all interfaces inside the
-# container so the host port mapping reaches it.
-CMD ["./launchtools/launch-linux.sh", "--launch_mode", "none", "--host", "0.0.0.0", "--port", "7801"]
+# SwarmUI's canonical container entrypoint. It handles dotnet build,
+# Python venv setup, and SwarmUI startup. We pass host/port overrides
+# via SWARMUI_LAUNCH_MODE so the binary listens on all interfaces
+# inside the container.
+ENTRYPOINT ["bash", "/SwarmUI/launchtools/docker-standard-inner.sh"]
