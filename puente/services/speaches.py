@@ -69,23 +69,21 @@ class SpeachesService(ServiceBase):
             )
             return
 
-        try:
-            installed = self._list_installed_models(base_url)
-        except Exception:
-            installed = set()
-
+        # Always POST each configured model. Speaches' /v1/models endpoint
+        # reflects its in-memory registry, which is empty after every container
+        # restart even though the cached files persist via the volume mount.
+        # POSTing is idempotent: instant if cached, downloads if not. Skipping
+        # based on /v1/models leaves the registry empty after restart, which
+        # surfaces in clients (Open WebUI, etc.) as "model not found" errors.
         for model_id in config.models:
-            if model_id in installed:
-                console.print(f"  [green]Speaches model already present:[/green] {model_id}")
-                continue
-            console.print(f"  [cyan]Pulling Speaches model:[/cyan] {model_id} (this may take a while)")
+            console.print(f"  [cyan]Registering Speaches model:[/cyan] {model_id}")
             try:
                 req = urllib.request.Request(
                     f"{base_url}/v1/models/{model_id}", method="POST"
                 )
                 with urllib.request.urlopen(req, timeout=1800) as resp:
                     resp.read()
-                console.print(f"  [green]Pulled:[/green] {model_id}")
+                console.print(f"  [green]Ready:[/green] {model_id}")
             except urllib.error.HTTPError as e:
                 console.print(f"  [red]Failed ({e.code}):[/red] {model_id} — {e.reason}")
             except Exception as e:  # noqa: BLE001
@@ -102,11 +100,3 @@ class SpeachesService(ServiceBase):
                 pass
             time.sleep(2)
         return False
-
-    def _list_installed_models(self, base_url: str) -> set[str]:
-        import json
-
-        with urllib.request.urlopen(f"{base_url}/v1/models", timeout=10) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-        data = payload.get("data", []) if isinstance(payload, dict) else []
-        return {item.get("id") for item in data if isinstance(item, dict) and item.get("id")}

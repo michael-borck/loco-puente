@@ -299,7 +299,9 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
     # Start Docker services
     if compose_path.exists() and compose_path.stat().st_size > 20:
         cmd = ["docker", "compose", "-f", str(compose_path), "up", "-d"]
-        if service and service not in ("ollama", "comfyui"):
+        # Ollama is the only non-Docker service; everything else (including
+        # ComfyUI) is a regular compose service and can be scoped normally.
+        if service and service != "ollama":
             compose_name = service.replace("_", "-")
             cmd.append(compose_name)
         console.print(f"[cyan]Starting Docker services...[/cyan]")
@@ -327,7 +329,9 @@ def down(service: str | None = typer.Argument(None, help="Stop a specific servic
 
     if compose_path.exists():
         cmd = ["docker", "compose", "-f", str(compose_path), "down"]
-        if service and service not in ("ollama", "comfyui"):
+        # Ollama is the only non-Docker service; everything else (including
+        # ComfyUI) is a regular compose service and can be scoped normally.
+        if service and service != "ollama":
             compose_name = service.replace("_", "-")
             cmd.extend(["--remove-orphans", compose_name])
         console.print(f"[cyan]Stopping Docker services...[/cyan]")
