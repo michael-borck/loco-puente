@@ -90,7 +90,7 @@ class StackConfig(BaseModel):
         default_factory=lambda: ServiceConfig(port=3782, enabled=False)
     )
     musicgen: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=7860, enabled=False)
+        default_factory=lambda: ServiceConfig(port=3000, enabled=False)
     )
     swarmui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=7801, enabled=False)

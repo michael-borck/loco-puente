@@ -41,7 +41,7 @@ SERVICE_META = {
     "open_notebook": ("📓", "Research Notes", "Read, annotate, synthesise, podcast"),
     "comfyui": ("🎨", "Image Workflows", "Node-based SD, SDXL, FLUX workflows"),
     "swarmui": ("🖼️", "Image Gen", "Friendly image generation (uses ComfyUI)"),
-    "musicgen": ("🎵", "Music Gen", "Local music generation (MusicGen)"),
+    "musicgen": ("🎵", "Audio Gen", "MusicGen, AudioGen, Bark, Tortoise, more"),
     "fooocus": ("🪄", "Fooocus", "Opinionated SDXL with auto-enhancement"),
     "stirling_pdf": ("📄", "PDF Tools", "Merge, split, OCR, convert"),
     "excalidraw": ("✏️", "Whiteboard", "Collaborative diagrams"),

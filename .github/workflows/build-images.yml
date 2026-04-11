@@ -1,9 +1,14 @@
 name: Build container images
 
-# Builds the three custom puente service images (musicgen, swarmui, fooocus)
-# and pushes them to GHCR. The corresponding service classes specify both
-# `image:` (for fast pulls in normal use) and `build:` (as a fallback when
-# the image hasn't been published yet — e.g. forks, dev, first push).
+# Builds the custom puente service images (swarmui, fooocus) and pushes
+# them to GHCR. The corresponding service classes specify both `image:`
+# (for fast pulls in normal use) and `build:` (as a fallback when the
+# image hasn't been published yet — e.g. forks, dev, first push).
+#
+# musicgen is intentionally not built here — we use the upstream
+# ashleykza/tts-webui image (a multi-model TTS bundle that already
+# solves the audiocraft+PyAV+ffmpeg dependency mess we'd otherwise
+# inherit). See puente/services/musicgen.py for context.
 #
 # Triggers:
 #   - push to main when a Dockerfile or this workflow changes
@@ -30,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [musicgen, swarmui, fooocus]
+        service: [swarmui, fooocus]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
