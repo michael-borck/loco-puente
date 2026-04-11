@@ -26,7 +26,13 @@ class MusicGenService(ServiceBase):
     # specific release tag rather than :latest so upstream changes don't
     # silently re-pull a different image under us — bump this tag in
     # follow-up commits when adopting newer releases.
-    docker_image = "ashleykza/tts-webui:5.1.3"
+    #
+    # Pinned to 5.0.3 rather than 5.1.x because the 5.1 series bumped
+    # its bundled CUDA runtime to >= 12.8, which requires NVIDIA driver
+    # 570+. Driver 550 (and most currently-deployed drivers) max out at
+    # CUDA 12.4. Bump to 5.1.x / 6.x once operators have upgraded past
+    # driver 570.
+    docker_image = "ashleykza/tts-webui:5.0.3"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
