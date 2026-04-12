@@ -71,7 +71,6 @@ VIEWS = {
         "label": "Student",
         "sections": [
             {"label": "AI", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
-            {"label": "Creative", "services": ["fooocus", "musicgen"]},
             {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
         ],
     },
