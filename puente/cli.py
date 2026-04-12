@@ -299,6 +299,19 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
 
     _ufw_warning_if_needed()
 
+    # Per-service pre-start hooks (e.g. config file pre-seeding) — must
+    # run before docker compose so any files land in mounted volumes
+    # before the container's first read.
+    for svc_name, svc_class in ALL_SERVICES.items():
+        if service and svc_name != service:
+            continue
+        svc_config = getattr(config.services, svc_name, None)
+        if svc_config is None or not svc_config.enabled:
+            continue
+        if svc_config.install_method != "docker":
+            continue
+        svc_class().pre_start(svc_config, str(data_dir))
+
     # Start Docker services
     if compose_path.exists() and compose_path.stat().st_size > 20:
         cmd = ["docker", "compose", "-f", str(compose_path), "up", "-d"]

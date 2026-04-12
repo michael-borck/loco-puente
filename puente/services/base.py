@@ -56,6 +56,13 @@ class ServiceBase(ABC):
         port = config.port or self.default_port
         return self.is_port_active(port)
 
+    def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
+        """Hook invoked before `docker compose up -d`. Override for config
+        file pre-seeding, ownership fixes, etc. — anything that needs to be
+        in place on disk before the container starts.
+        """
+        return None
+
     def post_start(self, config: ServiceConfig, data_dir: str) -> None:
         """Hook invoked after `docker compose up -d`. Override for model pulls, etc."""
         return None

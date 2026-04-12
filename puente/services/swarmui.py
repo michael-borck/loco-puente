@@ -2,11 +2,36 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
+
+from rich.console import Console
 
 from puente.models import ServiceConfig
 
 from .base import ServiceBase
+
+console = Console()
+
+
+# FDS (Frenetic Data Syntax) config telling SwarmUI to use a single
+# external ComfyUI backend pointed at the puente-comfyui container.
+# Format derived from SwarmUI's own BackendHandler.cs save logic and the
+# ComfyUIAPISettings C# class. The "comfyui_api" type is the registered
+# ID for the "ComfyUI API By URL" backend; without this file SwarmUI
+# defaults to spinning up its own bundled ComfyUI instance and downloads
+# multi-GB of duplicate models.
+BACKENDS_FDS_CONTENT = """\
+0:
+    type: comfyui_api
+    title: External ComfyUI (puente-comfyui)
+    enabled: true
+    settings:
+        Address: http://puente-comfyui:8188
+        AllowIdle: false
+        OverQueue: 1
+        EnableFrontendDev: false
+"""
 
 
 class SwarmUIService(ServiceBase):
@@ -55,3 +80,18 @@ class SwarmUIService(ServiceBase):
             }
 
         return fragment
+
+    def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
+        """Pre-seed Backends.fds so SwarmUI uses puente-comfyui instead of
+        downloading its own bundled ComfyUI on first launch. Idempotent —
+        only writes the file if it doesn't already exist, so any user
+        customisation via the SwarmUI UI is preserved across restarts.
+        """
+        backends_file = Path(data_dir) / "swarmui" / "Backends.fds"
+        if backends_file.exists():
+            return
+        backends_file.parent.mkdir(parents=True, exist_ok=True)
+        backends_file.write_text(BACKENDS_FDS_CONTENT)
+        console.print(
+            f"  [cyan]Pre-seeded SwarmUI external ComfyUI backend:[/cyan] {backends_file}"
+        )
