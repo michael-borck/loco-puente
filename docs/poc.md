@@ -2,79 +2,106 @@
 title: "Proof of Concept"
 ---
 
-The LocoPuente PoC is running today on two consumer GPUs already in the LocoLabo fleet. This is not a simulation. These machines are running the full stack.
+LocoPuente is the "closing the gap" PoC: a minimal, credible demonstration that local AI on one secondhand consumer GPU can deliver the student-facing capabilities an institution currently leans on frontier cloud AI for. One workstation, one card, three backend inference services, one tool-augmented general chat front end, and three purpose-built research and study front ends.
+
+OpenWebUI, augmented with ComfyUI (image generation), Speaches (voice), and OpenTerminal (coding and terminal workflow), provides functional equivalence to commercial chat interfaces -- chat, voice in/out, image generation, code assistance -- in a single browser tab. The three companion front ends cover deep research, tutoring, and NotebookLM-style research-to-media. The claim is not that local small models match frontier models on every benchmark; the claim is that for the way students actually use AI -- dialogically, in conversation -- they are close enough to close the gap.
 
 ---
 
 ## Hardware
 
-| | GPU 0 (Primary) | GPU 1 (Secondary) |
-|---|---|---|
-| **Machine** | Pulpo | Puente |
-| **Card** | NVIDIA RTX 3060 | NVIDIA RTX 2060 Super |
-| **VRAM** | 12 GB GDDR6 | 8 GB GDDR6 |
-| **Bandwidth** | 360 GB/s | 448 GB/s |
-| **CUDA Compute** | 8.6 | 7.5 |
-| **Role** | Primary LLM + image generation | Voice (TTS/STT) + secondary LLM |
+| | |
+|---|---|
+| **Machine** | Puente |
+| **Chassis** | AMD Ryzen 5 2600 desktop tower |
+| **GPU** | NVIDIA RTX 3090 24 GB GDDR6X |
+| **Memory bandwidth** | 936 GB/s |
+| **CUDA compute** | 8.6 |
+| **System RAM** | 32 GB DDR4 (minimum) |
+| **OS** | Ubuntu 22.04 LTS |
 
-The dual-GPU arrangement eliminates the sequential switching constraint of a single-GPU setup. All services run concurrently -- voice and LLM inference happen simultaneously on separate cards.
+The entire PoC runs on a single RTX 3090. The 24 GB of VRAM is what makes the minimal PoC work -- it absorbs LLM inference, image generation, and voice services concurrently.
 
 ---
 
-## VRAM Budget
+## Backend Services
 
-### GPU 0 -- Pulpo, RTX 3060 12 GB
+Three services run on the RTX 3090, each exposing a clean API that the front-end apps consume:
+
+| Service | Role | Port |
+|---|---|---|
+| **Ollama** | LLM inference (OpenAI-compatible chat/completions API) | 11434 |
+| **ComfyUI** | Image generation (backend API + optional direct UI) | 8188 |
+| **Speaches** | Audio in/out -- STT (faster-whisper) and TTS (Kokoro, Piper fallback) | 8000 |
+
+Every capability the PoC demonstrates routes through one of these three services. OpenTerminal, a coding-and-terminal tool, is configured as an additional OpenWebUI tool/service rather than as a stand-alone front end.
+
+---
+
+## Front-End Apps
+
+Four purpose-built front ends sit on top of the backend services:
+
+| App | Purpose | Consumes |
+|---|---|---|
+| **OpenWebUI** | General-purpose chat interface with tool augmentation -- text chat, voice in/out (Speaches), image generation (ComfyUI), and coding assistance (OpenTerminal). Functional equivalent of commercial chat UIs. | Ollama, Speaches, ComfyUI, OpenTerminal |
+| **Vane** | Deep research | Ollama |
+| **DeepTutor** | Research and tutoring | Ollama |
+| **OpenNotebook** | Podcast generation, quizzes, structured notes -- a NotebookLM clone without video | Ollama, Speaches |
+
+OpenWebUI carries the general-purpose chat envelope a student would otherwise get from a commercial service. The three companion apps sit beside it for deep research, tutoring, and notebook-style research-to-media. Each is an existing open-source project; the PoC is the integration and the hardware, not novel app code.
+
+---
+
+## VRAM Budget (RTX 3090, 24 GB)
+
+Headline: the full stack fits concurrently with comfortable headroom.
 
 | Service | Model | VRAM |
 |---|---|---|
-| Ollama instance 0 | Llama 3.1 8B Q4_K_M | ~5 GB |
-| ComfyUI (SDXL) | SDXL 1.0 base | ~6.5 GB |
-| **LLM only** | | **~5 GB** |
-| **Image gen only** | | **~6.5 GB** |
-| **LLM + image gen** | | **~11.5 GB -- tight, not recommended concurrently** |
+| Ollama -- primary LLM | Llama 3.1 8B Q4_K_M (or Qwen 2.5 7B) | ~5 GB |
+| Speaches STT + TTS | Whisper base/small + Kokoro 82M | ~0.7 GB |
+| ComfyUI -- image generation | SDXL base + refiner | ~8-10 GB |
+| **Full stack concurrent** | | **~14-16 GB -- comfortable** |
 
-### GPU 1 -- Puente, RTX 2060 Super 8 GB
+Larger models fit when the card is not doing image generation at the same time:
 
-| Service | Model | VRAM |
-|---|---|---|
-| Speaches STT | Whisper base/small | ~0.5 GB |
-| Speaches TTS | Kokoro 82M | ~0.2 GB |
-| Ollama instance 1 | Mistral 7B / Phi-3 Mini Q4 | ~4.5 GB |
-| **Total concurrent** | | **~5.2 GB -- comfortable headroom** |
+- Llama 3.1 13B Q4_K_M: ~8 GB
+- 30B-class Q4: ~18 GB (image gen idle)
+- FLUX.1 Dev FP16: ~16-24 GB (standalone image run)
 
 ---
 
 ## PoC Capabilities
 
-| Capability | Tool | GPU | Status |
-|---|---|---|---|
-| LLM chat -- general | Open WebUI + Ollama | Pulpo | Ready |
-| LLM chat -- secondary | Open WebUI + Ollama | Puente | Ready |
-| Web search in chat | Open WebUI + SearXNG | -- | Ready |
-| Cited AI web search | Perplexica + SearXNG | Pulpo | Ready |
-| Research nudge intervention | Custom chat | Pulpo | Ready |
-| Domain RAG chatbot | AnythingLLM | Pulpo | Ready |
-| Voice input (STT) | Speaches + Whisper | Puente | Ready |
-| Voice output (TTS) | Speaches + Kokoro | Puente | Ready |
-| Research assistant + podcast | Open Notebook AI | Pulpo | Ready |
-| Image generation (in-chat) | Open WebUI + ComfyUI | Pulpo | Ready |
-| Image generation (direct UI) | ComfyUI | Pulpo | Ready |
-| PDF tools | Stirling PDF | -- | Ready |
-| Collaborative whiteboard | Excalidraw | -- | Ready |
-| Citation + writing check | CiteSight | External | Ready |
-| **Voice + LLM concurrent** | **All services** | **Both cards** | **Ready** |
+| Capability | Provided by | Front-end |
+|---|---|---|
+| General chat | Ollama | OpenWebUI |
+| Voice input / voice output | Speaches | OpenWebUI (via tool integration) |
+| Image generation | ComfyUI | OpenWebUI (via tool integration) or ComfyUI directly |
+| Coding assistant and terminal workflow | Ollama + OpenTerminal | OpenWebUI (via tool integration) |
+| Deep research | Ollama | Vane |
+| Research and tutoring | Ollama | DeepTutor |
+| Podcast generation from notes | Ollama + Speaches | OpenNotebook |
+| Quizzes and structured summaries | Ollama | OpenNotebook |
+
+All services expose OpenAI-compatible APIs. All run without internet access. All student data stays on the machine.
 
 ---
 
 ## Known Constraints
 
-- LLM inference and SDXL image generation on Pulpo should not run simultaneously -- both together approach the 12 GB ceiling. In practice, Ollama unloads after inactivity before image generation is triggered.
-- Puente's 8 GB VRAM is sufficient for voice + secondary LLM but cannot run SDXL. Image generation stays on Pulpo only.
+- All services share the one 24 GB card. Concurrent LLM + SDXL + voice runs comfortably. FLUX.1 Dev FP16 at full quality consumes most of the card on its own and is best run when other workloads are idle.
 - System RAM should be 32 GB minimum to avoid model paging to disk.
-- The custom chat tool is the only interface with research consent and logging. Do not route research participants through other interfaces.
+
+---
+
+## What Is Deliberately Out of Scope
+
+The minimal PoC is the four front ends above. The broader LocoLabo ecosystem -- the Keep Asking research chat tool, AnythingLLM unit RAG chatbots, Perplexica, Stirling PDF, Excalidraw, CiteSight, LocoEnsayo rehearsal chatbots, and the TalkBuddy / StuddyBuddy / Career Compass desktop clients -- also runs against Puente's Ollama and Speaches endpoints where relevant. Those are documented in their own project docs. Keeping the PoC itself narrow is the point of "closing the gap": prove the core on one card, then expand.
 
 ---
 
 ## The Cost Argument
 
-The PoC hardware costs less than a year of commercial AI subscriptions for a small team. Two secondhand consumer GPUs. Running the full stack. Today.
+One secondhand AMD Ryzen 5 2600 desktop. One secondhand RTX 3090. The full student-facing stack. For less than a year of frontier cloud AI subscriptions for a small team.

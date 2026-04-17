@@ -88,27 +88,32 @@ LocoEnsayo builds AI-populated rehearsal environments for professional education
 
 ## Proof of Concept
 
-The LocoPuente PoC runs on two consumer GPUs already in the LocoLabo fleet.
+The LocoPuente "closing the gap" minimal PoC runs on one secondhand consumer GPU.
 
 | Machine | GPU | Role |
 |---|---|---|
-| Puente | RTX 2060 Super 8GB | Voice services (TTS/STT), secondary LLM |
-| Pulpo | RTX 3060 12GB | Primary LLM inference, image generation |
+| Puente | NVIDIA RTX 3090 24 GB | Full stack: LLM + image generation + voice |
 
-This is not a simulation. These machines are running the full stack today. The PoC demonstrates that the BridgeAI service model works on hardware that costs less than a single semester of commercial AI subscriptions for a cohort of students.
+This is not a simulation. The machine is running the full stack today. The PoC demonstrates that the BridgeAI service model works on hardware that costs less than a single semester of commercial AI subscriptions for a cohort of students.
 
-**Stack running on PoC hardware:**
+**Backend services (all on the RTX 3090):**
 
-| Service | Tool | GPU |
-|---|---|---|
-| LLM inference (primary) | Ollama | RTX 3060 |
-| LLM inference (secondary) | Ollama | RTX 2060 Super |
-| Voice STT/TTS | Speaches + Whisper + Kokoro | RTX 2060 Super |
-| Chat interface | Open WebUI | -- |
-| Research and notes | Open Notebook AI | -- |
-| Image generation | ComfyUI (SD 1.5, SDXL) | RTX 3060 |
+| Service | Tool |
+|---|---|
+| LLM inference | Ollama |
+| Image generation | ComfyUI (SD 1.5, SDXL, FLUX) |
+| Voice STT/TTS | Speaches + Whisper + Kokoro |
 
-All services expose OpenAI-compatible APIs. All run without internet access. All student data stays on the machine.
+**Front-end apps (CPU, consuming the backend services):**
+
+| App | Purpose |
+|---|---|
+| OpenWebUI | General chat with commercial-equivalent functionality; ComfyUI, Speaches, and OpenTerminal are wired in as tools for image generation, voice, and coding |
+| Vane | Deep research |
+| DeepTutor | Research and tutoring |
+| OpenNotebook | Podcast generation, quizzes, structured notes (NotebookLM clone without video) |
+
+All backend services expose OpenAI-compatible APIs. All run without internet access. All student data stays on the machine. The RTX 3090's 24 GB VRAM carries the entire stack on one card.
 
 ---
 
@@ -116,7 +121,7 @@ All services expose OpenAI-compatible APIs. All run without internet access. All
 
 The PoC demonstrates the model. The scale target is a single Apple M3 Ultra (512 GB unified memory), which runs the full stack for 50 to 100 concurrent users with comfortable headroom, on a machine the institution owns outright.
 
-The PoC to M3 Ultra transition is not a rebuild. It is a hardware upgrade. The software stack, the architecture, and the operational model carry forward unchanged.
+The PoC to M3 Ultra transition is not a rebuild. It is a hardware upgrade. The software stack, the architecture, and the operational model carry forward unchanged. The capability jump at Phase 2 matters: on an M3 Ultra the open-weight models can be run large enough that the 5-to-10-point benchmark gap against frontier closed models becomes practically insignificant -- especially in dialogic use, where conversation closes the gap naturally through iteration, clarification, and correction. At that point there is no capability reason to send student data to a commercial provider; the only remaining reasons are habit and licensing, neither of which is a research or pedagogical argument.
 
 ---
 

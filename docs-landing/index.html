@@ -386,30 +386,31 @@
 
   <section id="poc">
     <div class="section-label fade-up">Proof of Concept</div>
-    <h2 class="section-title fade-up">Running today. Two consumer GPUs.</h2>
+    <h2 class="section-title fade-up">Running today. One secondhand GPU.</h2>
     <p class="section-desc fade-up">
-      The full stack is operational on hardware that costs less than a year of commercial AI subscriptions for a small team.
+      The "closing the gap" minimal PoC. One workstation, one card, three backend services, one tool-augmented general chat front end (OpenWebUI with ComfyUI, Speaches, and OpenTerminal wired in as tools) and three research/study companions. Cost: less than a year of frontier cloud AI subscriptions for a small team.
     </p>
     <table class="poc-table fade-up">
       <thead>
         <tr><th>Machine</th><th>GPU</th><th>VRAM</th><th>Role</th></tr>
       </thead>
       <tbody>
-        <tr><td>Pulpo</td><td>RTX 3060</td><td>12 GB</td><td>Primary LLM + image generation</td></tr>
-        <tr><td>Puente</td><td>RTX 2060 Super</td><td>8 GB</td><td>Voice (TTS/STT) + secondary LLM</td></tr>
+        <tr><td>Puente</td><td>NVIDIA RTX 3090</td><td>24 GB</td><td>Full stack: LLM + image + voice</td></tr>
       </tbody>
     </table>
     <table class="poc-table fade-up" style="margin-top: 2.5rem;">
       <thead>
-        <tr><th>Service</th><th>Tool</th><th>GPU</th></tr>
+        <tr><th>Service / App</th><th>Role</th><th>Runs on</th></tr>
       </thead>
       <tbody>
-        <tr><td>LLM inference (primary)</td><td>Ollama</td><td>RTX 3060</td></tr>
-        <tr><td>LLM inference (secondary)</td><td>Ollama</td><td>RTX 2060 Super</td></tr>
-        <tr><td>Voice STT/TTS</td><td>Speaches + Whisper + Kokoro</td><td>RTX 2060 Super</td></tr>
-        <tr><td>Chat interface</td><td>Open WebUI</td><td>--</td></tr>
-        <tr><td>Research &amp; notes</td><td>Open Notebook AI</td><td>--</td></tr>
-        <tr><td>Image generation</td><td>ComfyUI</td><td>RTX 3060</td></tr>
+        <tr><td>Ollama</td><td>LLM inference backend</td><td>RTX 3090</td></tr>
+        <tr><td>ComfyUI</td><td>Image generation backend (OpenWebUI tool)</td><td>RTX 3090</td></tr>
+        <tr><td>Speaches</td><td>Voice STT/TTS backend (OpenWebUI tool; Whisper + Kokoro)</td><td>RTX 3090</td></tr>
+        <tr><td>OpenTerminal</td><td>Coding + terminal tool (OpenWebUI tool)</td><td>Ollama</td></tr>
+        <tr><td>OpenWebUI</td><td>General chat -- commercial-chat-equivalent, with the three tools above wired in</td><td>CPU</td></tr>
+        <tr><td>Vane</td><td>Deep research</td><td>CPU</td></tr>
+        <tr><td>DeepTutor</td><td>Research and tutoring</td><td>CPU</td></tr>
+        <tr><td>OpenNotebook</td><td>Podcasts, quizzes, notes (NotebookLM clone, no video)</td><td>CPU</td></tr>
       </tbody>
     </table>
     <p style="color: var(--text-secondary); margin-top: 2rem; font-size: 0.95rem;" class="fade-up">
