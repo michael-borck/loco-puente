@@ -64,6 +64,7 @@ PROXY_URLS = {
     "swarmui": "https://swarmui.locopuente.org",
     "musicgen": "https://musicgen.locopuente.org",
     "fooocus": "https://fooocus.locopuente.org",
+    "voicebox": "https://voice.locopuente.org",
 }
 
 # View definitions
