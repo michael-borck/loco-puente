@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from typing import Any
 
 from puente.models import ServiceConfig
@@ -22,17 +20,20 @@ class VoiceboxService(ServiceBase):
     docker_image = None
     requires_gpu = False
 
-    def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
-        # Voicebox runs as a non-root `voicebox` system user inside the
-        # container (rare among puente services). The container's UID won't
-        # match the host's, so bind-mounted directories created by puente
-        # are unwritable from inside — the SQLite DB init then fails with
-        # "unable to open database file" and uvicorn exits. Pre-creating the
-        # dirs world-writable lets the in-container user open them.
-        for sub in ("output", "data", "hf-cache"):
-            d = Path(data_dir) / "voicebox" / sub
-            d.mkdir(parents=True, exist_ok=True)
-            os.chmod(d, 0o777)
+    # Voicebox is the only puente service that runs as a non-root user inside
+    # the container (USER voicebox in upstream's Dockerfile). Bind mounts
+    # would require world-writable host dirs to be usable from inside; named
+    # Docker volumes sidestep that — Docker manages permissions and the
+    # in-container voicebox user owns its own data.
+    #
+    # To grab generated audio off the host:
+    #   docker cp puente-voicebox:/app/data/generations ./voicebox-output
+
+    def compose_volumes(self, config: ServiceConfig) -> dict[str, dict[str, Any]]:
+        return {
+            "voicebox-data": {},
+            "voicebox-hf-cache": {},
+        }
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
@@ -45,9 +46,8 @@ class VoiceboxService(ServiceBase):
                 "container_name": "puente-voicebox",
                 "ports": [f"{port}:17493"],
                 "volumes": [
-                    f"{data_dir}/voicebox/output:/app/data/generations",
-                    f"{data_dir}/voicebox/data:/app/data",
-                    f"{data_dir}/voicebox/hf-cache:/home/voicebox/.cache/huggingface",
+                    "voicebox-data:/app/data",
+                    "voicebox-hf-cache:/home/voicebox/.cache/huggingface",
                 ],
                 "environment": env,
                 "restart": "unless-stopped",

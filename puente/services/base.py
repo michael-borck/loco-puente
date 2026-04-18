@@ -41,6 +41,17 @@ class ServiceBase(ABC):
         """Return docker-compose service dict, or None for non-Docker services."""
         ...
 
+    def compose_volumes(self, config: ServiceConfig) -> dict[str, dict[str, Any]]:
+        """Return top-level named-volume declarations this service requires.
+
+        Compose requires named volumes referenced by services to be declared
+        at the file's top level. Most puente services use bind mounts and
+        return nothing here. Services that need Docker-managed volumes (e.g.
+        because they run as a non-root user inside the container) should
+        return a dict like ``{"voicebox-data": {}}``.
+        """
+        return {}
+
     def status(self, config: ServiceConfig) -> ServiceStatus:
         port = config.port or self.default_port
         running = self.is_port_active(port)

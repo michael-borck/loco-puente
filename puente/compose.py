@@ -43,6 +43,7 @@ def generate_compose(config: PuenteConfig) -> dict:
     """Collect compose fragments from all enabled Docker services."""
     data_dir = str(config.resolved_data_dir())
     services: dict = {}
+    volumes: dict = {}
 
     for svc_name, svc_class in ALL_SERVICES.items():
         svc_config = getattr(config.services, svc_name, None)
@@ -57,13 +58,14 @@ def generate_compose(config: PuenteConfig) -> dict:
         fragment = svc.compose_fragment(svc_config, data_dir)
         if fragment:
             services.update(fragment)
+        volumes.update(svc.compose_volumes(svc_config))
 
     if not services:
         return {}
 
     _rewrite_host_gateway(services)
 
-    return {
+    compose: dict = {
         "services": services,
         "networks": {
             "default": {
@@ -82,6 +84,9 @@ def generate_compose(config: PuenteConfig) -> dict:
             }
         },
     }
+    if volumes:
+        compose["volumes"] = volumes
+    return compose
 
 
 def _install_dockerfiles(target_root: Path) -> None:
