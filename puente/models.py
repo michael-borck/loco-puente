@@ -98,6 +98,9 @@ class StackConfig(BaseModel):
     fooocus: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=7865, enabled=False)
     )
+    voicebox: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=17493, enabled=False, review=True)
+    )
     portal: PortalConfig = Field(
         default_factory=lambda: PortalConfig(port=8080, enabled=False)
     )

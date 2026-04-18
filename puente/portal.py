@@ -50,6 +50,7 @@ SERVICE_META = {
     "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
     "open_terminal": ("⚡", "Code Sandbox", "Python execution, PDF/DOCX generation"),
     "deeptutor": ("🎓", "DeepTutor", "Personalised learning — quizzes, deep solve, research"),
+    "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio (evaluating)"),
 }
 
 # Proxy URLs — services accessible via reverse proxy (overrides host:port)

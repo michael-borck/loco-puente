@@ -21,6 +21,7 @@ from .speaches import SpeachesService
 from .stirling_pdf import StirlingPDFService
 from .swarmui import SwarmUIService
 from .vane import VaneService
+from .voicebox import VoiceboxService
 
 ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "ollama": OllamaService,
@@ -40,5 +41,6 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "musicgen": MusicGenService,
     "swarmui": SwarmUIService,
     "fooocus": FooocusService,
+    "voicebox": VoiceboxService,
     "portal": PortalService,
 }
