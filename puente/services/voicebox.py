@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import Any
 
 from puente.models import ServiceConfig
@@ -19,6 +21,18 @@ class VoiceboxService(ServiceBase):
     # rather than maintaining a parallel Dockerfile under dockerfiles/.
     docker_image = None
     requires_gpu = False
+
+    def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
+        # Voicebox runs as a non-root `voicebox` system user inside the
+        # container (rare among puente services). The container's UID won't
+        # match the host's, so bind-mounted directories created by puente
+        # are unwritable from inside — the SQLite DB init then fails with
+        # "unable to open database file" and uvicorn exits. Pre-creating the
+        # dirs world-writable lets the in-container user open them.
+        for sub in ("output", "data", "hf-cache"):
+            d = Path(data_dir) / "voicebox" / sub
+            d.mkdir(parents=True, exist_ok=True)
+            os.chmod(d, 0o777)
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
