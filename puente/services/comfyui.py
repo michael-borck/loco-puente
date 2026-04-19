@@ -71,6 +71,7 @@ class ComfyUIService(ServiceBase):
                 "volumes": [
                     f"{data_dir}/comfyui-run:/comfy/mnt",
                     f"{data_dir}/comfyui-basedir:/basedir",
+                    f"{data_dir}/comfyui-basedir/custom_nodes:/comfy/ComfyUI/custom_nodes",
                 ],
                 "environment": env,
                 "restart": "unless-stopped",
