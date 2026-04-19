@@ -25,6 +25,18 @@ security_level = weak
 """
 
 
+def _ensure_venv_base_packages(data_dir: Path) -> None:
+    # The ComfyUI venv lives in comfyui-run/venv — same volume as /comfy/mnt.
+    # Many custom nodes need setuptools (pkg_resources) which the mmartial
+    # image omits. Install it here so nodes load without manual "Try Fix".
+    venv_pip = data_dir / "comfyui-run" / "venv" / "bin" / "pip"
+    if venv_pip.exists():
+        subprocess.run(
+            [str(venv_pip), "install", "--quiet", "setuptools", "wheel"],
+            check=False,
+        )
+
+
 def _write_manager_config(manager_path: Path) -> None:
     (manager_path / "config.ini").write_text(_MANAGER_CONFIG)
 
@@ -51,6 +63,7 @@ class ComfyUIService(ServiceBase):
         else:
             subprocess.run(["git", "-C", str(manager_path), "pull"], check=True)
         _write_manager_config(manager_path)
+        _ensure_venv_base_packages(Path(data_dir))
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
