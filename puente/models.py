@@ -46,6 +46,10 @@ class PortalConfig(ServiceConfig):
     host: str = "localhost"  # hostname/IP used in generated service URLs
 
 
+class ComfyUIConfig(ServiceConfig):
+    install_manager: bool = True  # clone ComfyUI-Manager into basedir/custom_nodes on pre_start
+
+
 class StackConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     open_webui: ServiceConfig = Field(
@@ -54,8 +58,8 @@ class StackConfig(BaseModel):
     speaches: SpeachesConfig = Field(
         default_factory=lambda: SpeachesConfig(port=8000, enabled=False)
     )
-    comfyui: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(
+    comfyui: ComfyUIConfig = Field(
+        default_factory=lambda: ComfyUIConfig(
             port=8188, install_method="docker", enabled=False
         )
     )

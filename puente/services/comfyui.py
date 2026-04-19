@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import subprocess
+from pathlib import Path
 from typing import Any
 
-from puente.models import ServiceConfig
+from puente.models import ComfyUIConfig, ServiceConfig
 
 from .base import ServiceBase
+
+_MANAGER_REPO = "https://github.com/ltdrdata/ComfyUI-Manager.git"
+_MANAGER_DIR = "ComfyUI-Manager"
 
 
 class ComfyUIService(ServiceBase):
@@ -16,6 +21,20 @@ class ComfyUIService(ServiceBase):
     install_method = "docker"
     docker_image = "mmartial/comfyui-nvidia-docker:ubuntu22_cuda12.4-latest"
     requires_gpu = True
+
+    def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
+        if not isinstance(config, ComfyUIConfig) or not config.install_manager:
+            return
+        custom_nodes = Path(data_dir) / "comfyui-basedir" / "custom_nodes"
+        custom_nodes.mkdir(parents=True, exist_ok=True)
+        manager_path = custom_nodes / _MANAGER_DIR
+        if not manager_path.exists():
+            subprocess.run(
+                ["git", "clone", "--depth", "1", _MANAGER_REPO, str(manager_path)],
+                check=True,
+            )
+        else:
+            subprocess.run(["git", "-C", str(manager_path), "pull"], check=True)
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
