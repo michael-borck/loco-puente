@@ -12,6 +12,22 @@ from .base import ServiceBase
 
 _MANAGER_REPO = "https://github.com/ltdrdata/ComfyUI-Manager.git"
 _MANAGER_DIR = "ComfyUI-Manager"
+_MANAGER_CONFIG = """\
+[default]
+channel_url = default
+preview_method = auto
+badge_mode = none
+git_exe =
+update_interval = 600
+enable_after_install = False
+network_mode = public
+"""
+
+
+def _write_manager_config(manager_path: Path) -> None:
+    config_file = manager_path / "config.ini"
+    if not config_file.exists():
+        config_file.write_text(_MANAGER_CONFIG)
 
 
 class ComfyUIService(ServiceBase):
@@ -35,6 +51,7 @@ class ComfyUIService(ServiceBase):
             )
         else:
             subprocess.run(["git", "-C", str(manager_path), "pull"], check=True)
+        _write_manager_config(manager_path)
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
