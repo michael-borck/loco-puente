@@ -37,6 +37,7 @@ class FooocusService(ServiceBase):
                 ],
                 "environment": env,
                 "restart": "unless-stopped",
+                "init": True,
             }
         }
 
