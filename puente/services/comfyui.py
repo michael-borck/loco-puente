@@ -21,13 +21,12 @@ git_exe =
 update_interval = 600
 enable_after_install = False
 network_mode = public
+security_level = weak
 """
 
 
 def _write_manager_config(manager_path: Path) -> None:
-    config_file = manager_path / "config.ini"
-    if not config_file.exists():
-        config_file.write_text(_MANAGER_CONFIG)
+    (manager_path / "config.ini").write_text(_MANAGER_CONFIG)
 
 
 class ComfyUIService(ServiceBase):
@@ -60,7 +59,7 @@ class ComfyUIService(ServiceBase):
             "WANTED_UID": "1000",
             "WANTED_GID": "1000",
             "BASE_DIRECTORY": "/basedir",
-            "SECURITY_LEVEL": "normal",
+            "SECURITY_LEVEL": "weak",
         }
         env.update(config.environment)
 
