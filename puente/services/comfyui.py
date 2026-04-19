@@ -34,7 +34,7 @@ class ComfyUIService(ServiceBase):
     description = "Image generation (SD 1.5, SDXL, FLUX)"
     default_port = 8188
     install_method = "docker"
-    docker_image = "mmartial/comfyui-nvidia-docker:ubuntu22_cuda12.4-latest"
+    docker_image = "ghcr.io/michael-borck/puente-comfyui:latest"
     requires_gpu = True
 
     def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
@@ -66,6 +66,7 @@ class ComfyUIService(ServiceBase):
         fragment: dict[str, Any] = {
             "comfyui": {
                 "image": self.docker_image,
+                "build": {"context": "./dockerfiles/comfyui"},
                 "container_name": "puente-comfyui",
                 "ports": [f"{port}:8188"],
                 "volumes": [

@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [swarmui, fooocus]
+        service: [swarmui, fooocus, comfyui]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
