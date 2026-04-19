@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from puente import __version__
-from puente.compose import generate_compose, write_compose
+from puente.compose import ensure_volume_dirs, generate_compose, write_compose
 from puente.detect import detect_all
 from puente.gpu import detect_gpus, print_gpu_table, suggest_gpu_assignment
 from puente.models import (
@@ -289,6 +289,8 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
 
     # Always regenerate so upstream changes to compose.py / service fragments
     # are picked up without requiring users to manually delete the file.
+    compose_data = generate_compose(config)
+    ensure_volume_dirs(compose_data)
     write_compose(config, compose_path)
 
     # Keep the portal launcher page in sync with current config.

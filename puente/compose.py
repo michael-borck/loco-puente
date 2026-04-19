@@ -112,6 +112,23 @@ def _install_dockerfiles(target_root: Path) -> None:
         shutil.copytree(entry, dest)
 
 
+def ensure_volume_dirs(compose_data: dict) -> None:
+    """Pre-create all bind-mount host directories as the current user.
+
+    Docker creates missing mount directories as root, which locks out the
+    container process and prevents cache writes. Running this before
+    `docker compose up` ensures directories exist with correct ownership.
+    """
+    for svc in compose_data.get("services", {}).values():
+        for vol in svc.get("volumes", []):
+            if not isinstance(vol, str):
+                continue
+            host_path = vol.split(":")[0]
+            # Only create absolute paths that look like bind mounts (not named volumes)
+            if host_path.startswith("/"):
+                Path(host_path).mkdir(parents=True, exist_ok=True)
+
+
 def write_compose(config: PuenteConfig, output_path: Path | None = None) -> Path:
     """Generate and write docker-compose.yml."""
     compose_data = generate_compose(config)
