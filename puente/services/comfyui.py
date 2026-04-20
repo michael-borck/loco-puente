@@ -42,28 +42,19 @@ fi
 """
 
 # Written to {data_dir}/comfyui-run/postvenv_script.bash — runs AFTER the mmartial
-# upgrade loop (so our setuptools pin isn't overwritten) but before ComfyUI starts.
+# upgrade loop (so our setuptools pin isn't overwritten) but before torch/ComfyUI.
 _POSTVENV_SCRIPT = """#!/bin/bash
 # Puente ComfyUI post-upgrade setup — runs after mmartial's package upgrade loop.
 
 VENV_PIP="/comfy/mnt/venv/bin/pip"
 
 # Pin setuptools<70: mmartial upgrades to 82.x which omits pkg_resources from
-# uv venvs. Many custom nodes (SadTalker, etc.) import pkg_resources at load time.
+# uv venvs. Many custom nodes import pkg_resources at load time.
+# NOTE: do NOT install custom node requirements here — this hook runs before torch,
+# so compiled extensions (scikit-image, opencv, etc.) would be built against the
+# wrong numpy ABI. Use ComfyUI-Manager's "Try Fix" button for nodes with compiled deps.
 if [ -f "$VENV_PIP" ]; then
     "$VENV_PIP" install "setuptools<70" --quiet 2>&1 || true
-fi
-
-# Auto-install requirements for every custom node that has a requirements.txt.
-# Nodes installed via Manager get their deps resolved on next restart automatically.
-if [ -f "$VENV_PIP" ]; then
-    for req in /basedir/custom_nodes/*/requirements.txt; do
-        [ -f "$req" ] || continue
-        node_name=$(basename "$(dirname "$req")")
-        [ "$node_name" = "ComfyUI-Manager" ] && continue
-        echo "[puente] Installing requirements for $node_name..."
-        "$VENV_PIP" install -r "$req" --quiet 2>&1 || true
-    done
 fi
 """
 
