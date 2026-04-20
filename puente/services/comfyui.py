@@ -29,6 +29,7 @@ fi
 if [ -d "$MANAGER_DIR" ]; then
     cat > "$MANAGER_DIR/config.ini" << 'CONFIGEOF'
 [default]
+channel_url = local
 preview_method = auto
 badge_mode = none
 git_exe =
