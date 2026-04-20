@@ -45,6 +45,20 @@ network_mode = public
 security_level = weak
 CONFIGEOF
 fi
+
+# Auto-install requirements for every custom node that has a requirements.txt.
+# This ensures nodes installed via Manager (or manually) work after the next restart
+# without needing manual "Try Fix" steps.
+if [ -f "$VENV_PIP" ]; then
+    for req in /basedir/custom_nodes/*/requirements.txt; do
+        [ -f "$req" ] || continue
+        node_name=$(basename "$(dirname "$req")")
+        # Skip Manager itself — its deps are handled by ComfyUI's own install path.
+        [ "$node_name" = "ComfyUI-Manager" ] && continue
+        echo "[puente] Installing requirements for $node_name..."
+        "$VENV_PIP" install -r "$req" --quiet 2>&1 || true
+    done
+fi
 """
 
 
