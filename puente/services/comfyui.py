@@ -9,19 +9,13 @@ from puente.models import ComfyUIConfig, ServiceConfig
 
 from .base import ServiceBase
 
-# Written to {data_dir}/comfyui-run/user_script.bash which the mmartial image
-# runs automatically before ComfyUI starts (as the comfy user, after venv creation).
+# Written to {data_dir}/comfyui-run/user_script.bash — runs before the mmartial
+# upgrade loop (early startup hook: clone Manager, write config).
 _STARTUP_SCRIPT = """#!/bin/bash
-# Puente ComfyUI setup — runs inside container before ComfyUI starts.
+# Puente ComfyUI early setup — clones Manager before ComfyUI starts.
 
-VENV_PIP="/comfy/mnt/venv/bin/pip"
 MANAGER_REPO="https://github.com/ltdrdata/ComfyUI-Manager.git"
 MANAGER_DIR="/basedir/custom_nodes/ComfyUI-Manager"
-
-# Fix setuptools: versions >= 70 omit pkg_resources which many custom nodes need.
-if [ -f "$VENV_PIP" ]; then
-    "$VENV_PIP" install "setuptools<70" --quiet 2>&1 || true
-fi
 
 # Clone or update ComfyUI-Manager.
 mkdir -p /basedir/custom_nodes
@@ -45,15 +39,27 @@ network_mode = public
 security_level = weak
 CONFIGEOF
 fi
+"""
+
+# Written to {data_dir}/comfyui-run/postvenv_script.bash — runs AFTER the mmartial
+# upgrade loop (so our setuptools pin isn't overwritten) but before ComfyUI starts.
+_POSTVENV_SCRIPT = """#!/bin/bash
+# Puente ComfyUI post-upgrade setup — runs after mmartial's package upgrade loop.
+
+VENV_PIP="/comfy/mnt/venv/bin/pip"
+
+# Pin setuptools<70: mmartial upgrades to 82.x which omits pkg_resources from
+# uv venvs. Many custom nodes (SadTalker, etc.) import pkg_resources at load time.
+if [ -f "$VENV_PIP" ]; then
+    "$VENV_PIP" install "setuptools<70" --quiet 2>&1 || true
+fi
 
 # Auto-install requirements for every custom node that has a requirements.txt.
-# This ensures nodes installed via Manager (or manually) work after the next restart
-# without needing manual "Try Fix" steps.
+# Nodes installed via Manager get their deps resolved on next restart automatically.
 if [ -f "$VENV_PIP" ]; then
     for req in /basedir/custom_nodes/*/requirements.txt; do
         [ -f "$req" ] || continue
         node_name=$(basename "$(dirname "$req")")
-        # Skip Manager itself — its deps are handled by ComfyUI's own install path.
         [ "$node_name" = "ComfyUI-Manager" ] && continue
         echo "[puente] Installing requirements for $node_name..."
         "$VENV_PIP" install -r "$req" --quiet 2>&1 || true
@@ -75,9 +81,13 @@ class ComfyUIService(ServiceBase):
             return
         run_dir = Path(data_dir) / "comfyui-run"
         run_dir.mkdir(parents=True, exist_ok=True)
-        script = run_dir / "user_script.bash"
-        script.write_text(_STARTUP_SCRIPT)
-        script.chmod(0o755)
+        for filename, content in [
+            ("user_script.bash", _STARTUP_SCRIPT),
+            ("postvenv_script.bash", _POSTVENV_SCRIPT),
+        ]:
+            script = run_dir / filename
+            script.write_text(content)
+            script.chmod(0o755)
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
