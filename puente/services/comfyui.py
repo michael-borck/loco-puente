@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -10,9 +9,31 @@ from puente.models import ComfyUIConfig, ServiceConfig
 
 from .base import ServiceBase
 
-_MANAGER_REPO = "https://github.com/ltdrdata/ComfyUI-Manager.git"
-_MANAGER_DIR = "ComfyUI-Manager"
-_MANAGER_CONFIG = """\
+# Written to {data_dir}/comfyui-run/user_script.bash which the mmartial image
+# runs automatically before ComfyUI starts (as the comfy user, after venv creation).
+_STARTUP_SCRIPT = """#!/bin/bash
+# Puente ComfyUI setup — runs inside container before ComfyUI starts.
+
+VENV_PIP="/comfy/mnt/venv/bin/pip"
+MANAGER_REPO="https://github.com/ltdrdata/ComfyUI-Manager.git"
+MANAGER_DIR="/basedir/custom_nodes/ComfyUI-Manager"
+
+# Fix setuptools: versions >= 70 omit pkg_resources which many custom nodes need.
+if [ -f "$VENV_PIP" ]; then
+    "$VENV_PIP" install "setuptools<70" --quiet 2>&1 || true
+fi
+
+# Clone or update ComfyUI-Manager.
+mkdir -p /basedir/custom_nodes
+if [ ! -d "$MANAGER_DIR" ]; then
+    git clone --depth 1 "$MANAGER_REPO" "$MANAGER_DIR" 2>&1 || true
+else
+    git -C "$MANAGER_DIR" pull --quiet 2>&1 || true
+fi
+
+# Write Manager config (always overwrite to keep settings correct).
+if [ -d "$MANAGER_DIR" ]; then
+    cat > "$MANAGER_DIR/config.ini" << 'CONFIGEOF'
 [default]
 channel_url = default
 preview_method = auto
@@ -22,12 +43,9 @@ update_interval = 600
 enable_after_install = False
 network_mode = public
 security_level = weak
+CONFIGEOF
+fi
 """
-
-
-
-def _write_manager_config(manager_path: Path) -> None:
-    (manager_path / "config.ini").write_text(_MANAGER_CONFIG)
 
 
 class ComfyUIService(ServiceBase):
@@ -41,35 +59,11 @@ class ComfyUIService(ServiceBase):
     def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
         if not isinstance(config, ComfyUIConfig) or not config.install_manager:
             return
-        custom_nodes = Path(data_dir) / "comfyui-basedir" / "custom_nodes"
-        custom_nodes.mkdir(parents=True, exist_ok=True)
-        manager_path = custom_nodes / _MANAGER_DIR
-        if not manager_path.exists():
-            subprocess.run(
-                ["git", "clone", "--depth", "1", _MANAGER_REPO, str(manager_path)],
-                check=True,
-            )
-        else:
-            subprocess.run(["git", "-C", str(manager_path), "pull"], check=True)
-        _write_manager_config(manager_path)
-
-    def post_start(self, config: ServiceConfig, data_dir: str) -> None:
-        if not isinstance(config, ComfyUIConfig) or not config.install_manager:
-            return
-        venv_python = "/comfy/mnt/venv/bin/python"
-        venv_pip = "/comfy/mnt/venv/bin/pip"
-        check = subprocess.run(
-            ["docker", "exec", "puente-comfyui", venv_python, "-c", "import pkg_resources"],
-            capture_output=True,
-        )
-        if check.returncode != 0:
-            subprocess.run(
-                ["docker", "exec", "puente-comfyui", venv_pip,
-                 "install", "--quiet", "setuptools", "wheel"],
-                check=False,
-            )
-            # Restart so custom nodes reload with setuptools available
-            subprocess.run(["docker", "restart", "puente-comfyui"], check=False)
+        run_dir = Path(data_dir) / "comfyui-run"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        script = run_dir / "user_script.bash"
+        script.write_text(_STARTUP_SCRIPT)
+        script.chmod(0o755)
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
@@ -79,6 +73,7 @@ class ComfyUIService(ServiceBase):
             "WANTED_GID": "1000",
             "BASE_DIRECTORY": "/basedir",
             "SECURITY_LEVEL": "weak",
+            "DISABLE_UPGRADES": "true",
         }
         env.update(config.environment)
 
