@@ -73,7 +73,6 @@ class ComfyUIService(ServiceBase):
             "WANTED_GID": "1000",
             "BASE_DIRECTORY": "/basedir",
             "SECURITY_LEVEL": "weak",
-            "DISABLE_UPGRADES": "true",
         }
         env.update(config.environment)
 
