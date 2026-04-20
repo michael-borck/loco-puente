@@ -102,6 +102,7 @@ class ComfyUIService(ServiceBase):
                     f"{data_dir}/comfyui-basedir/custom_nodes:/comfy/ComfyUI/custom_nodes",
                 ],
                 "environment": env,
+                "init": True,
                 "restart": "unless-stopped",
             }
         }
