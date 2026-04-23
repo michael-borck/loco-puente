@@ -11,6 +11,7 @@ from .excalidraw import ExcalidrawService
 from .fooocus import FooocusService
 from .jupyter import JupyterService
 from .musicgen import MusicGenService
+from .nodepad import NodepadService
 from .ollama import OllamaService
 from .open_notebook import OpenNotebookService
 from .open_terminal import OpenTerminalService
@@ -39,6 +40,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "jupyter": JupyterService,
     "deeptutor": DeepTutorService,
     "musicgen": MusicGenService,
+    "nodepad": NodepadService,
     "swarmui": SwarmUIService,
     "fooocus": FooocusService,
     "voicebox": VoiceboxService,
