@@ -148,6 +148,34 @@ Do you want to supplement rather than replace commercial tools?
 
 ---
 
+## For Institutions and Organisations
+
+The case for local AI looks different at institutional scale. The key framing shift is **CapEx vs. OpEx**.
+
+Cloud AI is operational expenditure: recurring per-seat costs (typically $200+/month per user for enterprise tiers), rate limits, token quotas, and zero data sovereignty. Local inference is capital expenditure: hardware purchased once, depreciating over time, with uncapped throughput and full data control.
+
+**The compliance argument** is often decisive. Healthcare, legal, financial, and educational institutions handling sensitive data may be unable to use cloud AI APIs regardless of preference. On-premises inference is not a budget decision in these contexts — it is a regulatory requirement.
+
+**The throughput argument** matters at scale. Enterprise cloud subscriptions impose rate limits and quotas. Local hardware transforms AI from a metered external utility into an internal resource — running continuously, without per-query cost, on institutional data that never leaves the network.
+
+**Recommended approach for institutions:**
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Sensitive data, compliance requirements | Full local deployment — no cloud APIs for regulated data |
+| Mixed workloads, some public data | Hybrid: local for sensitive/high-volume, cloud for complex reasoning |
+| Evaluation / pilot phase | Start with the minimal stack (Open WebUI + Ollama), run LocoBench on available hardware, assess before committing to hardware procurement |
+
+**Implementation sequence:**
+1. Audit data sensitivity — determine what can and cannot leave institutional infrastructure
+2. Run LocoBench on available hardware to establish capability baseline
+3. Deploy the minimal stack; validate workflows before expanding
+4. Procure hardware based on actual measured throughput requirements, not theoretical specs
+
+*See [HARDWARE.md](HARDWARE.md) for hardware selection and procurement guidance.*
+
+---
+
 ## What Puente Is Not
 
 - A replacement for critical thinking
