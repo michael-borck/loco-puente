@@ -29,6 +29,8 @@ export default defineConfig({
             { label: 'Proof of Concept', slug: 'poc' },
             { label: 'Software Stack', slug: 'stack' },
             { label: 'Roadmap', slug: 'roadmap' },
+            { label: 'Choosing Your Stack', slug: 'choosing' },
+            { label: 'Hardware Selection', slug: 'hardware' },
           ],
         },
         {
