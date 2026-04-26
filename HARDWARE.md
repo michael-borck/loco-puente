@@ -53,7 +53,11 @@ Consumer cards top out at 24 GB (RTX 3090/4090). Professional cards with higher 
 
 The CPU, GPU, and NPU share a single high-speed RAM pool with no PCIe bottleneck. The practical result: a system with 128 GB of unified RAM can make ~108 GB available for inference, at a fraction of the cost of equivalent discrete VRAM.
 
-**Apple M-series** (Mac Studio, MacBook Pro M3+): mature ecosystem, excellent stability, strong community support, but price premium and limited system-level customisation.
+**Apple M-series**: mature ecosystem, excellent stability, strong community support, but price premium and limited system-level customisation.
+
+- **Entry / base benchmark tier — M1 MacBook, 16 GB unified RAM.** With shared CPU/GPU memory and typical macOS overhead (~8 GB), 16 GB leaves roughly 8 GB available for the GPU. This is enough to run 8B models comfortably at Q4 quantisation. Anything less forces you down to 3B–4B models. The M1 MacBook 16 GB is the Apple baseline used across LocoLab benchmarks — the floor from which all Apple-silicon comparisons are made.
+
+- **High-capacity tier — Mac Studio M3 Ultra (192 GB / 512 GB).** Note: Apple discontinued the 512 GB M3 Ultra configuration and, as of mid-2025, stopped taking orders. The Mac Mini was also effectively unavailable in April 2025, with reported wait times of 3–6 months or longer. Check current availability before planning a purchase around specific configurations.
 
 **AMD Strix Halo (Ryzen AI 395)**: delivers comparable or greater memory capacity to the Mac at lower cost, runs Linux natively, and gives full driver and OS control. Available in mini-PC form factors (e.g., GMK Tech Evo X2, Minisforum, ASUS) for $2,100–$2,500.
 
@@ -87,8 +91,9 @@ On AMD hardware, use **ROCm drivers** (proprietary) over Vulkan for AI workloads
 |----------|-----------|-------------|-------|
 | RTX 4090 | 24 GB discrete | $1,500–$2,000 | Consumer max; good CUDA ecosystem |
 | RTX 3090 | 24 GB discrete | $700–$900 used | Strong value second-hand |
+| MacBook / Mac Mini (M1, 16 GB) | 16 GB unified | $700–$1,000 used | LocoLab Apple baseline; runs 8B models comfortably |
 | AMD Strix Halo mini-PC | 128 GB unified | $2,100–$2,500 | Best $/GB for large models |
-| Mac Studio (M3 Ultra) | 192 GB unified | $4,000+ | Most stable UMA option |
+| Mac Studio (M3 Ultra) | 192 GB unified | $4,000+ | Check availability — 512 GB config discontinued; orders paused mid-2025 |
 | Nvidia DGX Spark | 128 GB unified | ~$4,000 | Enterprise warranty, clean stack |
 | RTX 6000 / Pro 6000 | 48–96 GB discrete | $7,000–$10,000 | High discrete VRAM, high cost |
 
