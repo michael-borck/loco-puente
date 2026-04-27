@@ -1,0 +1,33 @@
+---
+title: LocoPuente
+description: Local AI for everyone who can't — or won't — send their data to the cloud.
+template: splash
+hero:
+  tagline: Local AI for everyone who can't — or won't — send their data to the cloud.
+  actions:
+    - text: Student Services
+      link: /docs/services/
+      icon: right-arrow
+      variant: primary
+    - text: Proof of Concept
+      link: /docs/poc/
+      icon: external
+      variant: secondary
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <Card title="A suite of AI services" icon="puzzle">
+    Chat, image generation, voice, knowledge graphs, rehearsal chatbots — all running locally on a single server you own and control.
+  </Card>
+  <Card title="Private by architecture" icon="approve-check">
+    No data leaves the machine. No subscriptions. No terms-of-service changes. Local inference cannot leak what it does not send.
+  </Card>
+  <Card title="Open a browser, that's it" icon="laptop">
+    Students access everything from any device on the network. No installs, no accounts, no API keys.
+  </Card>
+  <Card title="Built on LocoLab research" icon="open-book">
+    LocoPuente is where the research becomes real — the convergence point for LocoLLM, LocoBench, LocoConvoy, LocoEnsayo, and LocoAgente.
+  </Card>
+</CardGrid>
