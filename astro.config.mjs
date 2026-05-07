@@ -9,6 +9,7 @@ export default defineConfig({
       title: 'LocoPuente',
       description: "Local AI for everyone who can\u2019t \u2014 or won\u2019t \u2014 send their data to the cloud",
       favicon: '/favicon.svg',
+      disable404Route: true,
       logo: {
         alt: 'LocoPuente',
         src: './src/assets/puente.svg',
