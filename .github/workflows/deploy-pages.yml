@@ -30,21 +30,14 @@ jobs:
       - name: Build Starlight docs
         run: npm run build
 
-      - name: Assemble site
+      - name: Prepare artifact
         run: |
-          mkdir _site
-
-          # Redirect root → /docs/
-          echo '<meta http-equiv="refresh" content="0; url=/docs/"><a href="/docs/">Redirecting…</a>' > _site/index.html
-          touch _site/.nojekyll
-
-          # CNAME for custom domain
-          echo "locopuente.org" > _site/CNAME
-
-          # Starlight output under /docs/
-          mv dist _site/docs
+          echo "locopuente.org" > dist/CNAME
+          touch dist/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
 
   deploy:
     needs: build

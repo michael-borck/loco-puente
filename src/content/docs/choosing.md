@@ -176,7 +176,7 @@ Cloud AI is operational expenditure: recurring per-seat costs (typically $200+/m
 3. Deploy the minimal stack; validate workflows before expanding
 4. Procure hardware based on actual measured throughput requirements, not theoretical specs
 
-*See [HARDWARE.md](HARDWARE.md) for hardware selection and procurement guidance.*
+*See [Hardware](hardware) for hardware selection and procurement guidance.*
 
 ---
 
@@ -191,4 +191,4 @@ What it is: a self-hosted environment that lets you experiment, build intuition,
 ---
 
 *For hardware benchmarks specific to your machine, see [LocoBench](https://github.com/michael-borck/loco-bench).*
-*For deployment configuration, see [README.md](README.md).*
+*For deployment configuration, see the [project README](https://github.com/michael-borck/loco-puente/blob/main/README.md).*

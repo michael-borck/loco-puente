@@ -137,4 +137,4 @@ Run LocoBench on candidate hardware before committing. Theoretical VRAM capacity
 
 ---
 
-*See also: [CHOOSING.md](CHOOSING.md) for deployment strategy (local vs cloud VPS), model selection, and the minimal viable stack.*
+*See also: [Choosing](choosing) for deployment strategy (local vs cloud VPS), model selection, and the minimal viable stack.*
