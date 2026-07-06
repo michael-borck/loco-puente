@@ -1,0 +1,178 @@
+data_dir: ~/.puente
+services:
+  ollama:
+    enabled: true
+    install_method: native
+    port: null
+    gpu: null
+    managed: false
+    environment: {}
+    review: false
+    instances:
+    - name: primary
+      gpu: 0
+      port: 11434
+      models:
+      - llama3.1:8b-q4_k_m
+  open_webui:
+    enabled: false
+    install_method: docker
+    port: 3000
+    gpu: null
+    managed: true
+    environment:
+      WEBUI_AUTH: 'true'
+      ENABLE_WEBSOCKET_SUPPORT: 'false'
+    review: false
+  speaches:
+    enabled: false
+    install_method: docker
+    port: 8000
+    gpu: 0
+    managed: true
+    environment:
+      CHAT_COMPLETION_BASE_URL: http://192.168.20.120:11434
+      CHAT_COMPLETION_API_KEY: Curtin2026ISYS20015002
+    review: false
+    models:
+    - Systran/faster-whisper-small
+    - speaches-ai/Kokoro-82M-v1.0-ONNX
+  comfyui:
+    enabled: true
+    install_method: docker
+    port: 8188
+    gpu: 0
+    managed: true
+    environment: {}
+    review: false
+    install_manager: true
+    install_sadtalker: true
+  searxng:
+    enabled: false
+    install_method: docker
+    port: 8888
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  vane:
+    enabled: false
+    install_method: docker
+    port: 3005
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  anythingllm:
+    enabled: false
+    install_method: docker
+    port: 3001
+    gpu: null
+    managed: false
+    environment: {}
+    review: false
+  open_notebook:
+    enabled: false
+    install_method: docker
+    port: 8502
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  stirling_pdf:
+    enabled: false
+    install_method: docker
+    port: 8089
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  excalidraw:
+    enabled: false
+    install_method: docker
+    port: 3333
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  open_terminal:
+    enabled: false
+    install_method: docker
+    port: 8100
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  citesight:
+    enabled: false
+    install_method: docker
+    port: 3010
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  jupyter:
+    enabled: false
+    install_method: docker
+    port: 8899
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  deeptutor:
+    enabled: false
+    install_method: docker
+    port: 3782
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+  musicgen:
+    enabled: false
+    install_method: docker
+    port: 7860
+    gpu: 0
+    managed: true
+    environment: {}
+    review: true
+  swarmui:
+    enabled: true
+    install_method: docker
+    port: 7801
+    gpu: 0
+    managed: true
+    environment: {}
+    review: true
+  fooocus:
+    enabled: false
+    install_method: docker
+    port: 7865
+    gpu: 0
+    managed: true
+    environment: {}
+    review: true
+  nodepad:
+    enabled: false
+    install_method: docker
+    port: 3004
+    gpu: null
+    managed: true
+    environment: {}
+    review: true
+  voicebox:
+    enabled: false
+    install_method: docker
+    port: 17493
+    gpu: null
+    managed: true
+    environment: {}
+    review: true
+  portal:
+    enabled: true
+    install_method: docker
+    port: 8090
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+    host: 192.168.20.120
