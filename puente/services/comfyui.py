@@ -55,6 +55,15 @@ VENV_PIP="/comfy/mnt/venv/bin/pip"
 # wrong numpy ABI. Use ComfyUI-Manager's "Try Fix" button for nodes with compiled deps.
 if [ -f "$VENV_PIP" ]; then
     "$VENV_PIP" install "setuptools<70" --quiet 2>&1 || true
+
+    # numpy-2 ABI fix: the base image ships numpy 2.x but pins old
+    # scikit-learn (1.1.x) and scikit-image (0.19.x) built against numpy 1.x.
+    # Their compiled extensions (sklearn murmurhash, skimage geometry) raise
+    # "numpy.dtype size changed (96 vs 88)" when transitively imported — which
+    # breaks SwarmUI's ComfyUI backend nodes (SwarmComfyCommon) at load time.
+    # Upgrading to numpy-2-compatible builds resolves it. These are upgrades of
+    # existing packages, not new compiled builds, so ABI-safe to run pre-torch.
+    "$VENV_PIP" install --upgrade "scikit-learn>=1.4" "scikit-image>=0.24" --quiet 2>&1 || true
 fi
 """
 

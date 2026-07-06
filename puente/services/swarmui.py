@@ -58,6 +58,15 @@ class SwarmUIService(ServiceBase):
                 "ports": [f"{port}:7801"],
                 "volumes": [
                     f"{data_dir}/swarmui:/SwarmUI/Data",
+                    # Share ComfyUI's model tree so SwarmUI lists the same
+                    # checkpoints/loras/vae instead of an empty folder. SwarmUI
+                    # uses Stable-Diffusion/Lora/VAE dir names; ComfyUI uses
+                    # checkpoints/loras/vae — map each explicitly. NOT read-only:
+                    # SwarmUI writes .tmp hash-cache files alongside models
+                    # (GetOrGenerateTensorHashSha256), which fails on a ro mount.
+                    f"{data_dir}/comfyui-basedir/models/checkpoints:/SwarmUI/Models/Stable-Diffusion",
+                    f"{data_dir}/comfyui-basedir/models/loras:/SwarmUI/Models/Lora",
+                    f"{data_dir}/comfyui-basedir/models/vae:/SwarmUI/Models/VAE",
                 ],
                 "environment": env,
                 "restart": "unless-stopped",
