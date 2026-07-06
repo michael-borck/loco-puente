@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,81 @@ from puente.models import ServiceConfig
 from .base import ServiceBase
 
 console = Console()
+
+# SwarmUI ships custom ComfyUI nodes (SwarmComfyCommon + SwarmComfyExtra) that
+# its backend requires. When SwarmUI self-starts ComfyUI it injects them
+# automatically; with an EXTERNAL ComfyUI (our puente-comfyui) it cannot, so
+# ComfyUI logs "missing the Swarm core nodes" and generation fails. The
+# post_start hook copies them out of the swarmui image into the shared ComfyUI
+# custom_nodes volume. Source path inside the SwarmUI container:
+_SWARM_NODES_SRC = "/SwarmUI/src/BuiltinExtensions/ComfyUIBackend/ExtraNodes"
+_SWARM_NODE_DIRS = ("SwarmComfyCommon", "SwarmComfyExtra")
+
+# SwarmComfyCommon/__init__.py imports every node eagerly, so one broken node
+# takes down the whole package. Two optional segmentation nodes (SwarmClipSeg,
+# SwarmSam2) fail on the shipped transformers 5.x (top-level CLIPSeg removed) —
+# neither is needed for text-to-image. This patched __init__ guards those two
+# so the core KSampler/Latents/SaveImage nodes still load. Overwrites the
+# shipped file each run (idempotent, deterministic).
+_SWARM_COMMON_INIT = '''\
+import os, folder_paths
+
+# Core Swarm nodes required for text-to-image generation. These must import.
+from . import (
+    SwarmBlending, SwarmImages, SwarmInternalUtil, SwarmKSampler,
+    SwarmLoadImageB64, SwarmLoraLoader, SwarmMasks, SwarmSaveImageWS,
+    SwarmTiling, SwarmExtractLora, SwarmUnsampler, SwarmLatents,
+    SwarmInputNodes, SwarmTextHandling, SwarmReference, SwarmMath, SwarmAudio,
+)
+
+# Optional nodes with heavy/incompatible deps (transformers CLIPSeg, SAM2).
+# The shipped ComfyUI has transformers 5.x which removed the top-level CLIPSeg
+# imports these rely on. Guard them so one broken optional node does not take
+# down the whole package (and thus core generation).
+_optional = []
+try:
+    from . import SwarmClipSeg
+    _optional.append(SwarmClipSeg)
+except Exception as _e:  # noqa: BLE001
+    print(f"[SwarmComfyCommon] optional SwarmClipSeg disabled: {type(_e).__name__}: {str(_e)[:120]}")
+try:
+    from . import SwarmSam2
+    _optional.append(SwarmSam2)
+except Exception as _e:  # noqa: BLE001
+    print(f"[SwarmComfyCommon] optional SwarmSam2 disabled: {type(_e).__name__}: {str(_e)[:120]}")
+
+WEB_DIRECTORY = "./web"
+
+NODE_CLASS_MAPPINGS = (
+    SwarmBlending.NODE_CLASS_MAPPINGS
+    | SwarmImages.NODE_CLASS_MAPPINGS
+    | SwarmInternalUtil.NODE_CLASS_MAPPINGS
+    | SwarmKSampler.NODE_CLASS_MAPPINGS
+    | SwarmLoadImageB64.NODE_CLASS_MAPPINGS
+    | SwarmLoraLoader.NODE_CLASS_MAPPINGS
+    | SwarmMasks.NODE_CLASS_MAPPINGS
+    | SwarmSaveImageWS.NODE_CLASS_MAPPINGS
+    | SwarmTiling.NODE_CLASS_MAPPINGS
+    | SwarmExtractLora.NODE_CLASS_MAPPINGS
+    | SwarmUnsampler.NODE_CLASS_MAPPINGS
+    | SwarmLatents.NODE_CLASS_MAPPINGS
+    | SwarmInputNodes.NODE_CLASS_MAPPINGS
+    | SwarmTextHandling.NODE_CLASS_MAPPINGS
+    | SwarmReference.NODE_CLASS_MAPPINGS
+    | SwarmMath.NODE_CLASS_MAPPINGS
+    | SwarmAudio.NODE_CLASS_MAPPINGS
+)
+for _mod in _optional:
+    NODE_CLASS_MAPPINGS = NODE_CLASS_MAPPINGS | _mod.NODE_CLASS_MAPPINGS
+
+def register_model_folder(name):
+    if name not in folder_paths.folder_names_and_paths:
+        folder_paths.folder_names_and_paths[name] = ([os.path.join(folder_paths.models_dir, name)], folder_paths.supported_pt_extensions)
+    else:
+        folder_paths.folder_names_and_paths[name] = (folder_paths.folder_names_and_paths[name][0], folder_paths.supported_pt_extensions)
+
+register_model_folder("yolov8")
+'''
 
 
 # FDS (Frenetic Data Syntax) config telling SwarmUI to use a single
@@ -104,3 +180,60 @@ class SwarmUIService(ServiceBase):
         console.print(
             f"  [cyan]Pre-seeded SwarmUI external ComfyUI backend:[/cyan] {backends_file}"
         )
+
+    def post_start(self, config: ServiceConfig, data_dir: str) -> None:
+        """Install SwarmUI's ComfyUI backend nodes into the external
+        puente-comfyui so it can actually drive generation.
+
+        SwarmUI only auto-injects its nodes into a ComfyUI it self-starts; with
+        an external backend we must copy them ourselves. We pull them out of the
+        running swarmui container (docker cp) into ComfyUI's shared custom_nodes
+        volume, patch SwarmComfyCommon/__init__.py to disable the two optional
+        segmentation nodes that break on the shipped transformers, then restart
+        comfyui so it re-imports. Idempotent: the __init__ is always rewritten to
+        the known-good version; node dirs are re-copied only if missing.
+        """
+        custom_nodes = Path(data_dir) / "comfyui-basedir" / "custom_nodes"
+        common_init = custom_nodes / "SwarmComfyCommon" / "__init__.py"
+
+        # Fast path: nodes present and __init__ already patched → nothing to do.
+        already = (
+            common_init.exists()
+            and "optional SwarmClipSeg disabled" in common_init.read_text()
+        )
+        if already:
+            return
+
+        custom_nodes.mkdir(parents=True, exist_ok=True)
+        copied_any = False
+        for node_dir in _SWARM_NODE_DIRS:
+            dest = custom_nodes / node_dir
+            if dest.exists():
+                continue
+            result = subprocess.run(
+                ["docker", "cp", f"puente-swarmui:{_SWARM_NODES_SRC}/{node_dir}", str(dest)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                console.print(
+                    f"[yellow]Could not copy Swarm node '{node_dir}' from puente-swarmui: "
+                    f"{result.stderr.strip()}[/yellow]"
+                )
+                return
+            copied_any = True
+
+        # Always write the known-good patched __init__ (guards optional nodes).
+        if (custom_nodes / "SwarmComfyCommon").exists():
+            common_init.write_text(_SWARM_COMMON_INIT)
+            console.print(
+                "  [cyan]Installed SwarmUI backend nodes into ComfyUI custom_nodes.[/cyan]"
+            )
+
+        # Restart comfyui so it re-imports the newly installed nodes.
+        if copied_any or common_init.exists():
+            subprocess.run(
+                ["docker", "restart", "puente-comfyui"],
+                capture_output=True,
+                text=True,
+            )
