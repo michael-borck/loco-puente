@@ -47,6 +47,7 @@ services:
     review: false
     install_manager: true
     install_sadtalker: true
+    install_wav2lip: true
   searxng:
     enabled: false
     install_method: docker

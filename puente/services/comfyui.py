@@ -132,6 +132,38 @@ echo "SADTALKER_SETUP_DONE"
 """
 
 
+# --- Optional Wav2Lip (video-driven lip-sync) support -----------------------
+# Wav2Lip is the light, 8GB-friendly video->video lip-sync path (vs LatentSync
+# which needs ~20GB). Installs two nodes: ComfyUI_wav2lip (the sync engine) and
+# ComfyUI-VideoHelperSuite (VHS_LoadVideo / VHS_VideoCombine for real video I/O).
+# Gated behind ComfyUIConfig.install_wav2lip. See docs/wav2lip-api.md.
+_WAV2LIP_SETUP = r"""#!/bin/bash
+set -u
+CN="/basedir/custom_nodes"
+PY="/comfy/mnt/venv/bin/python"
+PIP="/comfy/mnt/venv/bin/pip"
+
+# 1. Clone the two nodes if missing.
+[ -d "$CN/ComfyUI_wav2lip" ] || git clone --depth 1 https://github.com/ShmuelRonen/ComfyUI_wav2lip.git "$CN/ComfyUI_wav2lip" 2>&1 | tail -1
+[ -d "$CN/ComfyUI-VideoHelperSuite" ] || git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git "$CN/ComfyUI-VideoHelperSuite" 2>&1 | tail -1
+
+# 2. VideoHelperSuite requirements (opencv already present; imageio-ffmpeg needed).
+if [ -f "$CN/ComfyUI-VideoHelperSuite/requirements.txt" ]; then
+    "$PIP" install -r "$CN/ComfyUI-VideoHelperSuite/requirements.txt" --quiet 2>&1 | tail -2 || true
+fi
+
+# 3. Wav2Lip GAN weight (~416MB). The S3FD face detector weight auto-downloads
+#    on first inference, so only the GAN model needs fetching here.
+CKPT="$CN/ComfyUI_wav2lip/Wav2Lip/checkpoints"
+mkdir -p "$CKPT"
+if [ ! -s "$CKPT/wav2lip_gan.pth" ]; then
+    echo "downloading wav2lip_gan.pth"
+    wget -nc -q "https://huggingface.co/Nekochu/Wav2Lip/resolve/main/wav2lip_gan.pth?download=true" -O "$CKPT/wav2lip_gan.pth" || true
+fi
+echo "WAV2LIP_SETUP_DONE"
+"""
+
+
 class ComfyUIService(ServiceBase):
     name = "comfyui"
     description = "Image generation (SD 1.5, SDXL, FLUX)"
@@ -154,39 +186,53 @@ class ComfyUIService(ServiceBase):
             script.chmod(0o755)
 
     def post_start(self, config: ServiceConfig, data_dir: str) -> None:
-        """Optionally install the SadTalker talking-head node's fixes + weights.
+        """Optionally install the SadTalker and/or Wav2Lip avatar add-ons.
 
-        Gated on ComfyUIConfig.install_sadtalker (default False). The node's
-        2020-era code needs three source patches and a ~2.4GB weights download to
-        run on this image; the setup script is idempotent, so re-running is cheap
-        (it only downloads missing files and skips already-applied patches).
-        Restarts comfyui afterward so the patched node re-imports.
+        Both are gated on their own ComfyUIConfig flags (default False) and
+        install/patch nodes + download weights via idempotent container-side
+        scripts, so re-running is cheap (skips applied patches and present
+        weights). If either runs, comfyui is restarted once at the end so the
+        new/patched nodes re-import. See docs/sadtalker-api.md, docs/wav2lip-api.md.
         """
-        if not isinstance(config, ComfyUIConfig) or not config.install_sadtalker:
+        if not isinstance(config, ComfyUIConfig):
             return
 
-        node_dir = Path(data_dir) / "comfyui-basedir" / "custom_nodes" / "Comfyui-SadTalker"
-        if not node_dir.exists():
-            console.print(
-                "[yellow]install_sadtalker is set but the Comfyui-SadTalker node "
-                "is not present in custom_nodes; install it via ComfyUI-Manager "
-                "first, then re-run.[/yellow]"
-            )
-            return
+        changed = False
 
-        console.print("  [cyan]Applying SadTalker fixes / fetching weights (may download ~2.4GB)...[/cyan]")
+        if config.install_sadtalker:
+            node_dir = Path(data_dir) / "comfyui-basedir" / "custom_nodes" / "Comfyui-SadTalker"
+            if not node_dir.exists():
+                console.print(
+                    "[yellow]install_sadtalker is set but the Comfyui-SadTalker node "
+                    "is not present in custom_nodes; install it via ComfyUI-Manager "
+                    "first, then re-run.[/yellow]"
+                )
+            elif self._run_setup("SadTalker (fixes + ~2.4GB weights)", _SADTALKER_SETUP, "SADTALKER_SETUP_DONE"):
+                changed = True
+
+        if config.install_wav2lip:
+            if self._run_setup("Wav2Lip + VideoHelperSuite (nodes + ~416MB weight)", _WAV2LIP_SETUP, "WAV2LIP_SETUP_DONE"):
+                changed = True
+
+        if changed:
+            console.print("  [cyan]Restarting comfyui to load the new/patched nodes.[/cyan]")
+            subprocess.run(["docker", "restart", "puente-comfyui"], capture_output=True, text=True)
+
+    def _run_setup(self, label: str, script: str, done_marker: str) -> bool:
+        """Run a container-side setup script; return True on success."""
+        console.print(f"  [cyan]Setting up {label}...[/cyan]")
         result = subprocess.run(
-            ["docker", "exec", "-u", "0", "puente-comfyui", "bash", "-c", _SADTALKER_SETUP],
+            ["docker", "exec", "-u", "0", "puente-comfyui", "bash", "-c", script],
             capture_output=True,
             text=True,
         )
-        if "SADTALKER_SETUP_DONE" not in result.stdout:
+        if done_marker not in result.stdout:
             console.print(
-                f"[yellow]SadTalker setup did not complete cleanly:[/yellow]\n{result.stdout[-500:]}\n{result.stderr[-500:]}"
+                f"[yellow]{label} did not complete cleanly:[/yellow]\n"
+                f"{result.stdout[-500:]}\n{result.stderr[-500:]}"
             )
-            return
-        console.print("  [cyan]SadTalker ready.[/cyan] Restarting comfyui to load the patched node.")
-        subprocess.run(["docker", "restart", "puente-comfyui"], capture_output=True, text=True)
+            return False
+        return True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
