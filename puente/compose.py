@@ -126,7 +126,13 @@ def ensure_volume_dirs(compose_data: dict) -> None:
             host_path = vol.split(":")[0]
             # Only create absolute paths that look like bind mounts (not named volumes)
             if host_path.startswith("/"):
-                Path(host_path).mkdir(parents=True, exist_ok=True)
+                p = Path(host_path)
+                # A bind source can be an existing FILE (e.g. mounting a
+                # config.yaml). Don't mkdir over it — only create genuinely
+                # missing directories.
+                if p.exists():
+                    continue
+                p.mkdir(parents=True, exist_ok=True)
 
 
 def write_compose(config: PuenteConfig, output_path: Path | None = None) -> Path:

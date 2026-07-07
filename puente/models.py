@@ -36,6 +36,15 @@ class AnythingLLMConfig(ServiceConfig):
     jwt_secret: str | None = None
 
 
+class ChatterboxConfig(ServiceConfig):
+    # Chatterbox TTS builds from a local checkout (its Dockerfile pins a tuned
+    # CUDA/torch stack). Point build_context at that dir; defaults to the known
+    # PoC location. Others can clone the repo and set their own path.
+    build_context: str = "/home/michael/Chatterbox-TTS-Server"
+    # Optional HuggingFace token (some model pulls benefit from it).
+    hf_token: str | None = None
+
+
 class LibreChatConfig(ServiceConfig):
     # LibreChat needs MongoDB. When install_method is "external", point at an
     # existing LibreChat instead of running app+mongo locally.
@@ -129,6 +138,9 @@ class StackConfig(BaseModel):
     )
     voicebox: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=17493, enabled=False, review=True)
+    )
+    chatterbox: ChatterboxConfig = Field(
+        default_factory=lambda: ChatterboxConfig(port=8004, gpu=1, enabled=False, review=True)
     )
     portal: PortalConfig = Field(
         default_factory=lambda: PortalConfig(port=8080, enabled=False)

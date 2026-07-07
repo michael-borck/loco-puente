@@ -52,6 +52,7 @@ SERVICE_META = {
     "deeptutor": ("🎓", "DeepTutor", "Personalised learning — quizzes, deep solve, research"),
     "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio (evaluating)"),
     "librechat": ("💬", "LibreChat", "Multi-provider chat UI (evaluating)"),
+    "chatterbox": ("🔊", "Chatterbox", "Voice-cloning TTS server (evaluating)"),
 }
 
 # Proxy URLs — services accessible via reverse proxy (overrides host:port)

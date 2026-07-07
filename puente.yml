@@ -15,7 +15,7 @@ services:
       models:
       - llama3.1:8b-q4_k_m
   open_webui:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 3000
     gpu: null
@@ -179,6 +179,15 @@ services:
     managed: true
     environment: {}
     review: true
+  chatterbox:
+    enabled: true
+    install_method: docker
+    port: 8004
+    gpu: 1
+    managed: true
+    environment: {}
+    review: true
+    build_context: /home/michael/Chatterbox-TTS-Server
   portal:
     enabled: true
     install_method: docker
