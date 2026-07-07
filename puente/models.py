@@ -26,6 +26,22 @@ class ServiceConfig(BaseModel):
     review: bool = False  # True = surface in portal "Under Evaluation" section
 
 
+class AnythingLLMConfig(ServiceConfig):
+    # Point at an EXISTING AnythingLLM storage dir to bring a hand-run install
+    # under Puente without losing workspaces / embedded chatbots / vector data.
+    # Defaults to Puente's own {data_dir}/anythingllm when None. Absolute path.
+    storage_path: str | None = None
+    # Set to the existing install's JWT_SECRET so embedded-chatbot embeds and
+    # sessions keep working after migration. If None, AnythingLLM generates one.
+    jwt_secret: str | None = None
+
+
+class LibreChatConfig(ServiceConfig):
+    # LibreChat needs MongoDB. When install_method is "external", point at an
+    # existing LibreChat instead of running app+mongo locally.
+    mongo_uri: str | None = None  # override the bundled mongo (e.g. external Atlas)
+
+
 class OllamaConfig(ServiceConfig):
     install_method: Literal["docker", "native", "external"] = "native"
     instances: list[OllamaInstance] = Field(
@@ -71,8 +87,11 @@ class StackConfig(BaseModel):
     vane: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3005, enabled=False)
     )
-    anythingllm: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=3001, enabled=False)
+    anythingllm: AnythingLLMConfig = Field(
+        default_factory=lambda: AnythingLLMConfig(port=3001, enabled=False)
+    )
+    librechat: LibreChatConfig = Field(
+        default_factory=lambda: LibreChatConfig(port=3080, enabled=False)
     )
     open_notebook: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=8502, enabled=False)

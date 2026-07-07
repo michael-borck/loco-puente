@@ -5,11 +5,11 @@ title: "Voicebox Voice-Clone & TTS API"
 How to clone a voice and generate speech with it via Voicebox's HTTP API, so an
 external tool can add Voicebox as a **TTS provider** (alongside Chatterbox).
 
-> ⚠️ **Not yet verified end-to-end.** This contract is derived from the upstream
-> [jamiepine/voicebox](https://github.com/jamiepine/voicebox) FastAPI backend
-> source. Voicebox is `enabled: false` in `puente.yml` — enable and run it
-> (`puente up voicebox`) before relying on these calls, and confirm the exact
-> paths against its live `/docs` (FastAPI auto-generates interactive API docs).
+> **Verified** 2026-07-07 against a live Voicebox (`puente up voicebox`, port
+> 17493): all documented endpoints exist in its OpenAPI spec, and creating a
+> cloned-voice profile via `POST /profiles` works. Voicebox exposes interactive
+> FastAPI docs at `/docs` (and the raw schema at `/openapi.json`) — the
+> authoritative reference if the API evolves.
 
 ---
 

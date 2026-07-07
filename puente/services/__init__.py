@@ -10,6 +10,7 @@ from .comfyui import ComfyUIService
 from .excalidraw import ExcalidrawService
 from .fooocus import FooocusService
 from .jupyter import JupyterService
+from .librechat import LibreChatService
 from .musicgen import MusicGenService
 from .nodepad import NodepadService
 from .ollama import OllamaService
@@ -38,6 +39,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "excalidraw": ExcalidrawService,
     "citesight": CiteSightService,
     "jupyter": JupyterService,
+    "librechat": LibreChatService,
     "deeptutor": DeepTutorService,
     "musicgen": MusicGenService,
     "nodepad": NodepadService,

@@ -65,12 +65,14 @@ services:
     environment: {}
     review: false
   anythingllm:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 3001
     gpu: null
-    managed: false
+    managed: true
     environment: {}
+    storage_path: /home/michael/.puente/anythingllm
+    jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
     review: false
   open_notebook:
     enabled: false
@@ -161,7 +163,7 @@ services:
     environment: {}
     review: true
   voicebox:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 17493
     gpu: null
