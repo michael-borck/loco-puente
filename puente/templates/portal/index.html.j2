@@ -157,6 +157,24 @@
     .footer a { color: var(--text-muted); text-decoration: none; }
     .footer a:hover { color: var(--text-secondary); }
 
+    .gpu-strip {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
+      margin: 0 auto 1.25rem; max-width: 900px;
+    }
+    .gpu-card {
+      display: flex; align-items: center; gap: 0.6rem;
+      background: var(--card-bg, rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+      padding: 0.4rem 0.75rem; font-size: 0.8rem; color: var(--text-secondary);
+    }
+    .gpu-card .gpu-id { font-weight: 600; color: var(--text-primary, #fff); }
+    .gpu-bar {
+      width: 90px; height: 6px; border-radius: 3px;
+      background: rgba(255,255,255,0.12); overflow: hidden;
+    }
+    .gpu-bar > span { display: block; height: 100%; background: var(--accent, #6ea8fe); }
+    .gpu-meta { white-space: nowrap; }
+
     @media (max-width: 600px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
       .header h1 { font-size: 1.5rem; }
@@ -169,6 +187,8 @@
     <h1><span class="accent">⛩️</span> {{ title }}</h1>
     <p>{{ subtitle }}</p>
   </div>
+
+  <div id="gpu-strip" class="gpu-strip" style="display:none"></div>
 
   <div class="filters">
     {% for view in views %}
@@ -212,6 +232,30 @@
         });
       });
     });
+
+    // GPU stats strip — fetches gpu-stats.json (written by the portal-gpu-stats
+    // sidecar every ~3s). Hidden if the file is absent (no GPU / sidecar off).
+    async function refreshGpu() {
+      try {
+        const r = await fetch('gpu-stats.json?_=' + Date.now(), { cache: 'no-store' });
+        if (!r.ok) return;
+        const gpus = await r.json();
+        if (!Array.isArray(gpus) || !gpus.length) return;
+        const strip = document.getElementById('gpu-strip');
+        strip.innerHTML = gpus.map(g => {
+          const pct = g.mem_total ? Math.round(100 * g.mem_used / g.mem_total) : 0;
+          const gb = m => (m / 1024).toFixed(1);
+          return `<div class="gpu-card">
+            <span class="gpu-id">GPU ${g.index}</span>
+            <span class="gpu-bar"><span style="width:${pct}%"></span></span>
+            <span class="gpu-meta">${gb(g.mem_used)}/${gb(g.mem_total)} GB · ${g.util}% · ${g.temp}°C</span>
+          </div>`;
+        }).join('');
+        strip.style.display = 'flex';
+      } catch (e) { /* no GPU stats available — leave strip hidden */ }
+    }
+    refreshGpu();
+    setInterval(refreshGpu, 3000);
   </script>
 </body>
 </html>

@@ -188,6 +188,14 @@ services:
     environment: {}
     review: true
     build_context: /home/michael/Chatterbox-TTS-Server
+  glances:
+    enabled: true
+    install_method: docker
+    port: 61208
+    gpu: null
+    managed: true
+    environment: {}
+    review: true
   portal:
     enabled: true
     install_method: docker

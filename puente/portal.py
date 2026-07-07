@@ -53,6 +53,7 @@ SERVICE_META = {
     "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio (evaluating)"),
     "librechat": ("💬", "LibreChat", "Multi-provider chat UI (evaluating)"),
     "chatterbox": ("🔊", "Chatterbox", "Voice-cloning TTS server (evaluating)"),
+    "glances": ("📊", "System Monitor", "CPU, RAM, disk, GPU, containers"),
 }
 
 # Proxy URLs — services accessible via reverse proxy (overrides host:port)

@@ -19,7 +19,7 @@ class PortalService(ServiceBase):
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
-        return {
+        fragment: dict[str, Any] = {
             "portal": {
                 "image": self.docker_image,
                 "container_name": "puente-portal",
@@ -28,3 +28,42 @@ class PortalService(ServiceBase):
                 "restart": "unless-stopped",
             }
         }
+
+        # GPU-stats sidecar: the portal is static nginx and can't run
+        # nvidia-smi. This tiny CUDA-base container writes gpu-stats.json into
+        # the portal html dir every few seconds; the page fetches + renders it.
+        # Avoids the Glances-image NVML problem by using a proper CUDA base.
+        fragment["portal-gpu-stats"] = {
+            "image": "nvidia/cuda:12.8.1-base-ubuntu22.04",
+            "container_name": "puente-portal-gpu-stats",
+            "entrypoint": [
+                "bash",
+                "-c",
+                # Loop: query nvidia-smi as CSV, wrap into JSON, write to the
+                # shared html dir. 3s cadence is plenty for a glance.
+                "while true; do "
+                "nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu,temperature.gpu "
+                "--format=csv,noheader,nounits 2>/dev/null "
+                "| awk -F', *' 'BEGIN{print \"[\"} {if(NR>1)print \",\"; "
+                "printf \"{\\\"index\\\":%s,\\\"name\\\":\\\"%s\\\",\\\"mem_used\\\":%s,\\\"mem_total\\\":%s,\\\"util\\\":%s,\\\"temp\\\":%s}\",$1,$2,$3,$4,$5,$6} "
+                "END{print \"]\"}' > /html/gpu-stats.json.tmp && mv /html/gpu-stats.json.tmp /html/gpu-stats.json; "
+                "sleep 3; done",
+            ],
+            "volumes": [f"{data_dir}/portal:/html"],
+            "deploy": {
+                "resources": {
+                    "reservations": {
+                        "devices": [
+                            {"driver": "nvidia", "count": "all", "capabilities": ["gpu", "utility"]}
+                        ]
+                    }
+                }
+            },
+            "environment": {
+                "NVIDIA_VISIBLE_DEVICES": "all",
+                "NVIDIA_DRIVER_CAPABILITIES": "utility",
+            },
+            "restart": "unless-stopped",
+        }
+
+        return fragment

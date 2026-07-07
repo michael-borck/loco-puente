@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .anythingllm import AnythingLLMService
 from .chatterbox import ChatterboxService
+from .glances import GlancesService
 from .base import ServiceBase
 from .citesight import CiteSightService
 from .deeptutor import DeepTutorService
@@ -35,6 +36,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "vane": VaneService,
     "anythingllm": AnythingLLMService,
     "chatterbox": ChatterboxService,
+    "glances": GlancesService,
     "open_notebook": OpenNotebookService,
     "open_terminal": OpenTerminalService,
     "stirling_pdf": StirlingPDFService,

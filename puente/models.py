@@ -142,6 +142,9 @@ class StackConfig(BaseModel):
     chatterbox: ChatterboxConfig = Field(
         default_factory=lambda: ChatterboxConfig(port=8004, gpu=1, enabled=False, review=True)
     )
+    glances: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=61208, enabled=False, review=True)
+    )
     portal: PortalConfig = Field(
         default_factory=lambda: PortalConfig(port=8080, enabled=False)
     )
