@@ -48,6 +48,7 @@ services:
     install_manager: true
     install_sadtalker: true
     install_wav2lip: true
+    install_liveportrait: true
   searxng:
     enabled: false
     install_method: docker
@@ -74,6 +75,14 @@ services:
     storage_path: /home/michael/.puente/anythingllm
     jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
     review: false
+  librechat:
+    enabled: false
+    install_method: docker
+    port: 3080
+    gpu: null
+    managed: true
+    environment: {}
+    review: true
   open_notebook:
     enabled: false
     install_method: docker

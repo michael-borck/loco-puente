@@ -66,6 +66,7 @@ class ComfyUIConfig(ServiceConfig):
     install_manager: bool = True  # clone ComfyUI-Manager into basedir/custom_nodes on pre_start
     install_sadtalker: bool = False  # patch Comfyui-SadTalker + download ~2.4GB weights on post_start
     install_wav2lip: bool = False  # install Wav2Lip + VideoHelperSuite nodes + ~416MB weight on post_start
+    install_liveportrait: bool = False  # install LivePortraitKJ node + ~716MB models + insightface (non-commercial)
 
 
 class StackConfig(BaseModel):

@@ -164,6 +164,51 @@ echo "WAV2LIP_SETUP_DONE"
 """
 
 
+# --- Optional LivePortrait (expressive video-driven reenactment) support -----
+# LivePortrait animates a portrait from a driving VIDEO — higher quality and
+# more expressive than SadTalker (full-face reenactment, no mouth-box seam), and
+# unlike LatentSync it fits 8GB. Installs kijai's ComfyUI-LivePortraitKJ node +
+# the LivePortrait model repo + the Insightface buffalo_l detector.
+# NOTE: Insightface's models are NON-COMMERCIAL licensed — fine for a PoC /
+# evaluation; resolve licensing (or switch to the MediaPipe cropper) before any
+# commercial deployment. Gated behind ComfyUIConfig.install_liveportrait.
+# See docs/liveportrait-api.md.
+_LIVEPORTRAIT_SETUP = r"""#!/bin/bash
+set -u
+CN="/basedir/custom_nodes"
+PY="/comfy/mnt/venv/bin/python"
+PIP="/comfy/mnt/venv/bin/pip"
+
+# 1. Clone the node if missing.
+[ -d "$CN/ComfyUI-LivePortraitKJ" ] || git clone --depth 1 https://github.com/kijai/ComfyUI-LivePortraitKJ.git "$CN/ComfyUI-LivePortraitKJ" 2>&1 | tail -1
+
+# 2. Deps EXCEPT the numpy<=1.26 pin — the node works with the numpy 2.x this
+#    image ships, and downgrading would break the other avatar nodes.
+"$PIP" install pyyaml opencv-python onnxruntime-gpu pykalman onnx2torch insightface --quiet 2>&1 | tail -2 || true
+
+# 3. LivePortrait models (~716MB, includes landmark.onnx + safetensors modules).
+if [ ! -f "/basedir/models/liveportrait/landmark.onnx" ]; then
+    echo "downloading LivePortrait models"
+    "$PY" -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Kijai/LivePortrait_safetensors', local_dir='/basedir/models/liveportrait', ignore_patterns=['*animal*'])" 2>&1 | tail -1 || true
+fi
+
+# 4. Insightface buffalo_l detector -> models/insightface/models/buffalo_l
+#    (that nested path is where insightface's FaceAnalysis looks).
+BUF="/basedir/models/insightface/models/buffalo_l"
+if [ ! -f "$BUF/det_10g.onnx" ]; then
+    echo "downloading insightface buffalo_l"
+    mkdir -p "$BUF"
+    wget -nc -q "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip" -O /tmp/buffalo_l.zip && \
+    "$PY" -c "import zipfile; zipfile.ZipFile('/tmp/buffalo_l.zip').extractall('$BUF')" && rm -f /tmp/buffalo_l.zip || true
+fi
+# Ownership: the mmartial base refuses to start if /basedir dirs are not owned
+# by 1000:1000 (its runtime uid), so chown to that explicitly — NOT to
+# comfy:comfy, which can resolve to root and cause a boot crash-loop.
+chown -R 1000:1000 /basedir/models/liveportrait /basedir/models/insightface 2>/dev/null || true
+echo "LIVEPORTRAIT_SETUP_DONE"
+"""
+
+
 class ComfyUIService(ServiceBase):
     name = "comfyui"
     description = "Image generation (SD 1.5, SDXL, FLUX)"
@@ -212,6 +257,10 @@ class ComfyUIService(ServiceBase):
 
         if config.install_wav2lip:
             if self._run_setup("Wav2Lip + VideoHelperSuite (nodes + ~416MB weight)", _WAV2LIP_SETUP, "WAV2LIP_SETUP_DONE"):
+                changed = True
+
+        if config.install_liveportrait:
+            if self._run_setup("LivePortrait (node + ~716MB models + insightface)", _LIVEPORTRAIT_SETUP, "LIVEPORTRAIT_SETUP_DONE"):
                 changed = True
 
         if changed:

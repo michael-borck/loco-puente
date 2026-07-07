@@ -51,6 +51,7 @@ SERVICE_META = {
     "open_terminal": ("⚡", "Code Sandbox", "Python execution, PDF/DOCX generation"),
     "deeptutor": ("🎓", "DeepTutor", "Personalised learning — quizzes, deep solve, research"),
     "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio (evaluating)"),
+    "librechat": ("💬", "LibreChat", "Multi-provider chat UI (evaluating)"),
 }
 
 # Proxy URLs — services accessible via reverse proxy (overrides host:port)
