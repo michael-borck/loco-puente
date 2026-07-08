@@ -3,20 +3,36 @@ requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "puente"
+# PyPI distribution name (the `puente` name is Mozilla's). The CLI command and
+# import package stay `puente` — users `pip install locopuente`, then run `puente`.
+name = "locopuente"
 version = "0.1.0"
 description = "Local AI stack orchestrator — privacy-first, pick-and-choose, upstream-only"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [{name = "Michael Borck"}]
+keywords = ["ai", "llm", "self-hosted", "local-ai", "orchestrator", "ollama", "docker", "privacy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: System :: Systems Administration",
+]
 dependencies = [
-    "typer[all]>=0.12",
+    "typer>=0.12",
     "pydantic>=2.0",
     "jinja2>=3.1",
     "pyyaml>=6.0",
     "rich>=13.0",
 ]
+
+[project.urls]
+Homepage = "https://locopuente.org"
+Repository = "https://github.com/michael-borck/loco-puente"
 
 [project.scripts]
 puente = "puente.cli:app"

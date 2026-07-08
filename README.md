@@ -1,127 +1,93 @@
-# loco-puente
+# Puente
 
-Bridges Loco and Puente frameworks by providing integration utilities and middleware for seamless communication between the two Python web development platforms.
+**Your own AI platform. Runs on your hardware.**
 
-## Overview
+Puente is a local-first AI orchestrator. It stands up a full stack of AI
+services — chat, image generation, speech, search, notebooks — on modest
+hardware, from one config file. Private by default. Yours to keep.
 
-loco-puente is a comprehensive integration layer designed to facilitate seamless communication and data exchange between the Loco and Puente Python web frameworks. This project provides utilities, middleware, and helper functions that enable developers to leverage the strengths of both frameworks within a unified application architecture.
+> Pay a **time tax**, not a **token tax**. Modest hardware, honest bills.
 
-Whether you're building a complex web application that requires the unique capabilities of both frameworks or migrating between them, loco-puente simplifies the integration process with well-tested utilities and clear architectural patterns.
+Puente is the deployment layer of [LocoPuente](https://locopuente.org), a
+LocoLabo initiative: local AI for everyone who can't — or won't — send their
+data to the cloud.
 
-## Features
+## Install
 
-- **Framework Integration**: Utilities for bridging Loco and Puente frameworks
-- **Middleware Support**: Custom middleware for request/response handling across frameworks
-- **Docker Support**: Pre-configured Dockerfiles for various AI/ML applications
-- **Comprehensive Documentation**: Architecture guides and configuration examples
-- **Production Ready**: MIT licensed with CI/CD pipelines
+```bash
+pip install locopuente
+```
 
-## Installation
+> The PyPI distribution is `locopuente` (the `puente` name belongs to another
+> project). The command you run is `puente`.
 
-### From Source
-
-Clone the repository and install in development mode:
+Or from source:
 
 ```bash
 git clone https://github.com/michael-borck/loco-puente.git
-cd loco-puente
-pip install -e .
+cd loco-puente && pip install -e .
 ```
 
-### Using pip
+## Quick start
 
 ```bash
-pip install loco-puente
+puente init      # detect your hardware, choose services that fit
+puente install   # pull Docker images, install native pieces (Ollama, models)
+puente up        # start the stack + a launcher portal
 ```
 
-### Requirements
+Then `puente status` to see what's live. That's it.
 
-- Python 3.8 or higher
-- Loco framework
-- Puente framework
+## What it does
 
-## Usage
+- **Detects your hardware** and proposes a service set it can actually run,
+  pinning models to the right GPU.
+- **Orchestrates the containers** — you toggle services in `puente.yml`, Puente
+  handles Docker, GPUs, models, and (optionally) a reverse proxy.
+- **Config as code.** The whole stack is one committable `puente.yml`. No web UI,
+  no hidden state.
+- **Coexists with what you already run.** A service you've already installed can
+  stay (`managed: false`); Puente uses it instead of spinning up its own.
 
-### Basic Integration
+## Services
 
-Import the integration utilities in your application:
+A pick-and-choose menu, all running locally:
 
-```python
-from loco_puente import LocoPuenteBridge
+| Service | What it is |
+|---|---|
+| **Ollama** | Local LLM inference |
+| **Open WebUI** | Chat over your models |
+| **SwarmUI / ComfyUI** | Image generation |
+| **Chatterbox / Speaches** | Voice-cloning TTS, speech-to-text |
+| **SearXNG** | Private meta-search |
+| **AnythingLLM** | Docs + RAG workspaces |
+| **Open Notebook, Stirling PDF, Excalidraw, Jupyter, …** | Tools |
 
-# Initialize the bridge
-bridge = LocoPuenteBridge()
-```
+Plus an optional **Caddy** reverse-proxy service (automatic TLS) that fronts
+whichever services you expose — see [docs/caddy-migration.md](docs/caddy-migration.md).
 
-### Middleware Configuration
-
-Add loco-puente middleware to your application:
-
-```python
-from loco_puente.middleware import PuenteMiddleware
-
-# Configure middleware
-app.add_middleware(PuenteMiddleware)
-```
-
-### Framework Communication
-
-Enable seamless communication between Loco and Puente:
-
-```python
-from loco_puente import sync_frameworks
-
-# Synchronize framework states
-sync_frameworks(loco_app, puente_app)
-```
-
-## Architecture
-
-For detailed information about the project architecture, integration patterns, and design decisions, refer to the [Architecture Documentation](./docs/architecture.md).
-
-## Configuration
-
-Configuration options and setup instructions are available in the [Configuration Guide](./docs/choosing.md).
-
-## Docker Support
-
-The project includes Docker support for various AI/ML applications:
-
-- ComfyUI
-- Fooocus
-- NodePad
-- SwarmUI
-
-Build Docker images using the provided Dockerfiles in `puente/dockerfiles/`.
-
-## Project Structure
+## Commands
 
 ```
-loco-puente/
-├── docs/                          # Documentation files
-│   ├── architecture.md           # Architecture overview
-│   └── choosing.md               # Configuration guide
-├── puente/                        # Core integration code
-│   └── dockerfiles/              # Docker configurations
-├── .github/                       # GitHub workflows
-│   └── workflows/                # CI/CD pipelines
-└── README.md                      # This file
+puente init      Interactive setup — detect hardware, pick services
+puente install   Install native services + pull Docker images
+puente up        Start the stack (or a specific service)
+puente down      Stop the stack (or a specific service)
+puente enable    Enable a service in puente.yml
+puente disable   Disable a service in puente.yml
+puente status    Status of all enabled services
+puente doctor    Health-check enabled services
+puente gpu       Detect and display GPUs
+puente connect   Connection details for external tools
+puente portal    Generate the service launcher page
 ```
 
-## Documentation
+## Requirements
 
-- [Architecture Guide](./docs/architecture.md) - Detailed architecture and design patterns
-- [Hardware Configuration](./HARDWARE.md) - Hardware requirements and optimization
-- [Framework Selection Guide](./CHOOSING.md) - Guide for choosing between frameworks
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests to help improve loco-puente.
+- Python 3.10+
+- Docker (for containerized services)
+- A GPU is recommended but not required — a single consumer GPU is enough to start.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/michael-borck/loco-puente).
+MIT © Michael Borck. A LocoLabo initiative, Curtin University.
