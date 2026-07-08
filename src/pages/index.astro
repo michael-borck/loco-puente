@@ -239,7 +239,7 @@
         <a class="btn" href="#how">Get started →</a>
         <a class="btn ghost" href="#selfhost">Self-host guide</a>
       </div>
-      <p class="cta-note">$ pip install -e . &nbsp;·&nbsp; runs on a single consumer GPU</p>
+      <p class="cta-note">$ pip install locopuente &nbsp;·&nbsp; runs on a single consumer GPU</p>
     </div>
 
     <div class="term" aria-label="Terminal demonstration of the puente workflow">
@@ -318,9 +318,8 @@
         <li><span class="chk">✓</span><span><b>Runs on modest hardware.</b> A single consumer GPU is enough to start.</span></li>
       </ul>
     </div>
-    <pre class="code"><span class="cm"># clone &amp; install</span>
-<span class="p">$</span> git clone https://github.com/michael-borck/loco-puente.git
-<span class="p">$</span> cd loco-puente &amp;&amp; pip install -e .
+    <pre class="code"><span class="cm"># install (the command is `puente`)</span>
+<span class="p">$</span> pip install locopuente
 
 <span class="cm"># set it up and go</span>
 <span class="p">$</span> puente <span class="am">init</span>     <span class="cm"># detect hardware, choose services</span>
@@ -381,6 +380,8 @@
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const term = document.getElementById('term');
   const SEQ = [
+    {t:'p',x:'$ '},{t:'c',x:'pip install locopuente\n'},
+    {t:'ok',x:'✓ installed  (command: puente)\n\n'},
     {t:'p',x:'$ '},{t:'c',x:'puente init\n'},
     {t:'o',x:'→ detected: '},{t:'am',x:'2× RTX 2060 · 32GB RAM\n'},
     {t:'o',x:'→ proposing services that fit your hardware…\n'},
