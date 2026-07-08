@@ -14,6 +14,11 @@ services:
       port: 11434
       models:
       - llama3.1:8b-q4_k_m
+    proxy:
+      host: ollama.locollm.org
+      auth: bearer
+      token_env: OLLAMA_TOKEN
+      port: 11434
   open_webui:
     enabled: true
     install_method: docker
@@ -37,6 +42,10 @@ services:
     models:
     - Systran/faster-whisper-small
     - speaches-ai/Kokoro-82M-v1.0-ONNX
+    proxy:
+      host: speaches.locopuente.org
+      auth: bearer
+      token_env: SPEACHES_TOKEN
   comfyui:
     enabled: true
     install_method: docker
@@ -69,6 +78,9 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy:
+      host: search.locopuente.org
+      auth: basic
   anythingllm:
     enabled: true
     install_method: docker
@@ -90,6 +102,9 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy:
+      host: chat.locopuente.org
+      auth: none
   open_notebook:
     enabled: false
     install_method: docker
@@ -98,6 +113,9 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy:
+      host: notes.locopuente.org
+      auth: basic
   stirling_pdf:
     enabled: false
     install_method: docker
@@ -106,6 +124,9 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy:
+      host: pdf.locopuente.org
+      auth: basic
   excalidraw:
     enabled: false
     install_method: docker
@@ -114,6 +135,9 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy:
+      host: whiteboard.locopuente.org
+      auth: basic
   open_terminal:
     enabled: false
     install_method: docker
@@ -130,6 +154,9 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy:
+      host: cite.locopuente.org
+      auth: basic
   jupyter:
     enabled: false
     install_method: docker
@@ -154,6 +181,9 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy:
+      host: musicgen.locopuente.org
+      auth: basic
   swarmui:
     enabled: true
     install_method: docker
@@ -163,9 +193,11 @@ services:
     environment: {}
     review: true
     proxy:
-      host: swarmui.locopuente.org
+    - host: swarmui.locopuente.org
       auth: bearer
       token_env: SWARMUI_TOKEN
+    - host: image.locopuente.org
+      auth: basic
   fooocus:
     enabled: false
     install_method: docker
@@ -174,6 +206,9 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy:
+      host: fooocus.locopuente.org
+      auth: basic
   nodepad:
     enabled: false
     install_method: docker
@@ -224,16 +259,19 @@ services:
     environment: {}
     review: false
     host: 192.168.20.120
+    proxy:
+    - host: go.locopuente.org
+      auth: none
+    - host: closingthegap.eduserver.au
+      auth: none
   caddy:
-    # Disabled by default: NPM currently owns 80/443. Flip to true only after
-    # the cutover (see docs/caddy-migration.md) — both can't bind 80/443.
-    enabled: false
+    enabled: true
     install_method: docker
     managed: true
     email: michael.borck@curtin.edu.au
     upstream_host: 192.168.20.120
-    # bcrypt hashes are read from the Caddy container env (see caddy/.env),
-    # never stored here. `swarm` is the shared UI login.
     users:
       ui:
         swarm: SWARM_BCRYPT
+    # Personal / non-puente hosts (Plex, boxes, books) live here, hand-maintained.
+    extra_caddyfile: personal.caddy

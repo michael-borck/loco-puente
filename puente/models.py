@@ -34,6 +34,10 @@ class ProxyConfig(BaseModel):
     # For auth="basic": name of the basic-auth user group in CaddyConfig.users
     # to require. Defaults to the sole group when there's exactly one.
     basic_group: str | None = None
+    # Optional upstream port override. Defaults to the service's own port. Set it
+    # when a hostname fronts a different port than the service default, or when
+    # two hostnames share one backend (e.g. a UI + an API on the same service).
+    port: int | None = None
 
 
 class ServiceConfig(BaseModel):
@@ -44,7 +48,9 @@ class ServiceConfig(BaseModel):
     managed: bool = True  # False = coexist with existing install
     environment: dict[str, str] = Field(default_factory=dict)
     review: bool = False  # True = surface in portal "Under Evaluation" section
-    proxy: ProxyConfig | None = None  # reverse-proxy exposure (Caddy service)
+    # Reverse-proxy exposure (Caddy service). A single block, or a list when the
+    # service is published at several hostnames (e.g. a UI + an API route).
+    proxy: ProxyConfig | list[ProxyConfig] | None = None
 
 
 class AnythingLLMConfig(ServiceConfig):
@@ -107,6 +113,12 @@ class CaddyConfig(ServiceConfig):
     # LAN address of the Docker host, used as the reverse_proxy upstream for
     # services running outside the puente network (native installs, other boxes).
     upstream_host: str = "host.docker.internal"
+    # Optional extra Caddyfile fragment to `import` at the end of the generated
+    # config — the home for hosts puente does NOT manage (personal sites, other
+    # machines). Path is relative to the Caddyfile inside the container
+    # (default ~/.puente/caddy/), so "personal.caddy" -> caddy/personal.caddy.
+    # The file is yours to hand-maintain; puente never rewrites it.
+    extra_caddyfile: str | None = None
 
 
 class ComfyUIConfig(ServiceConfig):

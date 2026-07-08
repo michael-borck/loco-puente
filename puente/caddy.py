@@ -27,7 +27,8 @@ def _port_for(svc_name: str, svc_config: ServiceConfig) -> int | None:
 
 def iter_proxied_services(config: PuenteConfig):
     """Yield (svc_name, ServiceConfig, ProxyConfig) for every enabled service
-    that declares a proxy block. Stable order = registry order.
+    that declares a proxy block — once per hostname (a service may list several).
+    Stable order = registry order.
     """
     from puente.services import ALL_SERVICES
 
@@ -37,7 +38,11 @@ def iter_proxied_services(config: PuenteConfig):
             continue
         if svc_config.proxy is None:
             continue
-        yield svc_name, svc_config, svc_config.proxy
+        blocks = svc_config.proxy
+        if not isinstance(blocks, list):
+            blocks = [blocks]
+        for proxy in blocks:
+            yield svc_name, svc_config, proxy
 
 
 def _site_block(
@@ -90,13 +95,24 @@ def generate_caddyfile(config: PuenteConfig) -> str:
 
     blocks: list[str] = []
     for svc_name, svc_config, proxy in iter_proxied_services(config):
-        port = _port_for(svc_name, svc_config)
+        # Per-block port override wins, else the service's own port.
+        port = proxy.port if proxy.port is not None else _port_for(svc_name, svc_config)
         if port is None:
             # No port to proxy to; skip rather than emit a broken upstream.
             continue
         blocks.append(_site_block(proxy, upstream, port, caddy))
 
-    return "\n".join(header) + "\n\n".join(blocks) + "\n"
+    body = "\n\n".join(blocks)
+
+    # Import personal / non-puente hosts from a hand-maintained fragment.
+    footer = ""
+    if caddy.extra_caddyfile:
+        footer = (
+            f"\n\n# Hosts puente does not manage — see {caddy.extra_caddyfile}\n"
+            f"import {caddy.extra_caddyfile}\n"
+        )
+
+    return "\n".join(header) + body + footer + "\n"
 
 
 def write_caddyfile(config: PuenteConfig, output_path: Path | None = None) -> Path:
@@ -113,7 +129,8 @@ def proxy_urls(config: PuenteConfig) -> dict[str, str]:
 
     Replaces the hand-maintained PROXY_URLS dict in portal.py.
     """
-    return {
-        svc_name: f"https://{proxy.host}"
-        for svc_name, _cfg, proxy in iter_proxied_services(config)
-    }
+    out: dict[str, str] = {}
+    for svc_name, _cfg, proxy in iter_proxied_services(config):
+        # First hostname wins — a service's primary public URL for the portal.
+        out.setdefault(svc_name, f"https://{proxy.host}")
+    return out

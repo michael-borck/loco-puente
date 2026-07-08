@@ -92,6 +92,19 @@ class CaddyService(ServiceBase):
         caddy_dir.mkdir(parents=True, exist_ok=True)
         write_caddyfile(full, caddy_dir / "Caddyfile")
 
+        # If an extra (personal-hosts) fragment is configured, ensure the file
+        # exists so the `import` doesn't fail — but NEVER overwrite it, it's
+        # hand-maintained. Seed an empty stub only when absent.
+        extra = full.services.caddy.extra_caddyfile
+        if extra:
+            extra_path = caddy_dir / extra
+            if not extra_path.exists():
+                extra_path.parent.mkdir(parents=True, exist_ok=True)
+                extra_path.write_text(
+                    "# Hosts puente does not manage (personal sites, other machines).\n"
+                    "# Hand-maintained: puente never rewrites this file.\n"
+                )
+
         # Materialize an .env for the container from the secrets present in the
         # host environment. Missing ones are skipped (Caddy will 401/deny rather
         # than crash) but reported so the operator knows to set them.
