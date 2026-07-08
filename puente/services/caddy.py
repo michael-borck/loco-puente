@@ -105,7 +105,10 @@ class CaddyService(ServiceBase):
             if val is None:
                 missing.append(var)
                 continue
-            lines.append(f"{var}={val}")
+            # Docker Compose interpolates $ in env_file values, which mangles
+            # bcrypt hashes ($2a$14$...). Escape $ as $$ so Compose passes the
+            # value through literally.
+            lines.append(f"{var}={val.replace('$', '$$')}")
         # Only rewrite .env if we resolved something; never clobber a
         # hand-maintained .env with an empty file.
         if lines:

@@ -57,9 +57,19 @@ def _site_block(
 
     if proxy.auth == "basic":
         group = proxy.basic_group
-        if group is None and len(caddy.users) == 1:
-            group = next(iter(caddy.users))
+        if group is None:
+            # Default: the sole group, else a conventional "ui" group.
+            if len(caddy.users) == 1:
+                group = next(iter(caddy.users))
+            elif "ui" in caddy.users:
+                group = "ui"
         users = caddy.users.get(group, {}) if group else {}
+        if not users:
+            raise ValueError(
+                f"basic_auth host {proxy.host!r} resolved to no users "
+                f"(basic_group={proxy.basic_group!r}); set proxy.basic_group to "
+                f"one of {sorted(caddy.users)} or define that group in caddy.users"
+            )
         lines.append("\tbasic_auth {")
         for username, env_var in users.items():
             lines.append(f"\t\t{username} {{${env_var}}}")

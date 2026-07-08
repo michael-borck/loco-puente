@@ -8,17 +8,19 @@ services:
     managed: false
     environment: {}
     review: false
+    proxy:
+      host: ollama.locollm.org
+      auth: bearer
+      token_env: OLLAMA_TOKEN
+      basic_group: null
+      port: 11434
+      upstream: null
     instances:
     - name: primary
       gpu: 0
       port: 11434
       models:
       - llama3.1:8b-q4_k_m
-    proxy:
-      host: ollama.locollm.org
-      auth: bearer
-      token_env: OLLAMA_TOKEN
-      port: 11434
   open_webui:
     enabled: true
     install_method: docker
@@ -29,6 +31,7 @@ services:
       WEBUI_AUTH: 'true'
       ENABLE_WEBSOCKET_SUPPORT: 'false'
     review: false
+    proxy: null
   speaches:
     enabled: false
     install_method: docker
@@ -39,14 +42,16 @@ services:
       CHAT_COMPLETION_BASE_URL: http://192.168.20.120:11434
       CHAT_COMPLETION_API_KEY: Curtin2026ISYS20015002
     review: false
-    models:
-    - Systran/faster-whisper-small
-    - speaches-ai/Kokoro-82M-v1.0-ONNX
     proxy:
       host: speaches.locopuente.org
       auth: bearer
       token_env: SPEACHES_TOKEN
+      basic_group: null
       port: 8000
+      upstream: null
+    models:
+    - Systran/faster-whisper-small
+    - speaches-ai/Kokoro-82M-v1.0-ONNX
   comfyui:
     enabled: true
     install_method: docker
@@ -55,15 +60,17 @@ services:
     managed: true
     environment: {}
     review: false
-    install_manager: true
-    install_sadtalker: true
-    install_wav2lip: true
-    install_liveportrait: true
     proxy:
       host: comfyui.locopuente.org
       auth: bearer
       token_env: COMFYUI_TOKEN
+      basic_group: null
       port: 8188
+      upstream: null
+    install_manager: true
+    install_sadtalker: true
+    install_wav2lip: true
+    install_liveportrait: true
   searxng:
     enabled: false
     install_method: docker
@@ -72,6 +79,7 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy: null
   vane:
     enabled: false
     install_method: docker
@@ -83,7 +91,10 @@ services:
     proxy:
       host: search.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 3005
+      upstream: null
   anythingllm:
     enabled: true
     install_method: docker
@@ -91,13 +102,16 @@ services:
     gpu: null
     managed: true
     environment: {}
-    storage_path: /home/michael/.puente/anythingllm
-    jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
     review: false
     proxy:
       host: chat.eduserver.au
       auth: none
+      token_env: null
+      basic_group: null
       port: 3001
+      upstream: null
+    storage_path: /home/michael/.puente/anythingllm
+    jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
   librechat:
     enabled: false
     install_method: docker
@@ -109,7 +123,11 @@ services:
     proxy:
       host: chat.locopuente.org
       auth: none
+      token_env: null
+      basic_group: null
       port: 3080
+      upstream: null
+    mongo_uri: null
   open_notebook:
     enabled: false
     install_method: docker
@@ -121,7 +139,10 @@ services:
     proxy:
       host: notes.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 8502
+      upstream: null
   stirling_pdf:
     enabled: false
     install_method: docker
@@ -133,7 +154,10 @@ services:
     proxy:
       host: pdf.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 8089
+      upstream: null
   excalidraw:
     enabled: false
     install_method: docker
@@ -145,7 +169,10 @@ services:
     proxy:
       host: whiteboard.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 3333
+      upstream: null
   open_terminal:
     enabled: false
     install_method: docker
@@ -154,6 +181,7 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy: null
   citesight:
     enabled: false
     install_method: docker
@@ -165,7 +193,10 @@ services:
     proxy:
       host: cite.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 3010
+      upstream: null
   jupyter:
     enabled: false
     install_method: docker
@@ -174,6 +205,7 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy: null
   deeptutor:
     enabled: false
     install_method: docker
@@ -182,6 +214,7 @@ services:
     managed: true
     environment: {}
     review: false
+    proxy: null
   musicgen:
     enabled: false
     install_method: docker
@@ -193,7 +226,10 @@ services:
     proxy:
       host: musicgen.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 7860
+      upstream: null
   swarmui:
     enabled: true
     install_method: docker
@@ -206,10 +242,15 @@ services:
     - host: swarmui.locopuente.org
       auth: bearer
       token_env: SWARMUI_TOKEN
+      basic_group: null
       port: 7801
+      upstream: null
     - host: image.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 7801
+      upstream: null
   fooocus:
     enabled: false
     install_method: docker
@@ -221,7 +262,10 @@ services:
     proxy:
       host: fooocus.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 7865
+      upstream: null
   nodepad:
     enabled: false
     install_method: docker
@@ -230,6 +274,7 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy: null
   voicebox:
     enabled: true
     install_method: docker
@@ -242,7 +287,9 @@ services:
       host: voice.locopuente.org
       auth: bearer
       token_env: VOICE_TOKEN
+      basic_group: null
       port: 17493
+      upstream: null
   chatterbox:
     enabled: true
     install_method: docker
@@ -251,12 +298,15 @@ services:
     managed: true
     environment: {}
     review: true
-    build_context: /home/michael/Chatterbox-TTS-Server
     proxy:
       host: chatterbox.locoensayo.org
       auth: bearer
       token_env: CHATTERBOX_TOKEN
+      basic_group: null
       port: 8004
+      upstream: null
+    build_context: /home/michael/Chatterbox-TTS-Server
+    hf_token: null
   glances:
     enabled: true
     install_method: docker
@@ -265,6 +315,7 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy: null
   portal:
     enabled: true
     install_method: docker
@@ -273,42 +324,64 @@ services:
     managed: true
     environment: {}
     review: false
-    host: 192.168.20.120
     proxy:
     - host: go.locopuente.org
       auth: none
+      token_env: null
+      basic_group: null
       port: 8090
+      upstream: null
     - host: closingthegap.eduserver.au
       auth: none
+      token_env: null
+      basic_group: null
       port: 8090
+      upstream: null
+    host: 192.168.20.120
   caddy:
-    enabled: false
+    enabled: true
     install_method: docker
+    port: null
+    gpu: null
     managed: true
+    environment: {}
+    review: false
+    proxy: null
     email: michael.borck@curtin.edu.au
-    upstream_host: 192.168.20.120
     users:
       ui:
         swarm: SWARM_BCRYPT
       boxes:
         michael: BOXES_BCRYPT
+    upstream_host: 192.168.20.120
     proxy_hosts:
     - host: audio.locopuente.org
       auth: basic
+      token_env: null
+      basic_group: null
       port: 7860
+      upstream: null
     - host: boxes.borck.dev
       auth: basic
+      token_env: null
       basic_group: boxes
       port: 8077
+      upstream: null
     - host: workready-api.eduserver.au
       auth: bearer
       token_env: WORKREADY_TOKEN
+      basic_group: null
       port: 8001
+      upstream: null
     - host: plex.serveur.au
       auth: none
+      token_env: null
+      basic_group: null
       port: 32400
       upstream: 192.168.20.3
     - host: books.serveur.au
       auth: none
+      token_env: null
+      basic_group: null
       port: 5000
       upstream: 192.168.20.3
