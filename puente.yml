@@ -265,7 +265,10 @@ services:
     - host: closingthegap.eduserver.au
       auth: none
   caddy:
-    enabled: true
+    # Disabled: NPM currently owns 80/443. Caddy fronts only puente services;
+    # non-puente hosts (personal sites) bring their own proxy. Enable after
+    # deciding how those are served (see docs/caddy-migration.md).
+    enabled: false
     install_method: docker
     managed: true
     email: michael.borck@curtin.edu.au
@@ -273,5 +276,3 @@ services:
     users:
       ui:
         swarm: SWARM_BCRYPT
-    # Personal / non-puente hosts (Plex, boxes, books) live here, hand-maintained.
-    extra_caddyfile: personal.caddy

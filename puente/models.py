@@ -113,12 +113,6 @@ class CaddyConfig(ServiceConfig):
     # LAN address of the Docker host, used as the reverse_proxy upstream for
     # services running outside the puente network (native installs, other boxes).
     upstream_host: str = "host.docker.internal"
-    # Optional extra Caddyfile fragment to `import` at the end of the generated
-    # config — the home for hosts puente does NOT manage (personal sites, other
-    # machines). Path is relative to the Caddyfile inside the container
-    # (default ~/.puente/caddy/), so "personal.caddy" -> caddy/personal.caddy.
-    # The file is yours to hand-maintain; puente never rewrites it.
-    extra_caddyfile: str | None = None
 
 
 class ComfyUIConfig(ServiceConfig):

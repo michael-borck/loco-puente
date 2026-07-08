@@ -102,17 +102,7 @@ def generate_caddyfile(config: PuenteConfig) -> str:
             continue
         blocks.append(_site_block(proxy, upstream, port, caddy))
 
-    body = "\n\n".join(blocks)
-
-    # Import personal / non-puente hosts from a hand-maintained fragment.
-    footer = ""
-    if caddy.extra_caddyfile:
-        footer = (
-            f"\n\n# Hosts puente does not manage — see {caddy.extra_caddyfile}\n"
-            f"import {caddy.extra_caddyfile}\n"
-        )
-
-    return "\n".join(header) + body + footer + "\n"
+    return "\n".join(header) + "\n\n".join(blocks) + "\n"
 
 
 def write_caddyfile(config: PuenteConfig, output_path: Path | None = None) -> Path:
