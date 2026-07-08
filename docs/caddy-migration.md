@@ -1,0 +1,114 @@
+# Reverse proxy: Caddy as a puente service
+
+Puente can run its own reverse proxy (Caddy) as an optional service, the same
+way it runs every other container. When enabled, Caddy fronts every service
+that declares a `proxy:` block — terminating TLS (automatic Let's Encrypt) and
+enforcing a per-service auth policy. When disabled, you bring your own proxy
+(nginx-proxy-manager, Traefik, …) and puente stays out of the way.
+
+This replaces the old model where the proxy lived outside puente and every
+route was hand-configured in NPM's database (not captured in git, and prone to
+silent reversion when the NPM UI regenerated configs).
+
+## The model
+
+- **Source of truth is `puente.yml`.** Each service already declares its
+  `port`; add a `proxy:` block to publish it. The Caddyfile is *generated* from
+  this — there is no second file to keep in sync.
+- **Secrets stay out of the repo.** `proxy.token_env` (bearer) and the
+  basic-auth `users` map name *environment variables*; the generated Caddyfile
+  emits `{$VAR}` placeholders and puente materializes `caddy/.env` from the
+  host environment at start time.
+
+### Per-service `proxy:` block
+
+```yaml
+swarmui:
+  port: 7801
+  proxy:
+    host: swarmui.locopuente.org   # public hostname (needs DNS -> your IP)
+    auth: bearer                   # none | basic | bearer
+    token_env: SWARMUI_TOKEN       # env var holding the bearer token
+```
+
+Auth policy (matches the stack convention):
+
+| `auth`   | Use for                                   | Requires |
+|----------|-------------------------------------------|----------|
+| `none`   | app has its own accounts / public by design | –        |
+| `basic`  | UI tool with no built-in login            | a `users` group in the `caddy:` config |
+| `bearer` | API-only endpoint                         | `token_env` |
+
+### The `caddy:` service config
+
+```yaml
+caddy:
+  enabled: false                    # flip true after cutover (see below)
+  email: you@example.org            # ACME contact
+  upstream_host: 192.168.20.120     # LAN address of the backends
+  users:                            # basic-auth groups: {group: {user: ENV_VAR}}
+    ui:
+      swarm: SWARM_BCRYPT           # bcrypt hash read from caddy/.env
+```
+
+## Secrets: `caddy/.env`
+
+Puente writes `~/.puente/caddy/.env` on `puente up`, pulling each referenced var
+from **its own process environment**. So export them before `puente up`, or
+keep a persistent env file your shell sources. Required vars are discovered
+automatically; any that are unset are reported and their routes will deny until
+set.
+
+Generate a bcrypt hash for a basic-auth user:
+
+```sh
+docker run --rm caddy:2 caddy hash-password --plaintext 'yourpassword'
+```
+
+Generate a bearer token:
+
+```sh
+openssl rand -hex 32
+```
+
+## Cutover from nginx-proxy-manager
+
+Only one process can bind `:80` / `:443`. NPM currently owns them, so:
+
+1. **Prep DNS** — every `proxy.host` must resolve to this host's public IP.
+   (Caddy needs `:80` reachable for the HTTP-01 challenge.)
+2. **Set secrets** — export the token / bcrypt env vars (see above).
+3. **Stop NPM** — `cd ~/docker && docker compose stop` (or remove its
+   `:80/:443` bindings). Keep its data around until Caddy is proven.
+4. **Enable + start Caddy** — set `caddy.enabled: true` in `puente.yml`, then
+   `puente up caddy`. Caddy will request certs on first request per host.
+5. **Verify** each host:
+   ```sh
+   curl -sI https://swarmui.locopuente.org            # 401 (no bearer)
+   curl -sI -H 'Authorization: Bearer <tok>' https://swarmui.locopuente.org
+   curl -sI https://image.locopuente.org              # 401 + WWW-Authenticate: Basic
+   ```
+6. **Decommission NPM** once all hosts are green.
+
+### Rollback
+
+`puente down caddy`, then start NPM again. Caddy's certs/state live in the
+`~/.puente/caddy/data` volume, so re-enabling later is instant.
+
+## Hosts NOT managed by puente
+
+Some NPM hosts point at backends puente doesn't run (Plex, Calibre-Web on
+`serveur.au`, `boxes.borck.dev`). Those aren't in `puente.yml`, so they won't
+appear in the generated Caddyfile. Either keep them on NPM, or add them to the
+hand-maintained reference Caddyfile in `proxy/Caddyfile` and merge. The
+`proxy/` directory holds a full standalone Caddyfile (all 23 original hosts) as
+a bootstrap/reference; the puente-generated one covers only puente services.
+
+## Regenerating
+
+Any `puente up` regenerates `caddy/Caddyfile` from the current `puente.yml`.
+To apply changes without downtime after editing config:
+
+```sh
+docker exec puente-caddy caddy reload --config /etc/caddy/Caddyfile
+```

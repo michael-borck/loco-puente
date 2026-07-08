@@ -123,8 +123,13 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
 
     icon, display_name, desc = SERVICE_META.get(svc_name, ("🔧", svc_name, ""))
 
-    # Use proxy URL if available, otherwise fall back to host:port
-    if svc_name in PROXY_URLS:
+    # Prefer a proxy URL derived from the service's own `proxy:` block (single
+    # source of truth); fall back to the static PROXY_URLS map for services not
+    # yet migrated, then to host:port.
+    proxy = getattr(svc_config, "proxy", None)
+    if proxy is not None:
+        url = f"https://{proxy.host}"
+    elif svc_name in PROXY_URLS:
         url = PROXY_URLS[svc_name]
     else:
         port = svc_config.port or svc_class.default_port

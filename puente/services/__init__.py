@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .anythingllm import AnythingLLMService
+from .caddy import CaddyService
 from .chatterbox import ChatterboxService
 from .glances import GlancesService
 from .base import ServiceBase
@@ -51,4 +52,5 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "fooocus": FooocusService,
     "voicebox": VoiceboxService,
     "portal": PortalService,
+    "caddy": CaddyService,
 }

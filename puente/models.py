@@ -16,6 +16,26 @@ class OllamaInstance(BaseModel):
     models: list[str] = Field(default_factory=lambda: ["llama3.1:8b-q4_k_m"])
 
 
+class ProxyConfig(BaseModel):
+    """Reverse-proxy exposure for a service. Attach to a service's `proxy:`
+    block to have the Caddy service publish it at a public hostname.
+
+    Auth policy mirrors the stack convention:
+      * "none"   — app has its own accounts, or is public by design
+      * "basic"  — UI tool with no built-in login (HTTP Basic)
+      * "bearer" — API-only endpoint gated by a token
+    """
+
+    host: str  # public hostname, e.g. swarmui.locopuente.org
+    auth: Literal["none", "basic", "bearer"] = "none"
+    # For auth="bearer": name of the env var holding the token (read from the
+    # Caddy container's environment). Keeps secrets out of the committed config.
+    token_env: str | None = None
+    # For auth="basic": name of the basic-auth user group in CaddyConfig.users
+    # to require. Defaults to the sole group when there's exactly one.
+    basic_group: str | None = None
+
+
 class ServiceConfig(BaseModel):
     enabled: bool = True
     install_method: Literal["docker", "native", "external"] = "docker"
@@ -24,6 +44,7 @@ class ServiceConfig(BaseModel):
     managed: bool = True  # False = coexist with existing install
     environment: dict[str, str] = Field(default_factory=dict)
     review: bool = False  # True = surface in portal "Under Evaluation" section
+    proxy: ProxyConfig | None = None  # reverse-proxy exposure (Caddy service)
 
 
 class AnythingLLMConfig(ServiceConfig):
@@ -69,6 +90,23 @@ class SpeachesConfig(ServiceConfig):
 
 class PortalConfig(ServiceConfig):
     host: str = "localhost"  # hostname/IP used in generated service URLs
+
+
+class CaddyConfig(ServiceConfig):
+    """The reverse proxy. When enabled, Caddy fronts every service that has a
+    `proxy:` block, terminating TLS (automatic Let's Encrypt) and enforcing the
+    per-service auth policy. Disable to bring your own proxy (NPM, Traefik, …).
+    """
+
+    install_method: Literal["docker", "native", "external"] = "docker"
+    email: str = ""  # ACME contact for Let's Encrypt (recommended)
+    # Basic-auth user groups: {group_name: {username: env_var_holding_bcrypt}}.
+    # The generator emits `basic_auth { <user> {$<ENV>} }`, so the bcrypt hash
+    # is read from the container environment, never committed.
+    users: dict[str, dict[str, str]] = Field(default_factory=dict)
+    # LAN address of the Docker host, used as the reverse_proxy upstream for
+    # services running outside the puente network (native installs, other boxes).
+    upstream_host: str = "host.docker.internal"
 
 
 class ComfyUIConfig(ServiceConfig):
@@ -147,6 +185,9 @@ class StackConfig(BaseModel):
     )
     portal: PortalConfig = Field(
         default_factory=lambda: PortalConfig(port=8080, enabled=False)
+    )
+    caddy: CaddyConfig = Field(
+        default_factory=lambda: CaddyConfig(enabled=False, managed=True)
     )
 
 

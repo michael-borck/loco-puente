@@ -49,6 +49,10 @@ services:
     install_sadtalker: true
     install_wav2lip: true
     install_liveportrait: true
+    proxy:
+      host: comfyui.locopuente.org
+      auth: bearer
+      token_env: COMFYUI_TOKEN
   searxng:
     enabled: false
     install_method: docker
@@ -75,6 +79,9 @@ services:
     storage_path: /home/michael/.puente/anythingllm
     jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
     review: false
+    proxy:
+      host: chat.eduserver.au
+      auth: none
   librechat:
     enabled: false
     install_method: docker
@@ -155,6 +162,10 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy:
+      host: swarmui.locopuente.org
+      auth: bearer
+      token_env: SWARMUI_TOKEN
   fooocus:
     enabled: false
     install_method: docker
@@ -179,6 +190,10 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy:
+      host: voice.locopuente.org
+      auth: bearer
+      token_env: VOICE_TOKEN
   chatterbox:
     enabled: true
     install_method: docker
@@ -188,6 +203,10 @@ services:
     environment: {}
     review: true
     build_context: /home/michael/Chatterbox-TTS-Server
+    proxy:
+      host: chatterbox.locoensayo.org
+      auth: bearer
+      token_env: CHATTERBOX_TOKEN
   glances:
     enabled: true
     install_method: docker
@@ -205,3 +224,16 @@ services:
     environment: {}
     review: false
     host: 192.168.20.120
+  caddy:
+    # Disabled by default: NPM currently owns 80/443. Flip to true only after
+    # the cutover (see docs/caddy-migration.md) — both can't bind 80/443.
+    enabled: false
+    install_method: docker
+    managed: true
+    email: michael.borck@curtin.edu.au
+    upstream_host: 192.168.20.120
+    # bcrypt hashes are read from the Caddy container env (see caddy/.env),
+    # never stored here. `swarm` is the shared UI login.
+    users:
+      ui:
+        swarm: SWARM_BCRYPT

@@ -1,0 +1,31 @@
+# locopuente reverse proxy — Caddy
+#
+# Run:   cd proxy && cp .env.example .env && edit .env, then: docker compose up -d
+# Reload after Caddyfile edits (no downtime):
+#        docker exec loco-caddy caddy reload --config /etc/caddy/Caddyfile
+#
+# NOTE: NPM currently owns ports 80/443. Only ONE proxy can bind them.
+# See README.md "Cutover" — stop NPM (or move it) before starting Caddy on 80/443.
+
+services:
+  caddy:
+    image: caddy:2
+    container_name: loco-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    env_file:
+      - .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # certs + ACME state (persist these!)
+      - caddy_config:/config
+    # Backends are on the host LAN (192.168.20.x); default bridge reaches them
+    # via the host. If not, uncomment host networking and drop the ports block:
+    # network_mode: host
+
+volumes:
+  caddy_data:
+  caddy_config:
