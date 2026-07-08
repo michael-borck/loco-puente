@@ -32,11 +32,13 @@ class CaddyService(ServiceBase):
 
     def _secret_env_vars(self, config: PuenteConfig) -> list[str]:
         """Names of env vars the Caddyfile references and Caddy must receive:
-        every bearer token_env, plus every basic-auth user's bcrypt env var.
+        every bearer token_env, plus every basic-auth user's bcrypt env var —
+        across both service-bound proxy blocks and standalone proxy_hosts.
         """
         names: set[str] = set()
         caddy = config.services.caddy
-        for _svc, _cfg, proxy in iter_proxied_services(config):
+        service_blocks = (proxy for _s, _c, proxy in iter_proxied_services(config))
+        for proxy in (*service_blocks, *caddy.proxy_hosts):
             if proxy.auth == "bearer" and proxy.token_env:
                 names.add(proxy.token_env)
             elif proxy.auth == "basic":

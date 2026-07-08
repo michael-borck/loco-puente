@@ -26,17 +26,18 @@ def _port_for(svc_name: str, svc_config: ServiceConfig) -> int | None:
 
 
 def iter_proxied_services(config: PuenteConfig):
-    """Yield (svc_name, ServiceConfig, ProxyConfig) for every enabled service
-    that declares a proxy block — once per hostname (a service may list several).
-    Stable order = registry order.
+    """Yield (svc_name, ServiceConfig, ProxyConfig) for every service that
+    declares a proxy block — once per hostname (a service may list several).
+
+    A declared proxy block is served whether or not the service is enabled: the
+    user controls the boundary, not puente. A block on a stopped service just
+    proxies to a dead upstream (502) — not puente's concern. Registry order.
     """
     from puente.services import ALL_SERVICES
 
     for svc_name in ALL_SERVICES:
         svc_config = getattr(config.services, svc_name, None)
-        if svc_config is None or not svc_config.enabled:
-            continue
-        if svc_config.proxy is None:
+        if svc_config is None or svc_config.proxy is None:
             continue
         blocks = svc_config.proxy
         if not isinstance(blocks, list):
@@ -94,13 +95,22 @@ def generate_caddyfile(config: PuenteConfig) -> str:
         header += ["{", f"\temail {caddy.email}", "}", ""]
 
     blocks: list[str] = []
+
+    # Service-bound proxy blocks.
     for svc_name, svc_config, proxy in iter_proxied_services(config):
         # Per-block port override wins, else the service's own port.
         port = proxy.port if proxy.port is not None else _port_for(svc_name, svc_config)
         if port is None:
             # No port to proxy to; skip rather than emit a broken upstream.
             continue
-        blocks.append(_site_block(proxy, upstream, port, caddy))
+        blocks.append(_site_block(proxy, proxy.upstream or upstream, port, caddy))
+
+    # Standalone hosts not tied to any puente service.
+    for proxy in caddy.proxy_hosts:
+        if proxy.port is None:
+            # A standalone host has no service to borrow a port from.
+            continue
+        blocks.append(_site_block(proxy, proxy.upstream or upstream, proxy.port, caddy))
 
     return "\n".join(header) + "\n\n".join(blocks) + "\n"
 

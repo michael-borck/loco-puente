@@ -38,6 +38,9 @@ class ProxyConfig(BaseModel):
     # when a hostname fronts a different port than the service default, or when
     # two hostnames share one backend (e.g. a UI + an API on the same service).
     port: int | None = None
+    # Optional upstream host override. Defaults to CaddyConfig.upstream_host.
+    # Set it for a standalone host on a different machine (e.g. 192.168.20.3).
+    upstream: str | None = None
 
 
 class ServiceConfig(BaseModel):
@@ -113,6 +116,12 @@ class CaddyConfig(ServiceConfig):
     # LAN address of the Docker host, used as the reverse_proxy upstream for
     # services running outside the puente network (native installs, other boxes).
     upstream_host: str = "host.docker.internal"
+    # Standalone proxy hosts NOT tied to a puente service — anything you want
+    # Caddy to front (personal sites, other machines, external APIs). Each needs
+    # its own `port` (and usually `upstream`). Puente does not manage these
+    # backends; a dead one simply 502s. This is config-as-code, not a manager:
+    # you declare the boundary, Caddy serves it.
+    proxy_hosts: list[ProxyConfig] = Field(default_factory=list)
 
 
 class ComfyUIConfig(ServiceConfig):

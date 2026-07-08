@@ -46,6 +46,7 @@ services:
       host: speaches.locopuente.org
       auth: bearer
       token_env: SPEACHES_TOKEN
+      port: 8000
   comfyui:
     enabled: true
     install_method: docker
@@ -62,6 +63,7 @@ services:
       host: comfyui.locopuente.org
       auth: bearer
       token_env: COMFYUI_TOKEN
+      port: 8188
   searxng:
     enabled: false
     install_method: docker
@@ -81,6 +83,7 @@ services:
     proxy:
       host: search.locopuente.org
       auth: basic
+      port: 3005
   anythingllm:
     enabled: true
     install_method: docker
@@ -94,6 +97,7 @@ services:
     proxy:
       host: chat.eduserver.au
       auth: none
+      port: 3001
   librechat:
     enabled: false
     install_method: docker
@@ -105,6 +109,7 @@ services:
     proxy:
       host: chat.locopuente.org
       auth: none
+      port: 3080
   open_notebook:
     enabled: false
     install_method: docker
@@ -116,6 +121,7 @@ services:
     proxy:
       host: notes.locopuente.org
       auth: basic
+      port: 8502
   stirling_pdf:
     enabled: false
     install_method: docker
@@ -127,6 +133,7 @@ services:
     proxy:
       host: pdf.locopuente.org
       auth: basic
+      port: 8089
   excalidraw:
     enabled: false
     install_method: docker
@@ -138,6 +145,7 @@ services:
     proxy:
       host: whiteboard.locopuente.org
       auth: basic
+      port: 3333
   open_terminal:
     enabled: false
     install_method: docker
@@ -157,6 +165,7 @@ services:
     proxy:
       host: cite.locopuente.org
       auth: basic
+      port: 3010
   jupyter:
     enabled: false
     install_method: docker
@@ -184,6 +193,7 @@ services:
     proxy:
       host: musicgen.locopuente.org
       auth: basic
+      port: 7860
   swarmui:
     enabled: true
     install_method: docker
@@ -196,8 +206,10 @@ services:
     - host: swarmui.locopuente.org
       auth: bearer
       token_env: SWARMUI_TOKEN
+      port: 7801
     - host: image.locopuente.org
       auth: basic
+      port: 7801
   fooocus:
     enabled: false
     install_method: docker
@@ -209,6 +221,7 @@ services:
     proxy:
       host: fooocus.locopuente.org
       auth: basic
+      port: 7865
   nodepad:
     enabled: false
     install_method: docker
@@ -229,6 +242,7 @@ services:
       host: voice.locopuente.org
       auth: bearer
       token_env: VOICE_TOKEN
+      port: 17493
   chatterbox:
     enabled: true
     install_method: docker
@@ -242,6 +256,7 @@ services:
       host: chatterbox.locoensayo.org
       auth: bearer
       token_env: CHATTERBOX_TOKEN
+      port: 8004
   glances:
     enabled: true
     install_method: docker
@@ -262,12 +277,11 @@ services:
     proxy:
     - host: go.locopuente.org
       auth: none
+      port: 8090
     - host: closingthegap.eduserver.au
       auth: none
+      port: 8090
   caddy:
-    # Disabled: NPM currently owns 80/443. Caddy fronts only puente services;
-    # non-puente hosts (personal sites) bring their own proxy. Enable after
-    # deciding how those are served (see docs/caddy-migration.md).
     enabled: false
     install_method: docker
     managed: true
@@ -276,3 +290,25 @@ services:
     users:
       ui:
         swarm: SWARM_BCRYPT
+      boxes:
+        michael: BOXES_BCRYPT
+    proxy_hosts:
+    - host: audio.locopuente.org
+      auth: basic
+      port: 7860
+    - host: boxes.borck.dev
+      auth: basic
+      basic_group: boxes
+      port: 8077
+    - host: workready-api.eduserver.au
+      auth: bearer
+      token_env: WORKREADY_TOKEN
+      port: 8001
+    - host: plex.serveur.au
+      auth: none
+      port: 32400
+      upstream: 192.168.20.3
+    - host: books.serveur.au
+      auth: none
+      port: 5000
+      upstream: 192.168.20.3
