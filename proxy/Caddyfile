@@ -151,7 +151,7 @@ chat.eduserver.au {
 }
 
 books.serveur.au {
-	# Calibre-Web — own login
+	# personal host on serveur.au (not a puente service)
 	reverse_proxy 192.168.20.3:5000
 }
 

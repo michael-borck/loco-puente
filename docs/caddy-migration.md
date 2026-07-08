@@ -97,12 +97,14 @@ Only one process can bind `:80` / `:443`. NPM currently owns them, so:
 
 ## Hosts NOT managed by puente
 
-Some NPM hosts point at backends puente doesn't run (Plex, Calibre-Web on
-`serveur.au`, `boxes.borck.dev`). Those aren't in `puente.yml`, so they won't
-appear in the generated Caddyfile. Either keep them on NPM, or add them to the
-hand-maintained reference Caddyfile in `proxy/Caddyfile` and merge. The
-`proxy/` directory holds a full standalone Caddyfile (all 23 original hosts) as
-a bootstrap/reference; the puente-generated one covers only puente services.
+Puente is an AI-platform orchestrator — it only fronts the AI services it runs.
+Personal / unrelated infrastructure (e.g. Plex, `books.serveur.au`,
+`boxes.borck.dev`) is deliberately out of scope: those hosts aren't in
+`puente.yml`, so they never appear in the generated Caddyfile. Keep them on
+whatever proxy you like (NPM, a separate Caddy), or add them to the
+hand-maintained `proxy/Caddyfile`. The `proxy/` directory holds a full
+standalone Caddyfile (all 23 original hosts) as a bootstrap/reference; the
+puente-generated one covers only puente services.
 
 ## Regenerating
 

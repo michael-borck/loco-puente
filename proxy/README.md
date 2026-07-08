@@ -2,7 +2,8 @@
 
 This directory holds a **complete, hand-written Caddyfile** covering all 23
 hosts that were originally configured in nginx-proxy-manager — including hosts
-puente does not manage (Plex, Calibre-Web, `boxes.borck.dev`).
+puente does not manage — personal hosts like Plex, `books.serveur.au`, and
+`boxes.borck.dev`.
 
 It exists as a **bootstrap / reference**. Two ways to use it:
 
