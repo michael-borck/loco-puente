@@ -38,6 +38,36 @@ puente up        # start the stack + a launcher portal
 
 Then `puente status` to see what's live. That's it.
 
+## Expose services (optional)
+
+Enable the built-in **Caddy** service and give any service a `proxy:` block to
+publish it at a public hostname — automatic TLS, per-service auth. It's
+config-as-code: you declare the boundary, Caddy serves it.
+
+```yaml
+services:
+  caddy:
+    enabled: true
+    email: you@example.org         # Let's Encrypt contact
+    users:
+      ui: { admin: ADMIN_BCRYPT }  # basic-auth groups (bcrypt hash from env)
+    proxy_hosts:                   # front hosts that aren't puente services, too
+      - host: plex.example.org
+        port: 32400
+        upstream: 192.168.1.10
+        auth: none
+
+  swarmui:
+    proxy:
+      host: swarmui.example.org
+      auth: bearer                 # none | basic | bearer
+      token_env: SWARMUI_TOKEN     # token read from the environment
+```
+
+Secrets (`ADMIN_BCRYPT`, `SWARMUI_TOKEN`, …) come from the environment, never the
+committed config. Full walkthrough — including migrating off an existing proxy —
+in [docs/caddy-migration.md](docs/caddy-migration.md).
+
 ## What it does
 
 - **Detects your hardware** and proposes a service set it can actually run,
