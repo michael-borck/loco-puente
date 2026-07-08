@@ -23,6 +23,8 @@ export default defineConfig({
         {
           label: 'Overview',
           items: [
+            { label: 'Home', link: '/' },
+            { label: 'Why LocoPuente', slug: 'about' },
             { label: 'Student Services', slug: 'services' },
             { label: 'Architecture', slug: 'architecture' },
             { label: 'Philosophy', slug: 'philosophy' },
