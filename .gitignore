@@ -6,3 +6,9 @@ __pycache__/
 *.pyc
 business-case-m3-ultra.docx
 dist_pypi/
+
+# Private correspondence, not for the public repo
+eval/ts_server/email-draft.md
+# TextSynth Server binaries are non-redistributable (see eval/ts_server/README.md)
+eval/ts_server/*.tar.gz
+eval/ts_server/models/

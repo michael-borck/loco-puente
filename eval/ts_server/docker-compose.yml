@@ -1,0 +1,73 @@
+# TextSynth Server — evaluation stack.
+#
+# The free version accepts ONE model definition per process, so each capability
+# gets its own container. They are independent processes; nothing in the LICENSE
+# limits how many you run (it only forbids commercial use + redistribution).
+#
+# NOTE: on this host the CUDA path is broken (driver 595 / CUDA 13.2 rejects the
+# binary's kernel image — see eval/ts_server/README.md). TS_CUDA is left false.
+# Flip TS_CUDA=true and uncomment the `deploy` blocks once on a CUDA-12 driver.
+#
+# Models must be fetched first — and VERIFIED, HF serves them gzip-encoded:
+#   curl -sL -H 'Accept-Encoding: identity' -o models/<f> \
+#     "https://huggingface.co/fbellard/ts_server/resolve/main/<f>?download=true"
+#   sha256sum -c <(curl -s https://bellard.org/ts_server/sha256.txt | grep '<f>$')
+
+x-ts: &ts
+  build: .
+  image: ts_server:eval
+  restart: unless-stopped
+  volumes:
+    - ./models:/models:ro
+  environment: &ts-env
+    TS_CUDA: "false"
+    TS_FULL_MEMORY: "false"   # never let it grab the whole card
+
+services:
+  # Text: completion + chat + classification(logprob) + tokenize. One model, four endpoints.
+  ts-text:
+    <<: *ts
+    container_name: ts-text
+    ports: ["8081:8080"]
+    environment:
+      <<: *ts-env
+      TS_MODEL: llama3.1_8B_instruct
+      TS_MODEL_FILE: llama3.1_8B_instruct_q4.bin   # 5.2 GB
+      TS_DEVICE_INDEX: 0
+    # deploy: { resources: { reservations: { devices: [{ driver: nvidia, device_ids: ["0"], capabilities: [gpu] }] } } }
+
+  # Image generation. ~2.0 GB — comfortably co-resident with the text model on a 2nd card.
+  ts-image:
+    <<: *ts
+    container_name: ts-image
+    ports: ["8082:8080"]
+    environment:
+      <<: *ts-env
+      TS_MODEL: stable_diffusion_1.4
+      TS_MODEL_FILE: sd_v1.4.bin                   # 2.0 GB
+      TS_DEVICE_INDEX: 0
+    # deploy: { resources: { reservations: { devices: [{ driver: nvidia, device_ids: ["1"], capabilities: [gpu] }] } } }
+
+  # Audio transcription (Whisper). Speech synthesis needs a 4th container (Parler+DAC),
+  # since one process = one model.
+  ts-stt:
+    <<: *ts
+    container_name: ts-stt
+    ports: ["8083:8080"]
+    environment:
+      <<: *ts-env
+      TS_MODEL: whisper_large_v3
+      TS_MODEL_FILE: whisper_large_v3_q8.bin       # 1.7 GB
+      TS_DEVICE_INDEX: 0
+
+  ts-tts:
+    <<: *ts
+    container_name: ts-tts
+    ports: ["8084:8080"]
+    profiles: ["tts"]                              # opt-in: docker compose --profile tts up
+    environment:
+      <<: *ts-env
+      TS_MODEL: parler_tts_large
+      TS_MODEL_FILE: parler_tts_large_v1_q8.bin    # 1.0 GB
+      TS_MODEL_FILE2: dac_mono.bin                 # 0.3 GB — TTS needs a second file
+      TS_DEVICE_INDEX: 0
