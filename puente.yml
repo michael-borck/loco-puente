@@ -284,7 +284,13 @@ services:
     environment: {}
     review: true
     proxy:
-      host: voice.locopuente.org
+    - host: voice.locopuente.org
+      auth: basic
+      token_env: null
+      basic_group: null
+      port: 17493
+      upstream: null
+    - host: voicebox.locopuente.org
       auth: bearer
       token_env: VOICE_TOKEN
       basic_group: null
@@ -298,13 +304,10 @@ services:
     managed: true
     environment: {}
     review: true
-    proxy:
-      host: chatterbox.locoensayo.org
-      auth: bearer
-      token_env: CHATTERBOX_TOKEN
-      basic_group: null
-      port: 8004
-      upstream: null
+    # Retired: voicebox bundles chatterbox-tts. Proxy block removed so the
+    # dead route stops being served (a declared block is served even when the
+    # service is disabled — see caddy.iter_proxied_services).
+    proxy: null
     build_context: /home/michael/Chatterbox-TTS-Server
     hf_token: null
   glances:
