@@ -1,8 +1,11 @@
 FROM ubuntu:22.04
 
-# ts_server links only libmicrohttpd + libstdc++ + glibc (>= 2.27).
-# The CUDA backend (libnc_cuda.so) links ONLY libcuda.so.1 (the driver stub),
-# which the NVIDIA container runtime injects. No CUDA toolkit needed.
+# CPU path only. ts_server links libmicrohttpd + libstdc++ + glibc (>= 2.27).
+#
+# The GPU path is NOT supported by this image. `ldd libnc_cuda.so` shows only
+# libcuda.so.1, but libcublasLt.so is dlopen'd at runtime, so the CUDA toolkit
+# IS required -- and the docs additionally require an Ampere/ADA/Hopper GPU with
+# CUDA 11.x or 12.x. To attempt GPU, base on nvidia/cuda:12.x-runtime instead.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libmicrohttpd12 \
         ca-certificates \

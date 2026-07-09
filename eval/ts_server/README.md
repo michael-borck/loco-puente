@@ -21,17 +21,29 @@ evaluated as a lightweight alternative to parts of the Puente stack.
 
 ## What did work
 
-- Builds on `ubuntu:22.04` with exactly one package (`libmicrohttpd12`). `libnc_cuda.so`
-  links only `libcuda.so.1` — hand-written kernels against the driver API, no
-  cudart/cuBLAS/cuDNN, no Python. The whole engine is ~7 MB.
+- Builds on `ubuntu:22.04` with exactly one package (`libmicrohttpd12`) for the **CPU**
+  path. No Python. The whole engine is ~7 MB.
 - CPU inference is correct; the REST API and bundled GUI both work.
 - Quantisation (`ncconvert -q bf8|bf4|bf3`) runs on CPU in under a second.
 - Multiple instances run concurrently — the one-model limit is per process, not per host.
 
-**CUDA does not work on driver 595** (`cuModuleLoadData` → "Could not load cuda module
-data"). This reproduces on bare metal with the vendor's own `ts_test`, so it is not a
-container problem. Likely the CUDA 13 JIT rejecting the binary's kernel image, but the
-actual `CUresult` was never captured — treat that as a hypothesis.
+## GPU: unsupported on this hardware (not a bug)
+
+The docs require **an Ampere, ADA or Hopper GPU with CUDA 11.x or 12.x**, and note that
+ts_server needs **cuBLASLt from the CUDA toolkit**.
+
+This box has RTX 2060 Supers — **Turing, sm_75**, a generation older than Ampere
+(sm_80/86) — on driver 595 (CUDA 13.2). `ts_test --cuda` fails at `cuModuleLoadData`
+with "Could not load cuda module data", on bare metal as well as in a container. That is
+the expected result of running a kernel image built for sm_80+ on an sm_75 card.
+
+Retested with a real CUDA 12 toolkit on `LD_LIBRARY_PATH` — identical failure. So the
+GPU architecture, not the CUDA version, is the binding constraint.
+
+> **Correction:** an earlier version of this file claimed "no CUDA toolkit needed",
+> reasoning from `ldd libnc_cuda.so` showing only `libcuda.so.1`. That was wrong —
+> `libcublasLt.so` is `dlopen`'d at runtime (see `load_cublas_lt` in its strings).
+> The Dockerfile below therefore only supports the CPU path.
 
 ## Building
 
