@@ -279,7 +279,7 @@ services:
     enabled: true
     install_method: docker
     port: 17493
-    gpu: null
+    gpu: 1
     managed: true
     environment: {}
     review: true
@@ -291,7 +291,7 @@ services:
       port: 17493
       upstream: null
   chatterbox:
-    enabled: true
+    enabled: false
     install_method: docker
     port: 8004
     gpu: 1

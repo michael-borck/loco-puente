@@ -18,6 +18,10 @@ class VoiceboxService(ServiceBase):
     # layout, so we let Compose build directly from the upstream git context
     # rather than maintaining a parallel Dockerfile under dockerfiles/.
     docker_image = None
+    # Runs fine on CPU, but its bundled torch is a cu130 build and will use a
+    # GPU if one is handed to it — no extra CUDA libs needed (voicebox's own
+    # /backend/download-cuda is unnecessary). Set `gpu:` in puente.yml to pin
+    # it to a card. cu130 wheels need host driver >= 580.
     requires_gpu = False
 
     # Voicebox is the only puente service that runs as a non-root user inside
@@ -48,13 +52,28 @@ class VoiceboxService(ServiceBase):
         }
         env.update(config.environment)
 
-        return {
-            "voicebox": {
-                "build": {"context": "https://github.com/jamiepine/voicebox.git"},
-                "container_name": "puente-voicebox",
-                "ports": [f"{port}:17493"],
-                "volumes": ["voicebox-data:/app/data"],
-                "environment": env,
-                "restart": "unless-stopped",
-            }
+        service: dict[str, Any] = {
+            "build": {"context": "https://github.com/jamiepine/voicebox.git"},
+            "container_name": "puente-voicebox",
+            "ports": [f"{port}:17493"],
+            "volumes": ["voicebox-data:/app/data"],
+            "environment": env,
+            "restart": "unless-stopped",
         }
+
+        if config.gpu is not None:
+            service["deploy"] = {
+                "resources": {
+                    "reservations": {
+                        "devices": [
+                            {
+                                "driver": "nvidia",
+                                "device_ids": [str(config.gpu)],
+                                "capabilities": ["gpu"],
+                            }
+                        ]
+                    }
+                }
+            }
+
+        return {"voicebox": service}

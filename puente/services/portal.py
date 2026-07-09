@@ -33,8 +33,13 @@ class PortalService(ServiceBase):
         # nvidia-smi. This tiny CUDA-base container writes gpu-stats.json into
         # the portal html dir every few seconds; the page fetches + renders it.
         # Avoids the Glances-image NVML problem by using a proper CUDA base.
+        #
+        # Base is pinned to 12.4 (not 12.8) so this sidecar never becomes the
+        # thing forcing a host-driver upgrade: 12.4 matches ComfyUI's cu124
+        # wheels, the strictest real GPU service. The container only shells out
+        # to nvidia-smi, so the base's CUDA version is otherwise irrelevant.
         fragment["portal-gpu-stats"] = {
-            "image": "nvidia/cuda:12.8.1-base-ubuntu22.04",
+            "image": "nvidia/cuda:12.4.1-base-ubuntu22.04",
             "container_name": "puente-portal-gpu-stats",
             "entrypoint": [
                 "bash",
