@@ -1,9 +1,7 @@
----
-title: "Voicebox Voice-Clone & TTS API"
----
+# Voicebox Voice-Clone & TTS API
 
-How to clone a voice and generate speech with it via Voicebox's HTTP API, so an
-external tool can add Voicebox as a **TTS provider** (alongside Chatterbox).
+How to clone a voice and generate speech with it via Voicebox's HTTP API. Voicebox
+is **the TTS service for this box** — an external tool needing TTS should target it.
 
 > **Verified** 2026-07-07 against a live Voicebox (`puente up voicebox`, port
 > 17493): all documented endpoints exist in its OpenAPI spec, and creating a
@@ -128,15 +126,15 @@ per voice; step 3 is per utterance.
 
 ---
 
-## Should you use this instead of Chatterbox?
+## What happened to Chatterbox?
 
-Both do voice-clone TTS. For a **provider abstraction** in the calling tool:
+**Retired** (2026-07-09). Voicebox bundles a `chatterbox-tts` engine, so running a
+separate Chatterbox container was pure redundancy — and it was holding a GPU.
 
-- **Chatterbox (:8004)** — the currently-integrated, verified TTS. Simplest if
-  you just need "text → cloned-voice audio."
-- **Voicebox (:17493)** — richer: named profiles, multiple engines (incl.
-  Chatterbox), effects, personality rewriting. More setup, still "under
-  evaluation" in Puente.
+- **Voicebox (:17493)** — the active TTS. Named profiles, multiple engines
+  (including `chatterbox`), effects, personality rewriting. Runs on GPU 1.
+- **Chatterbox (was :8004)** — `enabled: false`. **Nothing listens on that port.**
 
-Adding both as selectable TTS providers is reasonable — they don't conflict.
-See [service topology](/service-topology/) for the full picture.
+So there is no provider choice to make any more: target Voicebox. If you specifically
+want Chatterbox's model, select it as an *engine* within Voicebox rather than running
+a second service. See `service-topology.md`, and `chatterbox-api.md` for the history.

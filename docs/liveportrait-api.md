@@ -1,14 +1,14 @@
----
-title: "LivePortrait Reenactment API (via ComfyUI)"
----
+# LivePortrait Reenactment API (via ComfyUI)
 
 How to animate a portrait from a **driving video** (expressive face reenactment)
 via the LivePortrait node in ComfyUI. This is the highest-quality avatar option —
 full-face reenactment with no mouth-box seam, above SadTalker and Wav2Lip.
 
 > **Verified working** 2026-07-07 on the 8 GB RTX 2060 Super: portrait + driving
-> video → clean full-face reenactment MP4 (768×768 h264). No newer hardware
-> needed — LivePortrait is VRAM-light (unlike LatentSync's ~20 GB).
+> video → clean full-face reenactment MP4 (768×768 h264). LivePortrait is
+> VRAM-light, so it needed no special hardware even then — and it runs on GPU 0's
+> 24 GB RTX 3090 with room to spare. (LatentSync's ~20 GB, once disqualifying,
+> now fits too — see `gpu-swap-3090.md`.)
 
 ---
 

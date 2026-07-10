@@ -1,6 +1,4 @@
----
-title: "SadTalker Talking-Head API (via ComfyUI)"
----
+# SadTalker Talking-Head API (via ComfyUI)
 
 How to generate talking-head videos (photo + audio → lip-synced MP4) by calling
 the SadTalker node through ComfyUI's HTTP API. This is the contract for a remote
@@ -119,5 +117,5 @@ while True:
     time.sleep(5)
 ```
 
-SadTalker on the 2060 Super takes ~30s for a few-second clip. Longer audio → longer.
-```
+SadTalker took ~30s for a few-second clip when GPU 0 was an 8 GB 2060 Super. Longer
+audio → longer. GPU 0 is now a 24 GB RTX 3090; this figure has not been re-measured.

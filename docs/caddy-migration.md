@@ -1,5 +1,9 @@
 # Reverse proxy: Caddy as a puente service
 
+> **Status on this box: cutover DONE (2026-07-08).** `caddy.enabled: true`,
+> `puente-caddy` binds `:80`/`:443`, and `nginx-proxy-manager` is stopped.
+> The cutover procedure below is retained for a fresh deployment.
+
 Puente can run its own reverse proxy (Caddy) as an optional service, the same
 way it runs every other container. When enabled, Caddy fronts every service
 that declares a `proxy:` block — terminating TLS (automatic Let's Encrypt) and
@@ -43,7 +47,7 @@ Auth policy (matches the stack convention):
 
 ```yaml
 caddy:
-  enabled: false                    # flip true after cutover (see below)
+  enabled: true                     # false until you cut over (see below)
   email: you@example.org            # ACME contact
   upstream_host: 192.168.20.120     # LAN address of the backends
   users:                            # basic-auth groups: {group: {user: ENV_VAR}}
@@ -73,7 +77,8 @@ openssl rand -hex 32
 
 ## Cutover from nginx-proxy-manager
 
-Only one process can bind `:80` / `:443`. NPM currently owns them, so:
+Only one process can bind `:80` / `:443`. On this box that cutover is **already
+done** — Caddy owns them. The steps below are for a box where NPM still does:
 
 1. **Prep DNS** — every `proxy.host` must resolve to this host's public IP.
    (Caddy needs `:80` reachable for the HTTP-01 challenge.)

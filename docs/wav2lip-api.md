@@ -1,10 +1,8 @@
----
-title: "Wav2Lip Video Lip-Sync API (via ComfyUI)"
----
+# Wav2Lip Video Lip-Sync API (via ComfyUI)
 
 How to re-sync a talking-head **video** to new **audio** (video → lip-synced
 MP4) by calling the Wav2Lip node through ComfyUI's HTTP API. This is the
-video-driven counterpart to [SadTalker](/sadtalker-api/) (which is photo-driven).
+video-driven counterpart to [SadTalker](sadtalker-api.md) (which is photo-driven).
 
 > **Verified working** 2026-07-07: a reference video + 3s audio produced a
 > lip-synced h264+aac MP4 end-to-end via this exact API flow, on the 8 GB
@@ -14,10 +12,15 @@ video-driven counterpart to [SadTalker](/sadtalker-api/) (which is photo-driven)
 
 ## Why Wav2Lip (and not LatentSync/MuseTalk)
 
-For the video → lip-sync family on **8 GB VRAM**, Wav2Lip is the pragmatic pick:
+> **Reconsider this.** The choice below was forced by an 8 GB budget. GPU 0 is now a
+> **24 GB RTX 3090**, so LatentSync's ~20 GB requirement is no longer disqualifying —
+> it is the quality leader and is worth evaluating. Wav2Lip's hardening for 8 GB can
+> likewise be relaxed. See `gpu-swap-3090.md`.
+
+The original reasoning, when the ceiling was **8 GB VRAM**:
 
 - **LatentSync 1.6** is the quality leader but is spec'd for ~20 GB VRAM — it
-  will not fit the 2060 Super. Revisit only with a 16 GB+ card.
+  would not fit the 2060 Super. (Now viable on the 3090.)
 - **MuseTalk** has a painful pinned-2024 install and degrades facial features.
 - **Wav2Lip** is light (~2 GB at inference), installs cleanly, and runs on 8 GB.
   Trade-off: it renders the mouth region at 96×96 and pastes it back, so the

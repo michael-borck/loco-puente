@@ -1,6 +1,4 @@
----
-title: "Service Topology — In vs Outside Puente"
----
+# Service Topology — In vs Outside Puente
 
 What runs where on the box, what Puente manages vs. doesn't, and where
 functionality overlaps. Useful when wiring an external tool to the stack, or
@@ -36,12 +34,14 @@ These run as their own docker-compose projects or native processes. Puente does
 
 | Service | Port | Location | What it is |
 |---------|------|----------|------------|
-| **Chatterbox** | 8004 | `~/Chatterbox-TTS-Server` | Voice-cloning TTS **server** (model + API). The active TTS. GPU 1. |
 | **Ollama** | 11434 | native (`ollama serve`) | LLM inference. In `puente.yml` but `managed: false` — see below. |
-| **AnythingLLM** | 3001 | standalone container | RAG/chat app. `enabled: false` in Puente but running independently. |
 | **workready-api** | 8001 | `~/workready-api` | Separate app. |
 | LibreChat, ensayo, vc2 | – | own dirs | Other unrelated projects. |
-| **nginx-proxy-manager** | 80/443 | `~/docker` | Reverse proxy + TLS for all the `*.locopuente.org` hostnames. |
+
+Chatterbox used to live here on `:8004`; it is **retired** (voicebox bundles
+`chatterbox-tts`). AnythingLLM and the reverse proxy have both moved *into*
+Puente — AnythingLLM as `puente-anythingllm` (:3001), and Caddy now owns 80/443
+in place of nginx-proxy-manager. See `caddy-migration.md`.
 
 ---
 
@@ -66,17 +66,17 @@ to avoid duplicating functionality:
 
 | Thing | In/out | What it does | Relationship |
 |-------|--------|--------------|--------------|
-| **Chatterbox** (8004) | outside | Voice-cloning TTS server + API | The active TTS. Bespoke, integrated. |
-| **Voicebox** (17493) | in Puente (disabled) | Voice-cloning/TTS **studio** web app ([jamiepine/voicebox](https://github.com/jamiepine/voicebox)) | **Independent** — its own models/backend, NOT a UI over Chatterbox. |
+| **Voicebox** (17493) | in Puente (**enabled**, GPU 1) | Voice-cloning/TTS **studio** web app + API ([jamiepine/voicebox](https://github.com/jamiepine/voicebox)) | **The active TTS.** Self-contained; bundles a `chatterbox-tts` engine. |
+| **Chatterbox** (was 8004) | **retired** | Voice-cloning TTS server + API | Redundant once voicebox landed. `enabled: false`; proxy block removed. |
 | **Speaches** (8000) | in Puente (disabled) | Whisper STT + Kokoro TTS, OpenAI-compatible | Different scope (STT + a lighter TTS). |
 
 **Key point:** Voicebox is **not** a front-end over Chatterbox — it's a separate,
-self-contained stack. They overlap functionally (both do voice-clone TTS) but
-can't be pointed at each other. So consolidation means *choosing one*, not
-wiring a shared UI:
+self-contained stack that happens to ship `chatterbox-tts` as one of its engines.
+That redundancy is exactly why Chatterbox was retired rather than kept alongside.
 
-- **Keep Chatterbox** (current, proven, already integrated) — recommended for now.
-- **Switch to Voicebox** only if you want its studio UI + API and are willing to
-  migrate; it's still marked "under evaluation" in Puente.
+An external tool needing TTS should target **Voicebox at :17493**. Nothing listens
+on `:8004`. See `voicebox-api.md` for the endpoints.
 
-An external tool needing TTS should target **Chatterbox at :8004** today.
+> Note the retirement gotcha recorded in `puente.yml`: a declared `proxy:` block is
+> served even when the service is `enabled: false`, so the block had to be set to
+> `null` to stop the dead route being routed. See `caddy.iter_proxied_services`.

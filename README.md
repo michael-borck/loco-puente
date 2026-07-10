@@ -88,7 +88,7 @@ A pick-and-choose menu, all running locally:
 | **Ollama** | Local LLM inference |
 | **Open WebUI** | Chat over your models |
 | **SwarmUI / ComfyUI** | Image generation |
-| **Chatterbox / Speaches** | Voice-cloning TTS, speech-to-text |
+| **Voicebox / Speaches** | Voice-cloning TTS, speech-to-text |
 | **SearXNG** | Private meta-search |
 | **AnythingLLM** | Docs + RAG workspaces |
 | **Open Notebook, Stirling PDF, Excalidraw, Jupyter, …** | Tools |

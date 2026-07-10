@@ -1,10 +1,12 @@
-# GPU swap: 2060 Super → 3090 (staged, not applied)
+# GPU swap: 2060 Super → 3090 (DONE — 2026-07-10)
 
-Replace the GPU 0 card (RTX 2060 Super, 8 GB, Turing) with an RTX 3090 (24 GB, Ampere),
+Replaced the GPU 0 card (RTX 2060 Super, 8 GB, Turing) with an RTX 3090 (24 GB, Ampere),
 keeping a 2060 Super in the second slot.
 
-**Nothing in `puente.yml` needs to change** *if* the 3090 lands on index 0 — which it
-will, provided you put it in the lower-numbered PCIe slot. Verify that before assuming.
+**Nothing in `puente.yml` needed to change** — the 3090 landed on index 0, as it does
+provided it sits in the lower-numbered PCIe slot. Verified, not assumed (see below).
+
+The plan and its rationale are kept for the next box.
 
 ## Why
 
@@ -53,10 +55,23 @@ nvidia-smi --query-gpu=index,pci.bus_id,name,memory.total --format=csv
 # 2. Confirm containers see the card they expect
 docker exec puente-comfyui nvidia-smi --query-gpu=name --format=csv,noheader   # 3090
 docker exec puente-voicebox nvidia-smi --query-gpu=name --format=csv,noheader  # 2060
+
+# 3. Confirm CUDA actually *computes* (nvidia-smi only proves visibility).
+#    ComfyUI's torch lives in a runtime venv owned by the `comfy` user, not on root's PATH:
+docker exec -u comfy puente-comfyui /comfy/mnt/venv/bin/python3 -c \
+  "import torch; print(torch.cuda.get_device_name(0), torch.cuda.get_device_capability(0)); \
+   print((torch.randn(4096,4096,device='cuda')@torch.randn(4096,4096,device='cuda')).sum())"
+
+# 4. Confirm host ollama lands on the 3090 (pinned via CUDA_VISIBLE_DEVICES=0)
+ollama run qwen3.5:9b hi >/dev/null && ollama ps   # expect "100% GPU"
 ```
 
 If the 3090 is **not** index 0, either move it to the other slot, or swap the `gpu:`
 values below.
+
+Verified on the actual swap: 3090 at index 0 / bus `06:00.0`, sm_86, 22.8 GiB free,
+matmul OK; `qwen3.5:9b` loads 100% GPU (~9.5 GB resident) where it would have spilled
+to CPU on 8 GB.
 
 ## puente.yml — no change needed (3090 in slot 0)
 
@@ -109,20 +124,38 @@ Two models on one card simply both allocate until it fills, then someone OOMs.
   big video jobs need the card to themselves. Budget ~3 GB for KV cache and fragmentation;
   do not plan to fill 24 GB exactly.
 
-## Note on ts_server
+## Note on ts_server — tested after the swap: still broken, now a real bug
 
-The 3090 is Ampere (sm_86), which satisfies ts_server's documented
-"Ampere, ADA or Hopper" requirement — unlike the Turing 2060s. Worth a single test:
+The 3090 is Ampere (sm_86), which satisfies ts_server's documented "Ampere, ADA or
+Hopper" requirement — unlike the Turing 2060s. Tested, and the picture changed:
+
+- The old `cuModuleLoadData` failure is **gone**. ts_server opens `/dev/nvidia0`,
+  `dlopen`s `libcublasLt.so`, and allocates ~1.6 GB of weights onto the card.
+- It then **segfaults on the first forward pass**, before emitting a token, inside
+  `cublasLtMatmulAlgoGetHeuristic` (reached from `nc_matmul_add2`). Exit 139.
+  The CPU path on the same binary and model generates correctly.
+
+**Root cause: ts_server passes `Cdesc = NULL`.** For `gpt2_117M` (12 layers) the first
+48 heuristic calls succeed; the 49th — the final projection to the 50257-token vocab,
+the one matmul with no bias — passes a null `Cdesc`, which cuBLASLt dereferences.
+It is **deterministic and structural**, so it should fire on any GPU, not just this one.
+
+**It is not the CUDA version** (identical segfault against cuBLASLt **12.1**, inside the
+documented 11.x/12.x range), **not the driver or card** (torch computes fine on this
+3090), and **not the instrumentation** (crashes with no `LD_PRELOAD`).
+
+So this is a genuine upstream bug report, not a hardware complaint. Details, the `dlsym`
+interposer, and the full trace are in `eval/ts_server/` (`README.md`, `cublaslt-hook.c`,
+`crash-trace.txt`, `email-draft.md`).
+
+**Do not downgrade the driver to chase this.** A downgrade would destabilise the stack
+that works (torch 2.6+cu124, ComfyUI, LivePortrait, Wav2Lip) and the evidence says it
+would not fix the crash anyway. Nothing here changes the verdict: ts_server cannot do
+SDXL, so it is not replacing the ComfyUI/SwarmUI stack.
+
+Reproduce (binaries are not in the repo — see `eval/ts_server/README.md`):
 
 ```bash
-cd eval/ts_server && LD_LIBRARY_PATH=. ./ts_test --cuda -m models/gpt2_117M.bin g "hi"
+./ts_test --cuda -v -l 20 -m gpt2_117M.bin g "The capital of France is"   # exit 139
+./ts_test        -v -l 20 -m gpt2_117M.bin g "The capital of France is"   # 20 tokens
 ```
-
-If it **works**, the only remaining gaps are Qwen3.5 and SDXL — both software, both
-Bellard's to answer, which is exactly what the draft email asks.
-
-If it **still fails**, that is now a genuine bug report (Ampere card, CUDA 13.2 driver,
-docs ask for CUDA 11.x/12.x) rather than a complaint about unsupported hardware.
-
-Either way this does not change the verdict: ts_server cannot do SDXL, so it is not
-replacing the ComfyUI/SwarmUI stack.

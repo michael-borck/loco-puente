@@ -1,6 +1,4 @@
----
-title: "Image Generation Setup (SwarmUI + ComfyUI)"
----
+# Image Generation Setup (SwarmUI + ComfyUI)
 
 Operational notes for the image-generation stack: how SwarmUI and ComfyUI fit
 together, the non-obvious fixes needed to make them work, and how to recover or
@@ -72,7 +70,8 @@ If a caller needs OpenAI's image schema, put a thin translation wrapper in front
 Checkpoints live on the host at
 `~/.puente/comfyui-basedir/models/checkpoints/` and are shared into SwarmUI (see
 fix #1). SDXL models (e.g. `juggernautXL_v9`, `sd_xl_base_1.0`) run comfortably
-on an 8 GB card. To add a model, drop a `.safetensors` into that folder — both
+on an 8 GB card, and have ample headroom on GPU 0's 24 GB. To add a model, drop a
+`.safetensors` into that folder — both
 ComfyUI and SwarmUI pick it up (SwarmUI may need a model-list refresh in its UI).
 
 ---
@@ -140,10 +139,15 @@ Two sub-problems surfaced when ComfyUI tried to import the Swarm nodes:
 ## GPU placement
 
 Image gen is pinned to one GPU via `gpu:` in `puente.yml` (compose
-`device_ids`). On the PoC box (2× RTX 2060 Super, 8 GB each) ComfyUI + SwarmUI
-share **GPU 0**; **GPU 1** is reserved for an external Chatterbox TTS service.
-Never run a bare `puente up` (it starts every enabled service, including any
-other GPU-0 service that would contend). Always scope: `puente up swarmui`.
+`device_ids`). On the PoC box ComfyUI + SwarmUI share **GPU 0** (RTX 3090, 24 GB);
+**GPU 1** (RTX 2060 Super, 8 GB) runs Voicebox. Never run a bare `puente up` (it
+starts every enabled service, including any other GPU-0 service that would
+contend). Always scope: `puente up swarmui`.
+
+Note GPU 0 also hosts the **host** Ollama process (pinned via
+`CUDA_VISIBLE_DEVICES=0`), so image gen and LLM inference share the 24 GB card.
+`device_ids` grants *visibility*, not exclusivity — co-resident models both
+allocate until the card fills. See `gpu-swap-3090.md`.
 
 ---
 

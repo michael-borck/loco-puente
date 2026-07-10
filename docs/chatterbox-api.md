@@ -1,13 +1,17 @@
----
-title: "Chatterbox TTS — In Puente"
----
+# Chatterbox TTS — RETIRED (historical reference)
 
-Chatterbox voice-cloning TTS, now a Puente-managed service. Operational notes:
-the CUDA gotcha, GPU pinning, the TTS API, and how to reproduce on a new box.
+> **⚠ RETIRED as of 2026-07-09. Do not follow this document to stand up a service.**
+>
+> Chatterbox is `enabled: false` in `puente.yml`. **Nothing listens on `:8004`.**
+> Voicebox is the active TTS — it bundles a `chatterbox-tts` engine, which made
+> a separate Chatterbox container redundant. See **`voicebox-api.md`** (port
+> **17493**) and `service-topology.md`.
+>
+> Kept because the CUDA/driver gotcha and the GPU-pinning notes below are still
+> instructive, and `puente/services/chatterbox.py` still references this file.
 
-> **Verified** 2026-07-07: migrated from the standalone install to
-> `puente-chatterbox` (GPU 1, port 8004); existing voice library preserved;
-> TTS generates real audio via `/v1/audio/speech`, with GPU 1 active.
+Historical operational notes from when Chatterbox ran as `puente-chatterbox`
+(GPU 1, port 8004), verified 2026-07-07 — superseded two days later.
 
 ---
 
