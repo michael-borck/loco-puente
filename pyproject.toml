@@ -30,6 +30,9 @@ dependencies = [
     "rich>=13.0",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
 [project.urls]
 Homepage = "https://locopuente.org"
 Repository = "https://github.com/michael-borck/loco-puente"
@@ -42,3 +45,6 @@ include = ["puente*"]
 
 [tool.setuptools.package-data]
 puente = ["templates/*", "templates/**/*", "dockerfiles/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
