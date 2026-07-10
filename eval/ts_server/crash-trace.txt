@@ -1,0 +1,602 @@
+[HOOK] intercepted dlsym(cublasLtCreate)
+[HOOK] (passthrough) dlsym(cublasLtDestroy)
+[HOOK] (passthrough) dlsym(cublasLtMatmulAlgoConfigGetAttribute)
+[HOOK] (passthrough) dlsym(cublasLtMatmulDescCreate)
+[HOOK] (passthrough) dlsym(cublasLtMatmulDescDestroy)
+[HOOK] (passthrough) dlsym(cublasLtMatmulDescSetAttribute)
+[HOOK] (passthrough) dlsym(cublasLtMatrixLayoutCreate)
+[HOOK] (passthrough) dlsym(cublasLtMatrixLayoutDestroy)
+[HOOK] (passthrough) dlsym(cublasLtMatrixLayoutSetAttribute)
+[HOOK] (passthrough) dlsym(cublasLtMatmulPreferenceCreate)
+[HOOK] (passthrough) dlsym(cublasLtMatmulPreferenceDestroy)
+[HOOK] (passthrough) dlsym(cublasLtMatmulPreferenceSetAttribute)
+[HOOK] intercepted dlsym(cublasLtMatmulAlgoGetHeuristic)
+[HOOK] (passthrough) dlsym(cublasLtMatmul)
+[HOOK] cublasLtCreate -> rc=0 handle=0x289ae9d0
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x2d46d4c0
+         Adesc          = 0x2d468430
+         Bdesc          = 0x2d468330
+         Cdesc          = 0x2d4681d0
+         Ddesc          = 0x2d4680b0
+         preference     = 0x2d467e40
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x2d46d4c0
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x2d46d4c0
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x2d46d4c0
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f7273c0
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f7273c0
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f729700
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f7299c0
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d888a0
+         returnAlgoCount       = 0x7ffea4d88764)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = 0x2d468430
+         Ddesc          = 0x2d468330
+         preference     = 0x2d4681d0
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d88860
+         returnAlgoCount       = 0x7ffea4d88724)
+[HOOK]   -> returned rc=0, returnAlgoCount=4
+[HOOK] cublasLtMatmulAlgoGetHeuristic(
+         lightHandle    = 0x289ae9d0
+         operationDesc  = 0x3f727e80
+         Adesc          = 0x3df6dc70
+         Bdesc          = 0x3df6d9b0
+         Cdesc          = (nil)
+         Ddesc          = 0x2d468430
+         preference     = 0x2d468330
+         requestedAlgoCount = 4
+         heuristicResultsArray = 0x7ffea4d889e0
+         returnAlgoCount       = 0x7ffea4d888a4)
