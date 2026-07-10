@@ -6,6 +6,8 @@ __pycache__/
 *.pyc
 business-case-m3-ultra.docx
 dist_pypi/
+build/
+.pytest_cache/
 
 # Private correspondence, not for the public repo
 eval/ts_server/email-draft.md
