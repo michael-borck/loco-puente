@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 # PyPI distribution name (the `puente` name is Mozilla's). The CLI command and
 # import package stay `puente` — users `pip install locopuente`, then run `puente`.
 name = "locopuente"
-version = "0.1.1"
+version = "0.1.2"
 description = "Local AI stack orchestrator — privacy-first, pick-and-choose, upstream-only"
 readme = "README.md"
 license = {text = "MIT"}
