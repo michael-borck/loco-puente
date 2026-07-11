@@ -308,6 +308,24 @@ class ComfyUIService(ServiceBase):
                 "environment": env,
                 "init": True,
                 "restart": "unless-stopped",
+                # SwarmUI's external-ComfyUI backend latches into an `errored`
+                # state (→ "No backends available!") if it probes ComfyUI before
+                # the Swarm core nodes finish importing. This healthcheck lets
+                # swarmui gate startup on ComfyUI being genuinely ready via
+                # `depends_on: condition: service_healthy`. ComfyUI serves its
+                # web UI on 8188 only once node import completes, so a plain HTTP
+                # 200 on / is a sufficient readiness signal. Generous start_period
+                # because first boot installs Manager + optional avatar nodes.
+                "healthcheck": {
+                    "test": [
+                        "CMD-SHELL",
+                        "curl -fsS http://localhost:8188/ >/dev/null || exit 1",
+                    ],
+                    "interval": "15s",
+                    "timeout": "5s",
+                    "retries": 5,
+                    "start_period": "180s",
+                },
             }
         }
 

@@ -39,6 +39,29 @@ def _rewrite_host_gateway(services: dict) -> None:
         ]
 
 
+def _prune_dangling_depends_on(services: dict) -> None:
+    """Drop `depends_on` entries that name a service not in this compose.
+
+    A fragment may declare `depends_on` on a sibling (e.g. swarmui waits for
+    comfyui's healthcheck). If that sibling is disabled, `docker compose up`
+    hard-errors on the dangling reference. Since a missing dependency just means
+    the ordering constraint no longer applies, strip it rather than fail.
+    """
+    present = set(services)
+    for svc in services.values():
+        deps = svc.get("depends_on")
+        if not deps:
+            continue
+        if isinstance(deps, dict):
+            kept = {k: v for k, v in deps.items() if k in present}
+        else:  # list form
+            kept = [d for d in deps if d in present]
+        if kept:
+            svc["depends_on"] = kept
+        else:
+            svc.pop("depends_on")
+
+
 def generate_compose(config: PuenteConfig) -> dict:
     """Collect compose fragments from all enabled Docker services."""
     data_dir = str(config.resolved_data_dir())
@@ -64,6 +87,7 @@ def generate_compose(config: PuenteConfig) -> dict:
         return {}
 
     _rewrite_host_gateway(services)
+    _prune_dangling_depends_on(services)
 
     compose: dict = {
         "services": services,

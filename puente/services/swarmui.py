@@ -146,6 +146,19 @@ class SwarmUIService(ServiceBase):
                 ],
                 "environment": env,
                 "restart": "unless-stopped",
+                # Wait for ComfyUI to pass its healthcheck before starting. Our
+                # backend is an EXTERNAL ComfyUI by URL; if SwarmUI probes it
+                # before the Swarm core nodes finish importing, the backend
+                # latches into `errored` and every request returns "No backends
+                # available!" until a manual RestartBackends. Gating startup on
+                # comfyui's health closes that race on `puente up`. (NOTE: this
+                # only orders a single compose-up — after a bare host reboot each
+                # container restarts independently via its restart policy, so if
+                # the error recurs, re-init via SwarmUI's RestartBackends API or
+                # `docker restart puente-swarmui` once comfyui is up.)
+                "depends_on": {
+                    "comfyui": {"condition": "service_healthy"},
+                },
             }
         }
 

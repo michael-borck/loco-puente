@@ -135,6 +135,38 @@ def test_compose_pins_gpu_to_requested_device():
 
 
 # --------------------------------------------------------------------------
+# compose: swarmui → comfyui startup ordering (the "No backends available!" race)
+# --------------------------------------------------------------------------
+
+
+def test_comfyui_has_a_healthcheck():
+    """swarmui gates its start on this; without it there is nothing to wait for."""
+    compose = generate_compose(_config(comfyui={"enabled": True}))
+    assert "healthcheck" in compose["services"]["comfyui"]
+
+
+def test_swarmui_waits_for_comfyui_health_when_both_enabled():
+    """When both are up, swarmui must depend on comfyui being *healthy* — else it
+    probes a not-yet-loaded ComfyUI, latches the backend `errored`, and every
+    request returns "No backends available!"."""
+    compose = generate_compose(
+        _config(comfyui={"enabled": True}, swarmui={"enabled": True})
+    )
+    deps = compose["services"]["swarmui"]["depends_on"]
+    assert deps == {"comfyui": {"condition": "service_healthy"}}
+
+
+def test_swarmui_depends_on_pruned_when_comfyui_disabled():
+    """A dangling depends_on hard-errors `docker compose up`. If comfyui is off,
+    the ordering constraint is moot and must be stripped, not emitted."""
+    compose = generate_compose(
+        _only(swarmui={"enabled": True}, comfyui={"enabled": False})
+    )
+    assert list(compose["services"]) == ["swarmui"]
+    assert "depends_on" not in compose["services"]["swarmui"]
+
+
+# --------------------------------------------------------------------------
 # caddy: the enabled/proxy asymmetry — the chatterbox retirement gotcha
 # --------------------------------------------------------------------------
 
