@@ -71,6 +71,7 @@ services:
     install_sadtalker: true
     install_wav2lip: true
     install_liveportrait: true
+    liveportrait_animal: true
   searxng:
     enabled: false
     install_method: docker

@@ -126,7 +126,11 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
     # Prefer a proxy URL derived from the service's own `proxy:` block (single
     # source of truth); fall back to the static PROXY_URLS map for services not
     # yet migrated, then to host:port.
+    # A service may front several hostnames (swarmui, voicebox, portal each do),
+    # in which case `proxy` is a list — the first entry is the canonical one.
     proxy = getattr(svc_config, "proxy", None)
+    if isinstance(proxy, list):
+        proxy = proxy[0] if proxy else None
     if proxy is not None:
         url = f"https://{proxy.host}"
     elif svc_name in PROXY_URLS:

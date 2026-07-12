@@ -171,7 +171,8 @@ echo "WAV2LIP_SETUP_DONE"
 # the LivePortrait model repo + the Insightface buffalo_l detector.
 # NOTE: Insightface's models are NON-COMMERCIAL licensed — fine for a PoC /
 # evaluation; resolve licensing (or switch to the MediaPipe cropper) before any
-# commercial deployment. Gated behind ComfyUIConfig.install_liveportrait.
+# commercial deployment. Gated behind ComfyUIConfig.install_liveportrait, with
+# liveportrait_animal adding the animal-trained generator models.
 # See docs/liveportrait-api.md.
 _LIVEPORTRAIT_SETUP = r"""#!/bin/bash
 set -u
@@ -200,6 +201,19 @@ if [ ! -f "$BUF/det_10g.onnx" ]; then
     mkdir -p "$BUF"
     wget -nc -q "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip" -O /tmp/buffalo_l.zip && \
     "$PY" -c "import zipfile; zipfile.ZipFile('/tmp/buffalo_l.zip').extractall('$BUF')" && rm -f /tmp/buffalo_l.zip || true
+fi
+
+# 5. Optional animal-trained models (~520MB) -> models/liveportrait/animal/.
+#    Selected by `mode: animal` on the (Down)Load LivePortraitModels node. These
+#    swap only the generator/motion models; the CROPPER is unchanged. Kijai's
+#    wrapper ships no animal face detector (upstream LivePortrait uses a YOLO
+#    animal-face model; there is no reference to it in this node), so all three
+#    croppers still look for a HUMAN face. For a non-human subject (teddy bear,
+#    cartoon) expect detection to fail — feed LivePortraitProcess a manually
+#    cropped head instead of relying on LivePortraitCropper.
+if [ "${PUENTE_LP_ANIMAL:-0}" = "1" ] && [ ! -f "/basedir/models/liveportrait/animal/motion_extractor.safetensors" ]; then
+    echo "downloading LivePortrait animal models"
+    "$PY" -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Kijai/LivePortrait_safetensors', local_dir='/basedir/models/liveportrait', allow_patterns=['animal/*'])" 2>&1 | tail -1 || true
 fi
 # Ownership: the mmartial base refuses to start if /basedir dirs are not owned
 # by 1000:1000 (its runtime uid), so chown to that explicitly — NOT to
@@ -260,18 +274,26 @@ class ComfyUIService(ServiceBase):
                 changed = True
 
         if config.install_liveportrait:
-            if self._run_setup("LivePortrait (node + ~716MB models + insightface)", _LIVEPORTRAIT_SETUP, "LIVEPORTRAIT_SETUP_DONE"):
+            label = "LivePortrait (node + ~716MB models + insightface)"
+            env = {}
+            if config.liveportrait_animal:
+                label = "LivePortrait (node + ~716MB models + insightface + ~520MB animal)"
+                env["PUENTE_LP_ANIMAL"] = "1"
+            if self._run_setup(label, _LIVEPORTRAIT_SETUP, "LIVEPORTRAIT_SETUP_DONE", env=env):
                 changed = True
 
         if changed:
             console.print("  [cyan]Restarting comfyui to load the new/patched nodes.[/cyan]")
             subprocess.run(["docker", "restart", "puente-comfyui"], capture_output=True, text=True)
 
-    def _run_setup(self, label: str, script: str, done_marker: str) -> bool:
+    def _run_setup(
+        self, label: str, script: str, done_marker: str, env: dict[str, str] | None = None
+    ) -> bool:
         """Run a container-side setup script; return True on success."""
         console.print(f"  [cyan]Setting up {label}...[/cyan]")
+        env_args = [a for k, v in (env or {}).items() for a in ("-e", f"{k}={v}")]
         result = subprocess.run(
-            ["docker", "exec", "-u", "0", "puente-comfyui", "bash", "-c", script],
+            ["docker", "exec", "-u", "0", *env_args, "puente-comfyui", "bash", "-c", script],
             capture_output=True,
             text=True,
         )

@@ -129,6 +129,7 @@ class ComfyUIConfig(ServiceConfig):
     install_sadtalker: bool = False  # patch Comfyui-SadTalker + download ~2.4GB weights on post_start
     install_wav2lip: bool = False  # install Wav2Lip + VideoHelperSuite nodes + ~416MB weight on post_start
     install_liveportrait: bool = False  # install LivePortraitKJ node + ~716MB models + insightface (non-commercial)
+    liveportrait_animal: bool = False  # also fetch the ~520MB animal-trained LivePortrait models (needs install_liveportrait)
 
 
 class StackConfig(BaseModel):
