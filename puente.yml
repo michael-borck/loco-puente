@@ -72,6 +72,7 @@ services:
     install_wav2lip: true
     install_liveportrait: true
     liveportrait_animal: true
+    install_wan_s2v: true
   searxng:
     enabled: false
     install_method: docker

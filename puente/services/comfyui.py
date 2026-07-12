@@ -223,6 +223,43 @@ echo "LIVEPORTRAIT_SETUP_DONE"
 """
 
 
+# --- Optional Wan2.2-S2V (audio-driven video, works on NON-HUMAN characters) ---
+# The other four avatar tools (SadTalker, Wav2Lip, LivePortrait, LatentSync) all
+# begin by DETECTING A HUMAN FACE and cropping to it, so they cannot animate a
+# teddy bear / cartoon animal / robot at all. Wan2.2-S2V is an audio-driven video
+# DiT: wav2vec2 audio embeddings + vae.encode(ref_image) -> latents. There is no
+# detector, no landmarker and no crop anywhere in its path (see ComfyUI's
+# comfy_extras/nodes_wan.py :: wan_sound_to_video), so a non-human subject simply
+# works. Verified 2026-07-13 on a plush teddy bear: real phoneme-like muzzle
+# articulation.
+#
+# NOTE: this installs NO CODE — the nodes (WanSoundImageToVideo, AudioEncoder*)
+# ship in ComfyUI core. It only fetches weights, so unlike LatentSync it cannot
+# disturb the shared numpy-2 / torch-2.6 venv. That is the main reason to prefer it.
+# Gated behind ComfyUIConfig.install_wan_s2v (~22GB). See docs/wan-s2v-api.md.
+_WAN_S2V_SETUP = r"""#!/bin/bash
+set -u
+BASE="https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files"
+dl() {  # $1 = path under split_files/, $2 = target dir under /basedir/models/
+  d="/basedir/models/$2"; mkdir -p "$d"
+  f="$d/$(basename "$1")"
+  [ -s "$f" ] && return 0
+  echo "downloading $(basename "$1") -> $2"
+  wget -q "$BASE/$1" -O "$f.part" && mv "$f.part" "$f" || { echo "FAILED $1"; rm -f "$f.part"; }
+}
+# fp8 (16.4GB), NOT the bf16 32.6GB build — the latter will not fit a 24GB card.
+dl "diffusion_models/wan2.2_s2v_14B_fp8_scaled.safetensors" "diffusion_models"
+dl "text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"   "text_encoders"
+dl "audio_encoders/wav2vec2_large_english_fp16.safetensors" "audio_encoders"
+dl "vae/wan_2.1_vae.safetensors"                            "vae"
+# The mmartial base refuses to boot if /basedir dirs aren't owned by its runtime
+# uid — chown to 1000:1000 explicitly, never to comfy:comfy (can resolve to root).
+chown -R 1000:1000 /basedir/models/diffusion_models /basedir/models/text_encoders \
+                   /basedir/models/audio_encoders /basedir/models/vae 2>/dev/null || true
+echo "WAN_S2V_SETUP_DONE"
+"""
+
+
 class ComfyUIService(ServiceBase):
     name = "comfyui"
     description = "Image generation (SD 1.5, SDXL, FLUX)"
@@ -281,6 +318,11 @@ class ComfyUIService(ServiceBase):
                 env["PUENTE_LP_ANIMAL"] = "1"
             if self._run_setup(label, _LIVEPORTRAIT_SETUP, "LIVEPORTRAIT_SETUP_DONE", env=env):
                 changed = True
+
+        if config.install_wan_s2v:
+            # Weights only — the nodes are in ComfyUI core — so no restart needed
+            # for imports; ComfyUI picks up new model files on its own.
+            self._run_setup("Wan2.2-S2V (~22GB weights, no code)", _WAN_S2V_SETUP, "WAN_S2V_SETUP_DONE")
 
         if changed:
             console.print("  [cyan]Restarting comfyui to load the new/patched nodes.[/cyan]")

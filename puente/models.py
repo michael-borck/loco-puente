@@ -130,6 +130,7 @@ class ComfyUIConfig(ServiceConfig):
     install_wav2lip: bool = False  # install Wav2Lip + VideoHelperSuite nodes + ~416MB weight on post_start
     install_liveportrait: bool = False  # install LivePortraitKJ node + ~716MB models + insightface (non-commercial)
     liveportrait_animal: bool = False  # also fetch the ~520MB animal-trained LivePortrait models (needs install_liveportrait)
+    install_wan_s2v: bool = False  # fetch ~22GB Wan2.2-S2V weights (nodes are in ComfyUI core); audio-driven video, works on NON-HUMAN characters
 
 
 class StackConfig(BaseModel):
