@@ -96,6 +96,12 @@ A pick-and-choose menu, all running locally:
 Plus an optional **Caddy** reverse-proxy service (automatic TLS) that fronts
 whichever services you expose — see [docs/caddy-migration.md](docs/caddy-migration.md).
 
+Most services pull a prebuilt image and start in seconds. **Voicebox is the
+exception:** upstream publishes a Dockerfile but no image, so the first
+`puente up voicebox` compiles it from source (torch + CUDA — budget 10–20
+minutes, with long silent stretches). It's a one-off; later starts reuse the
+built image.
+
 ## Commands
 
 ```

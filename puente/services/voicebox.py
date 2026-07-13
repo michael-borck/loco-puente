@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import subprocess
 from typing import Any
+
+from rich.console import Console
 
 from puente.models import ServiceConfig, VoiceboxConfig
 
 from .base import ServiceBase
+
+console = Console()
 
 UPSTREAM_REPO = "jamiepine/voicebox"
 
@@ -96,3 +101,34 @@ class VoiceboxService(ServiceBase):
             }
 
         return {"voicebox": service}
+
+    def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
+        """Warn that the first `up` compiles voicebox from source.
+
+        Unlike most puente services there is no image to pull — upstream ships a
+        Dockerfile but publishes no image, so Compose builds it here. That build
+        pulls a full torch/CUDA stack and takes a long time, with no output for
+        minutes at a stretch. Say so up front, or a first-time user reasonably
+        concludes it has hung. Only fires when the image is genuinely absent, so
+        routine restarts stay quiet.
+        """
+        try:
+            probe = subprocess.run(
+                ["docker", "image", "inspect", "puente-voicebox"],
+                capture_output=True,
+                timeout=10,
+            )
+            built = probe.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            return  # no docker / can't tell — compose will surface any real error
+
+        if built:
+            return
+
+        console.print(
+            "  [yellow]First run:[/yellow] voicebox has no prebuilt image, so it is "
+            "compiled from source now\n"
+            "  (torch + CUDA — expect [bold]10-20 minutes[/bold] and long silent "
+            "stretches). This is a [bold]one-off[/bold];\n"
+            "  later starts reuse the built image and come up in seconds."
+        )
