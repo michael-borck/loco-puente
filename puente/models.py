@@ -66,6 +66,18 @@ class AnythingLLMConfig(ServiceConfig):
     jwt_secret: str | None = None
 
 
+class VoiceboxConfig(ServiceConfig):
+    # Voicebox builds from a git context rather than a published image. Upstream
+    # has no idle-model-unload, so an idle instance pins its weights (~5.6GB for
+    # qwen-tts-1.7B) until the process restarts — most of an 8GB card. We build
+    # from a fork carrying that patch (jamiepine/voicebox#889); once it merges,
+    # drop build_ref from puente.yml to track upstream again.
+    #
+    # Format: "owner/repo@ref". Bare "owner/repo" builds that repo's default
+    # branch. Set to None to build upstream jamiepine/voicebox.
+    build_ref: str | None = None
+
+
 class ChatterboxConfig(ServiceConfig):
     # Chatterbox TTS builds from a local checkout (its Dockerfile pins a tuned
     # CUDA/torch stack). Point build_context at that dir; defaults to the known
@@ -191,8 +203,8 @@ class StackConfig(BaseModel):
     nodepad: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3004, enabled=False)
     )
-    voicebox: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=17493, enabled=False, review=True)
+    voicebox: VoiceboxConfig = Field(
+        default_factory=lambda: VoiceboxConfig(port=17493, enabled=False, review=True)
     )
     chatterbox: ChatterboxConfig = Field(
         default_factory=lambda: ChatterboxConfig(port=8004, gpu=1, enabled=False, review=True)

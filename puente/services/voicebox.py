@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from puente.models import ServiceConfig
+from puente.models import ServiceConfig, VoiceboxConfig
 
 from .base import ServiceBase
+
+UPSTREAM_REPO = "jamiepine/voicebox"
 
 
 class VoiceboxService(ServiceBase):
@@ -43,6 +45,15 @@ class VoiceboxService(ServiceBase):
     def compose_volumes(self, config: ServiceConfig) -> dict[str, dict[str, Any]]:
         return {"voicebox-data": {}}
 
+    @staticmethod
+    def _build_context(config: ServiceConfig) -> str:
+        """Compose git build context, honouring an optional owner/repo@ref override."""
+        build_ref = getattr(config, "build_ref", None) or UPSTREAM_REPO
+        repo, _, ref = build_ref.partition("@")
+        context = f"https://github.com/{repo}.git"
+        # Compose selects a branch/tag/commit with a '#fragment' on the git URL.
+        return f"{context}#{ref}" if ref else context
+
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
         env = {
@@ -50,10 +61,18 @@ class VoiceboxService(ServiceBase):
             "NUMBA_CACHE_DIR": "/tmp/numba_cache",
             "HF_HOME": "/app/data/hf-cache",
         }
+
+        # Unload idle models so a dormant voicebox stops pinning the card. Stock
+        # upstream has no idle unloading (jamiepine/voicebox#889), so only set
+        # this when building from a fork that can actually honour it -- otherwise
+        # it is a knob that looks live and silently does nothing.
+        if getattr(config, "build_ref", None):
+            env["VOICEBOX_IDLE_UNLOAD_SECONDS"] = "600"
+
         env.update(config.environment)
 
         service: dict[str, Any] = {
-            "build": {"context": "https://github.com/jamiepine/voicebox.git"},
+            "build": {"context": self._build_context(config)},
             "container_name": "puente-voicebox",
             "ports": [f"{port}:17493"],
             "volumes": ["voicebox-data:/app/data"],

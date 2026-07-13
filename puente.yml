@@ -283,6 +283,10 @@ services:
     port: 17493
     gpu: 1
     managed: true
+    # Fork carrying the idle-model-unload patch (jamiepine/voicebox#889).
+    # Without it VOICEBOX_IDLE_UNLOAD_SECONDS is a no-op and an idle voicebox
+    # pins ~4.3GB of GPU 1 indefinitely. Delete this line once #889 merges.
+    build_ref: michael-borck/voicebox@feat/idle-model-unload
     environment: {}
     review: true
     proxy:
