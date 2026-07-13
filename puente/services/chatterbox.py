@@ -31,7 +31,16 @@ class ChatterboxService(ServiceBase):
             return None
 
         port = config.port or self.default_port
-        ctx = getattr(config, "build_context", "/home/michael/Chatterbox-TTS-Server")
+        ctx = getattr(config, "build_context", None)
+        if not ctx:
+            raise ValueError(
+                "chatterbox has no image to pull and must be built from a local "
+                "checkout. Clone https://github.com/devnen/Chatterbox-TTS-Server "
+                "and set `build_context: /path/to/Chatterbox-TTS-Server` under "
+                "chatterbox in puente.yml.\n"
+                "Note: chatterbox is superseded by voicebox, which bundles a "
+                "chatterbox-tts engine — prefer enabling voicebox instead."
+            )
 
         env = {
             "HF_HUB_ENABLE_HF_TRANSFER": "1",

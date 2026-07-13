@@ -288,7 +288,7 @@ services:
     # pins ~4.3GB of GPU 1 indefinitely. Delete this line once #889 merges.
     build_ref: michael-borck/voicebox@feat/idle-model-unload
     environment: {}
-    review: true
+    review: false
     proxy:
     - host: voice.locopuente.org
       auth: basic

@@ -50,7 +50,7 @@ SERVICE_META = {
     "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
     "open_terminal": ("⚡", "Code Sandbox", "Python execution, PDF/DOCX generation"),
     "deeptutor": ("🎓", "DeepTutor", "Personalised learning — quizzes, deep solve, research"),
-    "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio (evaluating)"),
+    "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio"),
     "librechat": ("💬", "LibreChat", "Multi-provider chat UI (evaluating)"),
     "chatterbox": ("🔊", "Chatterbox", "Voice-cloning TTS server (evaluating)"),
     "glances": ("📊", "System Monitor", "CPU, RAM, disk, GPU, containers"),
@@ -85,7 +85,13 @@ VIEWS = {
             {"label": "Inference", "services": ["ollama"]},
             {
                 "label": "Backend Services",
-                "services": ["speaches", "comfyui", "anythingllm", "open_terminal"],
+                "services": [
+                    "speaches",
+                    "voicebox",
+                    "comfyui",
+                    "anythingllm",
+                    "open_terminal",
+                ],
             },
             {"label": "Power Tools", "services": ["searxng", "jupyter"]},
             # The "Under Evaluation" section auto-collects any enabled service

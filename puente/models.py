@@ -80,9 +80,11 @@ class VoiceboxConfig(ServiceConfig):
 
 class ChatterboxConfig(ServiceConfig):
     # Chatterbox TTS builds from a local checkout (its Dockerfile pins a tuned
-    # CUDA/torch stack). Point build_context at that dir; defaults to the known
-    # PoC location. Others can clone the repo and set their own path.
-    build_context: str = "/home/michael/Chatterbox-TTS-Server"
+    # CUDA/torch stack) — there is no image to pull. Set build_context to your
+    # own Chatterbox-TTS-Server checkout; there is no sensible default, so
+    # leaving it unset is an error rather than a path that only exists on one
+    # machine. Superseded by voicebox, which bundles a chatterbox-tts engine.
+    build_context: str | None = None
     # Optional HuggingFace token (some model pulls benefit from it).
     hf_token: str | None = None
 
@@ -203,8 +205,10 @@ class StackConfig(BaseModel):
     nodepad: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3004, enabled=False)
     )
+    # Graduated from evaluation — the active TTS. Still opt-in by default: it
+    # wants a GPU and its first start compiles from source (see VoiceboxService).
     voicebox: VoiceboxConfig = Field(
-        default_factory=lambda: VoiceboxConfig(port=17493, enabled=False, review=True)
+        default_factory=lambda: VoiceboxConfig(port=17493, enabled=False, review=False)
     )
     chatterbox: ChatterboxConfig = Field(
         default_factory=lambda: ChatterboxConfig(port=8004, gpu=1, enabled=False, review=True)
