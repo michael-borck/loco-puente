@@ -45,8 +45,10 @@ class CaddyService(ServiceBase):
                 group = proxy.basic_group
                 if group is None and len(caddy.users) == 1:
                     group = next(iter(caddy.users))
-                for env_var in caddy.users.get(group, {}).values():
-                    names.add(env_var)
+                for value in caddy.users.get(group, {}).values():
+                    # Inline bcrypt hashes ("$2...") are not env vars — skip them.
+                    if not value.startswith("$2"):
+                        names.add(value)
         return sorted(names)
 
     def compose_fragment(

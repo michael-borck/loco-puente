@@ -91,6 +91,7 @@ pdf.locopuente.org {
 boxes.borck.dev {
 	basic_auth {
 		michael {$BOXES_BCRYPT}
+		callum {$BOXES_CALLUM_BCRYPT}
 	}
 	reverse_proxy 192.168.20.120:8077
 }

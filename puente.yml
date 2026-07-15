@@ -361,7 +361,11 @@ services:
       ui:
         swarm: SWARM_BCRYPT
       boxes:
-        michael: BOXES_BCRYPT
+        # Inline bcrypt hashes (values starting with "$2" are emitted verbatim
+        # into the Caddyfile — no .env indirection). Regenerate a hash with:
+        #   docker exec -it puente-caddy caddy hash-password
+        michael: '$2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6'
+        callum: '$2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6'
     upstream_host: 192.168.20.120
     proxy_hosts:
     - host: audio.locopuente.org
@@ -382,15 +386,3 @@ services:
       basic_group: null
       port: 8001
       upstream: null
-    - host: plex.serveur.au
-      auth: none
-      token_env: null
-      basic_group: null
-      port: 32400
-      upstream: 192.168.20.3
-    - host: books.serveur.au
-      auth: none
-      token_env: null
-      basic_group: null
-      port: 5000
-      upstream: 192.168.20.3

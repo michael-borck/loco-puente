@@ -71,8 +71,14 @@ def _site_block(
                 f"one of {sorted(caddy.users)} or define that group in caddy.users"
             )
         lines.append("\tbasic_auth {")
-        for username, env_var in users.items():
-            lines.append(f"\t\t{username} {{${env_var}}}")
+        for username, value in users.items():
+            # A value starting with "$2" is a literal bcrypt hash: emit it
+            # inline (no env indirection). Anything else is treated as the
+            # name of an env var and rendered as a {$VAR} placeholder.
+            if value.startswith("$2"):
+                lines.append(f"\t\t{username} {value}")
+            else:
+                lines.append(f"\t\t{username} {{${value}}}")
         lines.append("\t}")
     elif proxy.auth == "bearer":
         # token read from the container environment; matcher rejects anything
