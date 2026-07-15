@@ -1,0 +1,35 @@
+[Unit]
+# Runs `puente up swarmui` once per boot, AFTER Docker is up. The container is
+# already restarted by its own `restart: unless-stopped` policy, so this is
+# effectively a no-op for the container itself — its real job is to fire
+# swarmui's post_start hook, which never otherwise runs on a cold boot (nothing
+# invokes `puente up` on reboot). That hook calls reconcile_backends(), which
+# recovers SwarmUI's external-ComfyUI backend if it latched `errored` in the
+# reboot startup race (the "No backends available!" failure). See
+# docs/service-topology.md.
+#
+# SCOPED to `swarmui` deliberately. Bare `puente up` would `docker compose up`
+# the WHOLE stack — recreating puente-caddy (a brief drop of every public route)
+# and colliding with the manually-started puente-portal-gpu-stats sidecar. It
+# also violates the "never bare `puente up`" mixed-GPU-ordering rule. We only
+# need swarmui's reconcile to run, so we scope to just that service.
+Description=Puente post-boot reconcile (runs `puente up swarmui` once)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=michael
+Group=michael
+# puente.yml is loaded relative to the CWD (models.CONFIG_FILE = "puente.yml"),
+# so we MUST run from the repo root or puente silently loads defaults.
+WorkingDirectory=/home/michael/loco-puente
+ExecStart=/home/michael/loco-puente/.venv/bin/puente up swarmui
+# Docker + comfyui can be slow to become healthy on this box; give the whole
+# `puente up` (which waits on comfyui's healthcheck and then reconciles) room.
+TimeoutStartSec=600
+# Don't wedge the boot if reconcile can't complete — log and move on.
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

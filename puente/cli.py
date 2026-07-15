@@ -56,6 +56,26 @@ DISPLAY_NAMES = {
 }
 
 
+# -- Sidecars -----------------------------------------------------------------
+# Some services own an extra compose service (a "sidecar") that shares their
+# lifecycle but has a distinct compose-service name. A scoped `puente up <svc>`
+# passes only <svc> to `docker compose up`, so without this map the sidecar is
+# skipped — and if it is then hand-started it ends up NOT compose-managed, so a
+# later bare `docker compose up` hits `Conflict. container name already in use`.
+# Mapping the parent to its sidecar service names keeps them started/stopped
+# together and compose-owned. Keys/values are compose-service names (hyphens).
+SIDECARS = {
+    "portal": ["portal-gpu-stats"],
+}
+
+
+def _scoped_compose_names(service: str) -> list[str]:
+    """Compose-service name(s) for a scoped up/down: the service plus any
+    sidecars it owns, so a sidecar is never left un-managed."""
+    compose_name = service.replace("_", "-")
+    return [compose_name, *SIDECARS.get(compose_name, [])]
+
+
 # -- init ----------------------------------------------------------------------
 
 
@@ -320,8 +340,7 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
         # Ollama is the only non-Docker service; everything else (including
         # ComfyUI) is a regular compose service and can be scoped normally.
         if service and service != "ollama":
-            compose_name = service.replace("_", "-")
-            cmd.append(compose_name)
+            cmd.extend(_scoped_compose_names(service))
         console.print(f"[cyan]Starting Docker services...[/cyan]")
         subprocess.run(cmd)
 
@@ -350,8 +369,8 @@ def down(service: str | None = typer.Argument(None, help="Stop a specific servic
         # Ollama is the only non-Docker service; everything else (including
         # ComfyUI) is a regular compose service and can be scoped normally.
         if service and service != "ollama":
-            compose_name = service.replace("_", "-")
-            cmd.extend(["--remove-orphans", compose_name])
+            cmd.append("--remove-orphans")
+            cmd.extend(_scoped_compose_names(service))
         console.print(f"[cyan]Stopping Docker services...[/cyan]")
         subprocess.run(cmd)
 

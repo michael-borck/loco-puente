@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
@@ -209,12 +210,17 @@ class SwarmUIService(ServiceBase):
         custom_nodes = Path(data_dir) / "comfyui-basedir" / "custom_nodes"
         common_init = custom_nodes / "SwarmComfyCommon" / "__init__.py"
 
-        # Fast path: nodes present and __init__ already patched → nothing to do.
+        # Fast path: nodes present and __init__ already patched → skip the
+        # (slow) node install/comfyui-restart, but STILL reconcile the backend.
+        # This is the common cold-boot case — nodes are already installed from
+        # first setup, yet the backend may have latched `errored` in the reboot
+        # race — so we must not early-return before reconcile_backends().
         already = (
             common_init.exists()
             and "optional SwarmClipSeg disabled" in common_init.read_text()
         )
         if already:
+            self.reconcile_backends()
             return
 
         custom_nodes.mkdir(parents=True, exist_ok=True)
@@ -250,3 +256,80 @@ class SwarmUIService(ServiceBase):
                 capture_output=True,
                 text=True,
             )
+
+        # Self-heal the external-ComfyUI backend if it latched `errored`.
+        self.reconcile_backends()
+
+    def reconcile_backends(self, retries: int = 30) -> None:
+        """Recover SwarmUI's external-ComfyUI backend if it latched `errored`.
+
+        SwarmUI probes its external ComfyUI backend once at startup. If it wins
+        the race against ComfyUI finishing its node imports, it marks the backend
+        `errored` and NEVER auto-retries — every generate then returns "No
+        backends available!". `depends_on: service_healthy` closes this on a
+        single `docker compose up`, but a bare host reboot restarts each
+        container independently via its restart policy, bypassing that ordering,
+        so the race recurs on cold boot. This runs SwarmUI's own RestartBackends
+        API (idempotent: a no-op when the backend is already `running`), which is
+        what fires on every `puente up` and — via the boot systemd unit — once
+        per cold boot.
+
+        All calls go through localhost inside puente-swarmui (docker exec + curl)
+        so no host-side HTTP client or auth token is needed. The API demands a
+        JSON content-type or it 400s "Wrong content type".
+        """
+
+        def _api(path: str, session: str = "") -> str:
+            body = f'{{"session_id":"{session}"}}' if session else "{}"
+            result = subprocess.run(
+                [
+                    "docker", "exec", "puente-swarmui",
+                    "curl", "-s", "-X", "POST",
+                    f"http://localhost:7801/API/{path}",
+                    "-H", "Content-Type: application/json",
+                    "-d", body,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            return result.stdout if result.returncode == 0 else ""
+
+        # SwarmUI may still be booting its web server right after container
+        # start; poll GetNewSession until it answers before we probe backends.
+        session = ""
+        for _ in range(retries):
+            resp = _api("GetNewSession")
+            if '"session_id"' in resp:
+                session = resp.split('"session_id":"', 1)[1].split('"', 1)[0]
+                break
+            time.sleep(2)
+        if not session:
+            console.print(
+                "[yellow]SwarmUI did not answer GetNewSession; skipping backend "
+                "reconcile. Run `puente up swarmui` once it is up.[/yellow]"
+            )
+            return
+
+        backends = _api("ListBackends", session)
+        if '"status":"errored"' not in backends:
+            return  # already running (or none configured) — nothing to do.
+
+        console.print(
+            "  [cyan]SwarmUI backend is errored (startup race); "
+            "calling RestartBackends...[/cyan]"
+        )
+        _api("RestartBackends", session)
+
+        # Poll until the backend leaves the errored state (or we give up).
+        for _ in range(retries):
+            time.sleep(2)
+            backends = _api("ListBackends", session)
+            if '"status":"running"' in backends:
+                console.print("  [green]SwarmUI backend recovered (running).[/green]")
+                return
+            if '"status":"errored"' not in backends:
+                return
+        console.print(
+            "[yellow]SwarmUI backend still not running after RestartBackends. "
+            "Is puente-comfyui healthy? Check `docker ps`.[/yellow]"
+        )
