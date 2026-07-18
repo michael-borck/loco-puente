@@ -24,10 +24,18 @@ workflow API — there is no separate microservice.
 
 **Base URL:** `https://comfyui.locopuente.org` (ComfyUI native API, internal port 8188).
 
-⚠️ **Currently unauthenticated.** Add auth (Caddy basic_auth / bearer) before any
-public app uses this. Treat the base URL as a secret until then.
+🔑 **Bearer auth is required.** Caddy fronts this host and rejects any request whose
+header is not **exactly** `Authorization: Bearer <token>` with `401` — no exceptions,
+including `/upload/image`, `/prompt`, `/history`, `/view` and `/free`. Send the header
+on **every** call below. The token is the value of the `COMFYUI_TOKEN` env var on the
+server (ask Michael for it; it is not in the repo). Treat it as a secret.
 
-Everything below is standard ComfyUI HTTP API — the same four calls for both models:
+```
+Authorization: Bearer $COMFYUI_TOKEN
+```
+
+Everything below is standard ComfyUI HTTP API — the same four calls for both models,
+each carrying that header:
 
 | Step | Call |
 |---|---|
@@ -179,33 +187,36 @@ disturb the shared numpy-2 / torch-2.6 venv — that safety is why S2V beat Late
 ## Minimal client (reference)
 
 ```python
-import requests, uuid, time
+import os, requests, uuid, time
 
 BASE = "https://comfyui.locopuente.org"
+# Bearer auth is enforced by Caddy on EVERY endpoint — set the header on the session.
+S = requests.Session()
+S.headers["Authorization"] = f"Bearer {os.environ['COMFYUI_TOKEN']}"
 
 def upload(path):
     with open(path, "rb") as f:
-        r = requests.post(f"{BASE}/upload/image", files={"image": f})
+        r = S.post(f"{BASE}/upload/image", files={"image": f})
     r.raise_for_status()
     return r.json()["name"]          # use this name in the graph
 
 def free():
-    requests.post(f"{BASE}/free", json={"unload_models": True, "free_memory": True})
+    S.post(f"{BASE}/free", json={"unload_models": True, "free_memory": True})
 
 def run(graph, out_node):
     cid = str(uuid.uuid4())
-    pid = requests.post(f"{BASE}/prompt",
-                        json={"prompt": graph, "client_id": cid}).json()["prompt_id"]
+    pid = S.post(f"{BASE}/prompt",
+                 json={"prompt": graph, "client_id": cid}).json()["prompt_id"]
     while True:
-        h = requests.get(f"{BASE}/history/{pid}").json()
+        h = S.get(f"{BASE}/history/{pid}").json()
         if h.get(pid):
             break
         time.sleep(2)
     g = h[pid]["outputs"][out_node]["gifs"][0]
-    vid = requests.get(f"{BASE}/view",
-                       params={"filename": g["filename"],
-                               "subfolder": g.get("subfolder", ""),
-                               "type": "output"})
+    vid = S.get(f"{BASE}/view",
+                params={"filename": g["filename"],
+                        "subfolder": g.get("subfolder", ""),
+                        "type": "output"})
     return vid.content               # MP4 bytes
 
 # Wan2.2-S2V:

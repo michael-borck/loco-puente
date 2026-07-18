@@ -57,6 +57,13 @@ telling the model where the mouth is and how it moves. Describe the actual anato
 has a beak, not lips. Low step counts (10) can drift the character's identity from the
 reference and produce a blurry first frame; raise steps to tighten it.
 
+## Endpoint & auth
+
+Served via ComfyUI at `https://comfyui.locopuente.org`. 🔑 **Bearer auth required** on
+every call: `Authorization: Bearer $COMFYUI_TOKEN` (Caddy 401s anything else, including
+`/free`). See [nonhuman-avatar-api.md](nonhuman-avatar-api.md) for the full remote call
+flow (upload → prompt → poll → view) and a working client.
+
 ## Workflow (ComfyUI HTTP API)
 
 ```

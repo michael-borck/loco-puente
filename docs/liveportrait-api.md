@@ -36,6 +36,10 @@ lives in the standalone `faster_liveportrait` image, not this ComfyUI node.
 `https://comfyui.locopuente.org` — same ComfyUI workflow API as SadTalker/Wav2Lip
 (`POST /prompt` → poll `GET /history/{id}` → read output path).
 
+🔑 **Bearer auth required** on every call: `Authorization: Bearer $COMFYUI_TOKEN`
+(Caddy 401s anything else). See [nonhuman-avatar-api.md](nonhuman-avatar-api.md) for
+the full auth + call flow.
+
 Nodes (installed by the comfyui `post_start` hook when `install_liveportrait: true`):
 `DownloadAndLoadLivePortraitModels`, `LivePortraitLoadCropper` (Insightface) /
 `LivePortraitLoadMediaPipeCropper`, `LivePortraitCropper`, `LivePortraitProcess`,
