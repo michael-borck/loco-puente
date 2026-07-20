@@ -72,6 +72,10 @@ class CaddyService(ServiceBase):
                     f"{caddy_dir}/Caddyfile:/etc/caddy/Caddyfile:ro",
                     f"{caddy_dir}/data:/data",
                     f"{caddy_dir}/config:/config",
+                    # Static pages served when an upstream is down; see
+                    # ProxyConfig.offline_page. Mounted unconditionally so
+                    # adding a page later needs no container recreate.
+                    f"{caddy_dir}/offline:/srv/offline:ro",
                 ],
                 # host.docker.internal must resolve to the LAN gateway so Caddy
                 # can reach native / off-network upstreams. compose.py rewrites
@@ -94,6 +98,10 @@ class CaddyService(ServiceBase):
         full = load_config()
         caddy_dir = Path(data_dir) / "caddy"
         caddy_dir.mkdir(parents=True, exist_ok=True)
+        # Bind source for the offline pages. Must exist before the container
+        # starts or Docker creates it as root-owned, which then can't be
+        # written without sudo (same trap as the /basedir dirs).
+        (caddy_dir / "offline").mkdir(parents=True, exist_ok=True)
         write_caddyfile(full, caddy_dir / "Caddyfile")
 
         # Materialize an .env for the container from the secrets present in the

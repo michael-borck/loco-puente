@@ -90,6 +90,37 @@ def _site_block(
         lines.append("\trespond @unauthorized 401")
 
     lines.append(f"\treverse_proxy {upstream}:{port}")
+
+    # Optional friendly page for when the upstream is down. Without this a
+    # stopped container gives a bare 502, which reads as "broken" rather than
+    # "closed right now" — the LibreChat lab windows (deploy/chat-window.sh)
+    # stop the container on purpose outside class, and students hitting it
+    # early have no way to tell those apart.
+    #
+    # handle_errors catches the dial failure, so this needs no second container
+    # on the same port: nothing to start, stop, or race with, and it covers an
+    # unplanned crash exactly the same as a scheduled close.
+    if proxy.offline_page:
+        lines.append("\thandle_errors {")
+        # 502/503 = upstream unreachable. Other statuses (a real 404 from a
+        # running app) fall through and keep Caddy's default handling.
+        lines.append("\t\t@down expression {err.status_code} in [502, 503]")
+        lines.append("\t\thandle @down {")
+        # rewrite + file_server, not `respond`: respond takes a literal body,
+        # so it cannot serve a file. The path is inside the container — see
+        # the offline-pages mount in services/caddy.py.
+        lines.append(f"\t\t\trewrite * /{proxy.offline_page}")
+        # file_server would otherwise pass through the upstream's 502. 503
+        # ("temporarily unavailable") is the accurate status for a scheduled
+        # close, and unlike 502 it tells crawlers to come back rather than
+        # treating the host as broken.
+        lines.append("\t\t\tfile_server {")
+        lines.append("\t\t\t\troot /srv/offline")
+        lines.append("\t\t\t\tstatus 503")
+        lines.append("\t\t\t}")
+        lines.append("\t\t}")
+        lines.append("\t}")
+
     lines.append("}")
     return "\n".join(lines)
 
