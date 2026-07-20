@@ -1,0 +1,14 @@
+# Polls every 5 min; the 30-min idle threshold lives in the script (IDLE_SECS),
+# not here. Tick interval only bounds how soon after the window expires the
+# unload actually fires — a coarser tick would delay it, not change the policy.
+[Unit]
+Description=Periodically free idle ComfyUI VRAM
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=5min
+# Don't stack ticks if one run is slow.
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

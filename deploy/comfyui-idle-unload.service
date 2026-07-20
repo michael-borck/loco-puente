@@ -1,0 +1,17 @@
+# Unloads ComfyUI's models after an idle period so Ollama (same GPU 0) has room
+# to keep chat models resident. Paired with comfyui-idle-unload.timer — this
+# unit does nothing on its own. See comfyui-idle-unload.sh for the rationale.
+[Unit]
+Description=Free ComfyUI VRAM when idle
+After=docker.service
+# Deliberately NOT Requires=docker.service: if Docker is down there is nothing
+# loaded to free, and the script exits 0 on an unreachable ComfyUI anyway.
+
+[Service]
+Type=oneshot
+User=michael
+Group=michael
+ExecStart=/home/michael/loco-puente/deploy/comfyui-idle-unload.sh
+# The script's own curl timeouts cap the real runtime well under this; this is
+# only a backstop against a hung connection.
+TimeoutStartSec=60
