@@ -6,7 +6,7 @@
 # Conversations live in Mongo (a separate container, left running), so
 # nothing is lost across a close/open cycle.
 #
-# Usage: chat-window.sh open|close|status
+# Usage: chat-window.sh open|close|status|warm
 # Cron:  0 14 * * 1 /home/michael/loco-puente/deploy/chat-window.sh open
 set -euo pipefail
 
@@ -61,6 +61,15 @@ case "${1:-}" in
     log "OPEN FAILED — container started but not serving after 60s"
     exit 1
     ;;
+  warm)
+    # Models only — does NOT open the chat. Called by comfyui-idle-unload's
+    # sibling unit ollama-warm.service after Ollama (re)starts, so a reboot or
+    # a manual `systemctl restart ollama` restores the two-GPU placement
+    # without touching LibreChat's open/closed state. Wiring `open` to Ollama
+    # instead would expose the chat — and the Anthropic key — at any hour.
+    log "WARM — preloading classroom models"
+    warm_models
+    ;;
   close)
     docker stop "$APP" >/dev/null
     # Mongo stays up: cheap, holds no open port to the internet, and
@@ -75,7 +84,7 @@ case "${1:-}" in
     fi
     ;;
   *)
-    echo "Usage: $0 open|close|status" >&2
+    echo "Usage: $0 open|close|status|warm" >&2
     exit 2
     ;;
 esac
