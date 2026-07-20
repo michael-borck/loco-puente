@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 from typing import Any
 
@@ -90,6 +91,32 @@ class LibreChatService(ServiceBase):
             "      modelDisplayLabel: 'Ollama'\n"
         )
 
+    def _write_env_file(self, config: ServiceConfig, data_dir: str) -> None:
+        """Materialize secrets compose must not interpolate itself.
+
+        Written every `puente up` from the host environment, mirroring how the
+        caddy service handles its tokens. Always created (possibly empty) so a
+        standalone `docker compose up` doesn't fail on a missing env_file.
+        """
+        env_dir = Path(data_dir) / "librechat"
+        env_dir.mkdir(parents=True, exist_ok=True)
+        lines: list[str] = []
+
+        if getattr(config, "email_host", None):
+            var = getattr(config, "email_password_env", None) or "RESEND_API_KEY"
+            value = os.environ.get(var)
+            if value:
+                # $ would be interpolated by compose; $$ passes it through.
+                lines.append(f"EMAIL_PASSWORD={value.replace('$', '$$')}")
+            else:
+                print(
+                    f"  ⚠ LibreChat: {var} not set in the environment — SMTP will "
+                    f"fail (530) and verification/reset emails will not send. "
+                    f"Export it where `puente up` runs, not just in .zshrc."
+                )
+
+        (env_dir / ".env").write_text("\n".join(lines) + ("\n" if lines else ""))
+
     def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
         """Seed librechat.yaml before the container starts.
 
@@ -99,6 +126,8 @@ class LibreChatService(ServiceBase):
         Rewritten every up so endpoint changes take effect; user edits belong
         in puente.yml, not here.
         """
+        self._write_env_file(config, data_dir)
+
         target = Path(data_dir) / "librechat" / "librechat.yaml"
         target.parent.mkdir(parents=True, exist_ok=True)
         # ensure_volume_dirs() runs before this hook and mkdir -p's every bind
@@ -162,6 +191,17 @@ class LibreChatService(ServiceBase):
             if claude_models:
                 env.setdefault("ANTHROPIC_MODELS", ",".join(claude_models))
 
+        # Public URL, used to build links in outgoing email. Without it
+        # LibreChat falls back to http://localhost:3080, so a verification link
+        # is unusable for anyone but someone sitting at the host. Derived from
+        # the proxy host so it tracks the public hostname automatically.
+        proxy = getattr(config, "proxy", None)
+        proxy_host = getattr(proxy, "host", None) if proxy else None
+        if proxy_host:
+            public_url = f"https://{proxy_host}"
+            env.setdefault("DOMAIN_CLIENT", public_url)
+            env.setdefault("DOMAIN_SERVER", public_url)
+
         # SMTP. When EMAIL_HOST is set LibreChat sends a verification link on
         # signup and enables self-service password reset; without it, accounts
         # are auto-verified and reset is disabled entirely.
@@ -173,9 +213,18 @@ class LibreChatService(ServiceBase):
             env.setdefault("EMAIL_FROM", getattr(config, "email_from", None) or "")
             env.setdefault("EMAIL_FROM_NAME", getattr(config, "email_from_name", None) or "LibreChat")
             # Password comes from the host environment so the secret stays out
-            # of puente.yml; compose interpolates ${VAR} at up time.
+            # of puente.yml. NOT emitted as a ${VAR} placeholder: compose
+            # interpolates those from ITS OWN environment, which is empty when
+            # `puente up` runs from cron or systemd (the key lives in .zshrc,
+            # an interactive-shell-only file). The container then gets an empty
+            # EMAIL_PASSWORD, and LibreChat's sendEmail only attaches SMTP auth
+            # when username AND password are both truthy — so it connects
+            # unauthenticated and Resend answers "530 Authentication Required",
+            # with the failure swallowed behind an optimistic "Verification
+            # link issued" log line. pre_start writes the resolved value to an
+            # env_file instead; see _write_env_file.
             pw_env = getattr(config, "email_password_env", None) or "RESEND_API_KEY"
-            env.setdefault("EMAIL_PASSWORD", f"${{{pw_env}}}")
+            self._password_env_var = pw_env
             # Password reset has its own switch — configuring SMTP is not enough.
             # Only meaningful with email working, hence nested here.
             env.setdefault("ALLOW_PASSWORD_RESET", "true")
@@ -196,6 +245,9 @@ class LibreChatService(ServiceBase):
                 "environment": env,
                 "labels": {"puente.config-digest": config_digest},
                 "extra_hosts": ["host.docker.internal:host-gateway"],
+                # Secrets that must reach the container verbatim rather than via
+                # compose interpolation — see _write_env_file.
+                "env_file": [f"{data_dir}/librechat/.env"],
                 "volumes": [
                     "librechat-images:/app/client/public/images",
                     "librechat-logs:/app/api/logs",

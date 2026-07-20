@@ -170,6 +170,15 @@ services:
     - curtin.edu.au
     - student.curtin.edu.au
     - postgraduate.curtin.edu.au
+    # Verification email is REQUIRED, not optional: without it a student who
+    # mistypes their address gets a working account on the wrong email, then
+    # registers again next lab when the right address says "user not found" —
+    # duplicate accounts and lost history. It also gates self-service password
+    # reset, which tutors cannot do on the operator's behalf.
+    #
+    # EMAIL_PASSWORD is resolved from RESEND_API_KEY in the host environment and
+    # written to a .env file at `puente up` — NOT emitted as a ${VAR} compose
+    # placeholder. See _write_env_file in services/librechat.py for why.
     email_host: smtp.resend.com
     email_port: 587
     email_username: resend
