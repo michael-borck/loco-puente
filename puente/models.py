@@ -41,6 +41,13 @@ class ProxyConfig(BaseModel):
     # Optional upstream host override. Defaults to CaddyConfig.upstream_host.
     # Set it for a standalone host on a different machine (e.g. 192.168.20.3).
     upstream: str | None = None
+    # Filename of an HTML page served (as 503) when the upstream is unreachable,
+    # instead of a bare 502. Relative to the caddy data dir's `offline/`. Use it
+    # for services that are DOWN ON PURPOSE some of the time — e.g. LibreChat's
+    # lab windows — so visitors see "closed until your lab" rather than a
+    # browser error. Also covers unplanned outages, which is a bonus, not the
+    # main goal.
+    offline_page: str | None = None
 
 
 class ServiceConfig(BaseModel):
@@ -93,6 +100,43 @@ class LibreChatConfig(ServiceConfig):
     # LibreChat needs MongoDB. When install_method is "external", point at an
     # existing LibreChat instead of running app+mongo locally.
     mongo_uri: str | None = None  # override the bundled mongo (e.g. external Atlas)
+    # LibreChat refuses to boot without a JWT secret, and encrypts stored
+    # provider credentials with CREDS_KEY/CREDS_IV. Persisted here so sessions
+    # and saved credentials survive a container recreate.
+    jwt_secret: str | None = None
+    jwt_refresh_secret: str | None = None
+    creds_key: str | None = None
+    creds_iv: str | None = None
+    # OpenAI-compatible base URL for the Ollama custom endpoint. Override to
+    # point at a remote or other Ollama; default reaches the host's own instance.
+    ollama_base_url: str | None = None
+    # Models offered in the picker. When set, ONLY these are exposed and the
+    # live fetch from Ollama is disabled — pulling a new model does not add it
+    # here. Empty/unset = fetch whatever Ollama currently has.
+    models: list[str] = Field(default_factory=list)
+    # Model used to generate conversation titles. Defaults to the last entry in
+    # `models` (pin the smallest one there). LibreChat's own default is
+    # 'current_model', which makes titling contend with the live chat for the
+    # GPU and abort — avoid unless the card has room for two loaded models.
+    title_model: str | None = None
+    # Anthropic (Claude) endpoint. The key is read from the host environment —
+    # named here, never stored here, so it stays out of git. `user_provided`
+    # makes LibreChat prompt each user for their own key instead.
+    anthropic_key_env: str | None = None
+    anthropic_models: list[str] = Field(default_factory=list)
+    # Email domains permitted to self-register. Enforced server-side in
+    # AuthService (403 on mismatch), so it holds even with open registration.
+    # Empty = any address may register.
+    allowed_registration_domains: list[str] = Field(default_factory=list)
+    # Resend (or any SMTP relay) for verification + password reset. Without
+    # these, LibreChat auto-verifies new accounts and disables self-service
+    # password reset. The API key belongs in the environment, not puente.yml.
+    email_host: str | None = None
+    email_port: int | None = None
+    email_username: str | None = None
+    email_password_env: str | None = None
+    email_from: str | None = None
+    email_from_name: str | None = None
 
 
 class OllamaConfig(ServiceConfig):

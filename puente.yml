@@ -115,7 +115,7 @@ services:
     storage_path: /home/michael/.puente/anythingllm
     jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
   librechat:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 3080
     gpu: null
@@ -129,7 +129,46 @@ services:
       basic_group: null
       port: 3080
       upstream: null
+      # LibreChat is stopped outside lab hours by deploy/chat-window.sh, so a
+      # bare 502 would be the normal out-of-hours experience. Serve the lab
+      # timetable instead.
+      offline_page: chat-closed.html
     mongo_uri: null
+    jwt_secret: bc7b375cf786ec343a9853fc95e7bc01a9ffec7b0b28664f7e4b88ab833b1145
+    jwt_refresh_secret: 924cd338fd5618c23b3a7a9dc7a1cfe715936c86beaf8eb072c10234835dfecb
+    creds_key: 312c3ed097b353814db93a4881bbaa4a4a7bd067ea2609b8d8135aacb7f3a356
+    creds_iv: 6ec53bf663221014099fbb678cf203d9
+    ollama_base_url: null
+    # Picker list, in picker order. Trimmed for ISYS6014 module 01, which runs
+    # one prompt across a local and a frontier model, then repeats it with an
+    # image attached. Four near-identical qwens were choice paralysis without
+    # serving either axis of that comparison.
+    #   qwen3.5:9b    - the local contender; big enough to be a fair fight
+    #   qwen2.5vl:7b  - the ONLY local model that reads images (activity pass B)
+    # Both stay resident together (~13GB of 24GB) so switching costs nothing.
+    # The frontier side is anthropic_models below — API-side, so no VRAM and no
+    # local concurrency limit. Removing a model here does NOT delete it from
+    # Ollama; `ollama list` still has 0.8b/2b/4b/coder for other uses.
+    models:
+    - qwen3.5:9b
+    - qwen2.5vl:7b
+    # Not in the picker on purpose — titling is a background call, so it should
+    # use the cheapest model on the box, not one students would choose.
+    title_model: qwen3.5:0.8b
+    anthropic_key_env: ANTHROPIC_API_KEY
+    anthropic_models:
+    - claude-sonnet-5
+    - claude-haiku-4-5
+    allowed_registration_domains:
+    - curtin.edu.au
+    - student.curtin.edu.au
+    - postgraduate.curtin.edu.au
+    email_host: smtp.resend.com
+    email_port: 587
+    email_username: resend
+    email_password_env: RESEND_API_KEY
+    email_from: librechat@onboarding.locoensayo.org
+    email_from_name: Libre Chat
   open_notebook:
     enabled: false
     install_method: docker
@@ -283,10 +322,6 @@ services:
     port: 17493
     gpu: 1
     managed: true
-    # Fork carrying the idle-model-unload patch (jamiepine/voicebox#889).
-    # Without it VOICEBOX_IDLE_UNLOAD_SECONDS is a no-op and an idle voicebox
-    # pins ~4.3GB of GPU 1 indefinitely. Delete this line once #889 merges.
-    build_ref: michael-borck/voicebox@feat/idle-model-unload
     environment: {}
     review: false
     proxy:
@@ -302,6 +337,7 @@ services:
       basic_group: null
       port: 17493
       upstream: null
+    build_ref: michael-borck/voicebox@feat/idle-model-unload
   chatterbox:
     enabled: false
     install_method: docker
@@ -310,9 +346,6 @@ services:
     managed: true
     environment: {}
     review: true
-    # Retired: voicebox bundles chatterbox-tts. Proxy block removed so the
-    # dead route stops being served (a declared block is served even when the
-    # service is disabled — see caddy.iter_proxied_services).
     proxy: null
     build_context: /home/michael/Chatterbox-TTS-Server
     hf_token: null
@@ -361,11 +394,8 @@ services:
       ui:
         swarm: SWARM_BCRYPT
       boxes:
-        # Inline bcrypt hashes (values starting with "$2" are emitted verbatim
-        # into the Caddyfile — no .env indirection). Regenerate a hash with:
-        #   docker exec -it puente-caddy caddy hash-password
-        michael: '$2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6'
-        callum: '$2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6'
+        michael: $2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6
+        callum: $2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6
     upstream_host: 192.168.20.120
     proxy_hosts:
     - host: audio.locopuente.org
