@@ -119,6 +119,11 @@ class LibreChatConfig(ServiceConfig):
     # 'current_model', which makes titling contend with the live chat for the
     # GPU and abort — avoid unless the card has room for two loaded models.
     title_model: str | None = None
+    # Context window forced on every Ollama request from LibreChat. Set it when
+    # a model's default context is too large to load on the host GPU — the
+    # failure is a hard runner abort at load time, not a graceful degradation,
+    # so the model appears in the picker and then 500s on first use.
+    num_ctx: int | None = None
     # Anthropic (Claude) endpoint. The key is read from the host environment —
     # named here, never stored here, so it stays out of git. `user_provided`
     # makes LibreChat prompt each user for their own key instead.

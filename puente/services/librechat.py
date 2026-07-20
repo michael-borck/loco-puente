@@ -38,6 +38,21 @@ class LibreChatService(ServiceBase):
         # deliberately not used here — see titleModel below.
         title_model = getattr(config, "title_model", None) or allowed[-1]
 
+        # Ollama options forced on every request to this endpoint.
+        #
+        # NOTE: this does NOT reliably control context size. It was tried as a
+        # fix for a model whose declared context was too large to load, and
+        # Ollama still sized its KV cache from the model's own declared
+        # context — the load kept failing with the pre-addParams memory figure.
+        # To cap context, bake it into the model instead:
+        #   printf 'FROM <model>\nPARAMETER num_ctx 16384\n' > m.Modelfile
+        #   ollama create <model>-16k -f m.Modelfile
+        # and pin the variant in `models`. Left here for other Ollama options.
+        num_ctx = getattr(config, "num_ctx", None)
+        addparams_yaml = ""
+        if num_ctx:
+            addparams_yaml = f"      addParams:\n        num_ctx: {num_ctx}\n"
+
         # Enforced in AuthService.registerUser — a non-matching address gets a
         # 403 at signup. This is the real gate on an open registration page;
         # it works with or without email configured.
@@ -64,6 +79,7 @@ class LibreChatService(ServiceBase):
             f"        fetch: {fetch}\n"
             "        default:\n"
             f"{models_yaml}"
+            f"{addparams_yaml}"
             "      titleConvo: true\n"
             # Titling fires a *second* inference alongside the live chat. With
             # 'current_model' both hit the same large model and contend for the
