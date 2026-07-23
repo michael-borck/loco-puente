@@ -120,7 +120,36 @@ services:
     port: 3080
     gpu: null
     managed: true
-    environment: {}
+    # Signup rate limiters, effectively disabled on purpose.
+    #
+    # LibreChat rate-limits registration BY CLIENT IP (removePorts(req.ip), with
+    # TRUST_PROXY=1 so it sees the real client through puente-caddy, not the
+    # proxy). A whole lab NATs to ONE campus IP, so the entire class shares a
+    # single bucket. At the stock REGISTER_MAX=5/60min this cost a 40-student
+    # class most of its session on 2026-07-22: 4 accounts at 08:38:49-08:39:20,
+    # then nothing until the window rolled over and 4 more got in at
+    # 09:35:17-09:36:02. 8 of 40 registered; the rest saw
+    # "Too many accounts created, please try again after 60 minutes".
+    #
+    # Set absurdly high rather than "generously" high — the limit must never be
+    # the thing that fails in front of a class, and a second cohort on the same
+    # IP must not inherit a half-drained bucket. Do NOT use 0 to mean unlimited:
+    # in express-rate-limit 0 blocks EVERY request.
+    #
+    # Abuse risk is near zero without it: registration is already gated by
+    # allowed_registration_domains (Curtin only) plus mandatory email
+    # verification, and chat.locopuente.org is only up during the lab window
+    # (deploy/chat-window.sh). Those gates, not the IP limiter, are the control.
+    #
+    # VERIFY_EMAIL_* covers the resend-verification endpoint (stock 2 per 2 min,
+    # also per-IP): a few mistyped addresses in one room would otherwise lock
+    # everyone out of resends. Each 429 also calls logViolation, which feeds the
+    # violation/ban layer, so a tight limit can escalate past its own window.
+    environment:
+      REGISTER_MAX: '10000'
+      REGISTER_WINDOW: '60'
+      VERIFY_EMAIL_MAX: '10000'
+      VERIFY_EMAIL_WINDOW: '2'
     review: true
     proxy:
       host: chat.locopuente.org
