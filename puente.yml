@@ -11,7 +11,7 @@ services:
     proxy:
       host: ollama.locollm.org
       auth: bearer
-      token_env: OLLAMA_TOKEN
+      token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2]
       basic_group: null
       port: 11434
       upstream: null
