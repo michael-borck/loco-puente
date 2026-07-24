@@ -30,7 +30,9 @@ class ProxyConfig(BaseModel):
     auth: Literal["none", "basic", "bearer"] = "none"
     # For auth="bearer": name of the env var holding the token (read from the
     # Caddy container's environment). Keeps secrets out of the committed config.
-    token_env: str | None = None
+    # A list names several env vars, any one of which is accepted — that's what
+    # makes rotation possible: add the new token, migrate clients, drop the old.
+    token_env: str | list[str] | None = None
     # For auth="basic": name of the basic-auth user group in CaddyConfig.users
     # to require. Defaults to the sole group when there's exactly one.
     basic_group: str | None = None
@@ -48,6 +50,18 @@ class ProxyConfig(BaseModel):
     # browser error. Also covers unplanned outages, which is a bonus, not the
     # main goal.
     offline_page: str | None = None
+
+    def token_envs(self) -> list[str]:
+        """`token_env` as a list, whether it was written as one name or several.
+
+        Both the Caddyfile generator and the secret-collection pass go through
+        here so a scalar and a single-item list can never render differently.
+        """
+        if self.token_env is None:
+            return []
+        if isinstance(self.token_env, str):
+            return [self.token_env]
+        return list(self.token_env)
 
 
 class ServiceConfig(BaseModel):

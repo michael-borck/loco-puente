@@ -54,6 +54,9 @@ def _site_block(
 ) -> str:
     """Render one Caddy site block for a proxied service."""
     lines = [f"{proxy.host} {{"]
+    # Set by the multi-token bearer branch, which must wrap the upstream in its
+    # own `handle` and so emits reverse_proxy itself.
+    multi_token_bearer = False
 
     if proxy.auth == "basic":
         group = proxy.basic_group
@@ -81,15 +84,44 @@ def _site_block(
                 lines.append(f"\t\t{username} {{${value}}}")
         lines.append("\t}")
     elif proxy.auth == "bearer":
-        # token read from the container environment; matcher rejects anything
-        # that isn't exactly "Bearer <token>".
-        env = proxy.token_env or ""
-        lines.append(
-            f'\t@unauthorized not header Authorization "Bearer {{${env}}}"'
-        )
-        lines.append("\trespond @unauthorized 401")
+        # tokens read from the container environment; anything that isn't
+        # exactly "Bearer <token>" gets a 401.
+        envs = proxy.token_envs()
+        if not envs:
+            raise ValueError(
+                f"bearer host {proxy.host!r} has no token_env; set it to the "
+                f"name of an env var holding the token (or a list of names)"
+            )
+        if len(envs) == 1:
+            lines.append(
+                f'\t@unauthorized not header Authorization "Bearer {{${envs[0]}}}"'
+            )
+            lines.append("\trespond @unauthorized 401")
+        else:
+            # Several accepted tokens — how a key is rotated without a flag-day
+            # cutover: add the new one, migrate clients, drop the old.
+            #
+            # This has to be a positive match in a matcher *block*: repeating a
+            # field inside the block OR-s the values (verified against caddy:2),
+            # whereas the one-line form `header Authorization "A" "B"` is a
+            # parse error, and negating with `not` would AND the negations —
+            # rejecting every request once there are two tokens.
+            lines.append("\t@authorized {")
+            for env in envs:
+                lines.append(f'\t\theader Authorization "Bearer {{${env}}}"')
+            lines.append("\t}")
+            # The upstream then has to live inside `handle @authorized`, so the
+            # shared reverse_proxy line below is skipped for this branch.
+            lines.append("\thandle @authorized {")
+            lines.append(f"\t\treverse_proxy {upstream}:{port}")
+            lines.append("\t}")
+            lines.append("\thandle {")
+            lines.append("\t\trespond 401")
+            lines.append("\t}")
+            multi_token_bearer = True
 
-    lines.append(f"\treverse_proxy {upstream}:{port}")
+    if not multi_token_bearer:
+        lines.append(f"\treverse_proxy {upstream}:{port}")
 
     # Optional friendly page for when the upstream is down. Without this a
     # stopped container gives a bare 502, which reads as "broken" rather than

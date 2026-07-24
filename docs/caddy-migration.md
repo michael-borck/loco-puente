@@ -43,6 +43,19 @@ Auth policy (matches the stack convention):
 | `basic`  | UI tool with no built-in login            | a `users` group in the `caddy:` config |
 | `bearer` | API-only endpoint                         | `token_env` |
 
+#### Rotating a bearer token
+
+`token_env` also takes a **list**, and any one of the named tokens is accepted:
+
+```yaml
+    token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2]
+```
+
+That is what makes rotation possible without a flag-day cutover: add the new
+env var, hand the new key out, then drop the old name once nobody is using it.
+Every name in the list must have a value in the environment at `puente up` —
+an unset one resolves to an empty placeholder that quietly matches nothing.
+
 ### The `caddy:` service config
 
 ```yaml

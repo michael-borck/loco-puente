@@ -22,6 +22,28 @@ from puente.models import PuenteConfig, ServiceConfig
 from .base import ServiceBase
 
 
+def _read_env_file(path: Path) -> dict[str, str]:
+    """Parse a docker-compose `.env` into {name: raw_value}.
+
+    Values are returned exactly as stored — still `$$`-escaped — so a merge can
+    write them back untouched. Blank lines and `#` comments are skipped; a line
+    with no `=` is ignored rather than raising, since a corrupt or hand-edited
+    file should not block a deploy.
+    """
+    if not path.exists():
+        return {}
+    env: dict[str, str] = {}
+    for line in path.read_text().splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        # split on the FIRST "=" only: bcrypt hashes and base64 tokens can
+        # contain "=" in the value.
+        key, _, value = stripped.partition("=")
+        env[key.strip()] = value
+    return env
+
+
 class CaddyService(ServiceBase):
     name = "caddy"
     description = "Reverse proxy + automatic TLS (fronts all proxied services)"
@@ -32,15 +54,16 @@ class CaddyService(ServiceBase):
 
     def _secret_env_vars(self, config: PuenteConfig) -> list[str]:
         """Names of env vars the Caddyfile references and Caddy must receive:
-        every bearer token_env, plus every basic-auth user's bcrypt env var —
-        across both service-bound proxy blocks and standalone proxy_hosts.
+        every bearer token_env (a host may name several), plus every basic-auth
+        user's bcrypt env var — across both service-bound proxy blocks and
+        standalone proxy_hosts.
         """
         names: set[str] = set()
         caddy = config.services.caddy
         service_blocks = (proxy for _s, _c, proxy in iter_proxied_services(config))
         for proxy in (*service_blocks, *caddy.proxy_hosts):
-            if proxy.auth == "bearer" and proxy.token_env:
-                names.add(proxy.token_env)
+            if proxy.auth == "bearer":
+                names.update(proxy.token_envs())
             elif proxy.auth == "basic":
                 group = proxy.basic_group
                 if group is None and len(caddy.users) == 1:
@@ -105,24 +128,39 @@ class CaddyService(ServiceBase):
         write_caddyfile(full, caddy_dir / "Caddyfile")
 
         # Materialize an .env for the container from the secrets present in the
-        # host environment. Missing ones are skipped (Caddy will 401/deny rather
-        # than crash) but reported so the operator knows to set them.
+        # host environment, MERGED over whatever .env already holds.
+        #
+        # Merging (rather than replacing) is what makes it safe to run with only
+        # some secrets exported: `export OLLAMA_TOKEN_2=... && puente up caddy`
+        # used to rewrite .env with just that one var and silently drop every
+        # other token, breaking auth on hosts the operator never touched.
+        # A var still set in the environment wins; anything else is carried
+        # forward. Missing-everywhere vars are reported, not written.
         env_path = caddy_dir / ".env"
-        lines: list[str] = []
+        existing = _read_env_file(env_path)
+        resolved: dict[str, str] = {}
         missing: list[str] = []
         for var in self._secret_env_vars(full):
             val = os.environ.get(var)
-            if val is None:
+            if val is not None:
+                # Docker Compose interpolates $ in env_file values, which mangles
+                # bcrypt hashes ($2a$14$...). Escape $ as $$ so Compose passes the
+                # value through literally. Values carried over from the existing
+                # file are already escaped — re-escaping them would double the $
+                # on every run, so only freshly-read env vars go through this.
+                resolved[var] = val.replace("$", "$$")
+            elif var in existing:
+                resolved[var] = existing[var]
+            else:
                 missing.append(var)
-                continue
-            # Docker Compose interpolates $ in env_file values, which mangles
-            # bcrypt hashes ($2a$14$...). Escape $ as $$ so Compose passes the
-            # value through literally.
-            lines.append(f"{var}={val.replace('$', '$$')}")
-        # Only rewrite .env if we resolved something; never clobber a
-        # hand-maintained .env with an empty file.
-        if lines:
-            env_path.write_text("\n".join(lines) + "\n")
+
+        # Preserve unrecognized keys (hand-added vars, secrets for a host that
+        # is temporarily commented out) so a merge never loses operator data.
+        merged = {**existing, **resolved}
+        if merged:
+            env_path.write_text(
+                "\n".join(f"{k}={v}" for k, v in sorted(merged.items())) + "\n"
+            )
         elif not env_path.exists():
             env_path.write_text("")
         if missing:

@@ -23,8 +23,9 @@ import yaml
 
 from puente.caddy import generate_caddyfile, iter_proxied_services
 from puente.compose import generate_compose
-from puente.models import PuenteConfig
+from puente.models import PuenteConfig, ServiceConfig
 from puente.services import ALL_SERVICES
+from puente.services.caddy import CaddyService, _read_env_file
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -231,6 +232,62 @@ def test_bearer_auth_emits_env_placeholder_not_the_token():
     assert "respond @unauthorized 401" in caddyfile
 
 
+def test_bearer_auth_accepts_a_list_of_token_envs():
+    """Several env vars on one host = several valid keys, so a key can be
+    rotated (add new, migrate clients, drop old) without a flag-day cutover."""
+    config = _config(
+        swarmui={
+            "enabled": True,
+            "proxy": {"host": "swarmui.example.org", "auth": "bearer",
+                      "token_env": ["SWARM_TOKEN", "SWARM_TOKEN_2"]},
+        },
+        caddy={"enabled": True},
+    )
+    caddyfile = generate_caddyfile(config)
+    # Repeating the field inside a matcher block is what OR-s the values. The
+    # one-line form `header Authorization "A" "B"` is a Caddy parse error, and
+    # a negated matcher would AND the negations and reject everything — so
+    # pin the exact shape, not just the presence of both names.
+    assert (
+        '\t@authorized {\n'
+        '\t\theader Authorization "Bearer {$SWARM_TOKEN}"\n'
+        '\t\theader Authorization "Bearer {$SWARM_TOKEN_2}"\n'
+        '\t}\n'
+    ) in caddyfile
+    # The upstream moves inside handle @authorized; an unguarded reverse_proxy
+    # at site level would serve every request regardless of token.
+    assert "\thandle @authorized {\n\t\treverse_proxy " in caddyfile
+    assert "\t\trespond 401\n" in caddyfile
+
+
+def test_bearer_token_env_list_reaches_the_env_file():
+    """Every named token must be handed to the container, or the placeholder
+    resolves empty and the host silently rejects a valid key."""
+    config = _config(
+        swarmui={
+            "enabled": True,
+            "proxy": {"host": "swarmui.example.org", "auth": "bearer",
+                      "token_env": ["SWARM_TOKEN", "SWARM_TOKEN_2"]},
+        },
+        caddy={"enabled": True},
+    )
+    names = CaddyService()._secret_env_vars(config)
+    assert "SWARM_TOKEN" in names and "SWARM_TOKEN_2" in names
+
+
+def test_bearer_without_a_token_env_is_rejected():
+    """An empty token_env used to render "Bearer {$}", locking out every client."""
+    config = _config(
+        swarmui={
+            "enabled": True,
+            "proxy": {"host": "swarmui.example.org", "auth": "bearer"},
+        },
+        caddy={"enabled": True},
+    )
+    with pytest.raises(ValueError, match="no token_env"):
+        generate_caddyfile(config)
+
+
 def test_basic_auth_emits_env_placeholder_not_the_hash():
     config = _config(
         comfyui={
@@ -269,3 +326,97 @@ def test_basic_auth_with_no_resolvable_users_is_an_error():
     )
     with pytest.raises(ValueError, match="no users"):
         generate_caddyfile(config)
+
+
+# --------------------------------------------------------------------------
+# caddy pre_start: the .env is MERGED, never replaced
+# --------------------------------------------------------------------------
+
+
+def _pre_start_in(tmp_path: Path, monkeypatch, puente_yml: dict) -> Path:
+    """Run CaddyService.pre_start against a throwaway puente.yml + data dir.
+
+    `load_config()` resolves puente.yml relative to cwd, so chdir into the tmp
+    dir to keep the real repo config out of these tests. Returns the .env path.
+    """
+    (tmp_path / "puente.yml").write_text(yaml.dump(puente_yml))
+    monkeypatch.chdir(tmp_path)
+    data = tmp_path / "data"
+    (data / "caddy").mkdir(parents=True)
+    return data / "caddy" / ".env"
+
+
+_TWO_BEARER_HOSTS = {
+    "services": {
+        "caddy": {"enabled": True},
+        "ollama": {
+            "enabled": True,
+            "proxy": {"host": "ollama.example.org", "auth": "bearer",
+                      "token_env": "OLLAMA_TOKEN"},
+        },
+        "swarmui": {
+            "enabled": True,
+            "proxy": {"host": "swarmui.example.org", "auth": "bearer",
+                      "token_env": "SWARMUI_TOKEN"},
+        },
+    }
+}
+
+
+def test_pre_start_keeps_secrets_it_cannot_resolve(tmp_path, monkeypatch):
+    """The regression this merge exists for.
+
+    Exporting only the NEW token used to rewrite .env with just that var and
+    silently drop every other one — breaking auth on untouched hosts.
+    """
+    env_path = _pre_start_in(tmp_path, monkeypatch, _TWO_BEARER_HOSTS)
+    env_path.write_text("OLLAMA_TOKEN=classkey\nSWARMUI_TOKEN=swarmkey\n")
+
+    monkeypatch.delenv("OLLAMA_TOKEN", raising=False)
+    monkeypatch.delenv("SWARMUI_TOKEN", raising=False)
+    monkeypatch.setenv("SWARMUI_TOKEN", "rotated")
+
+    CaddyService().pre_start(ServiceConfig(), str(tmp_path / "data"))
+
+    written = _read_env_file(env_path)
+    assert written["SWARMUI_TOKEN"] == "rotated"   # env wins
+    assert written["OLLAMA_TOKEN"] == "classkey"   # carried forward, not lost
+
+
+def test_pre_start_does_not_double_escape_on_repeat_runs(tmp_path, monkeypatch):
+    """Carried-over values are already $$-escaped; re-escaping would corrupt
+    bcrypt hashes a little more on every single `puente up`."""
+    env_path = _pre_start_in(tmp_path, monkeypatch, _TWO_BEARER_HOSTS)
+    monkeypatch.setenv("OLLAMA_TOKEN", "tok")
+    monkeypatch.setenv("SWARMUI_TOKEN", "$2a$14$abc")
+
+    data = str(tmp_path / "data")
+    CaddyService().pre_start(ServiceConfig(), data)
+    after_first = env_path.read_text()
+
+    # Second run with nothing exported: values come from the file this time.
+    monkeypatch.delenv("OLLAMA_TOKEN", raising=False)
+    monkeypatch.delenv("SWARMUI_TOKEN", raising=False)
+    CaddyService().pre_start(ServiceConfig(), data)
+
+    assert env_path.read_text() == after_first
+    assert _read_env_file(env_path)["SWARMUI_TOKEN"] == "$$2a$$14$$abc"
+
+
+def test_pre_start_preserves_unrelated_keys(tmp_path, monkeypatch):
+    """A secret for a host that's temporarily commented out of puente.yml (so
+    _secret_env_vars never names it) must survive the merge."""
+    env_path = _pre_start_in(tmp_path, monkeypatch, _TWO_BEARER_HOSTS)
+    env_path.write_text("RETIRED_TOKEN=keepme\n")
+    monkeypatch.setenv("OLLAMA_TOKEN", "tok")
+    monkeypatch.setenv("SWARMUI_TOKEN", "tok2")
+
+    CaddyService().pre_start(ServiceConfig(), str(tmp_path / "data"))
+
+    assert _read_env_file(env_path)["RETIRED_TOKEN"] == "keepme"
+
+
+def test_read_env_file_tolerates_comments_and_junk(tmp_path):
+    path = tmp_path / ".env"
+    path.write_text("# a comment\n\nA=1\nJUNKLINE\nB=x=y=z\n")
+    assert _read_env_file(path) == {"A": "1", "B": "x=y=z"}
