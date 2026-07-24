@@ -185,14 +185,16 @@ services:
     #   qwen3.5:9b    - the local contender; big enough to be a fair fight
     #   qwen2.5vl:7b  - the ONLY local model that reads images (activity pass B)
     #   gemma4:12b    - newer local contender, added 2026-07-24
-    # THE THREE NO LONGER ALL FIT. Measured on the idle 3090 that day: loading
-    # qwen3.5:9b (6.7GB) + gemma4:12b (8.4GB) leaves 17.2GB used and only 7.0GB
-    # free, so qwen2.5vl:7b-16k (~9.5GB) is EVICTED rather than co-resident.
-    # The old "both stay resident, switching is free" property is gone; a
-    # student who switches to the vision model now pays a ~16s reload, and
-    # switching back evicts whatever it displaced. That is the load-tax
-    # thrashing pattern, so if module 01's image pass feels slow, drop
-    # gemma4:12b from this list rather than adding a fourth entry.
+    # THREE MODELS, TWO RESIDENT SLOTS. The cap is OLLAMA_MAX_LOADED_MODELS=2
+    # in deploy/ollama-classroom/10-classroom.conf, so a third model always
+    # costs an evict + reload from disk on first use, whatever the free VRAM.
+    # Raising the cap to 3 is not a free fix: the original pair already needs
+    # ~27.8GB combined (qwen2.5vl:7b-16k alone is ~17GB — see that file, and
+    # docs/classroom-models.md) and only co-fits because CUDA_VISIBLE_DEVICES
+    # spans both cards. Adding gemma4:12b (8.4GB measured 2026-07-24) exceeds
+    # that headroom. Prefer keeping the two models a given module actually
+    # needs in this list over holding all three.
+    # Residency is an operator decision, not a puente.yml one.
     # The frontier side is anthropic_models below — API-side, so no VRAM and no
     # local concurrency limit. Removing a model here does NOT delete it from
     # Ollama; `ollama list` still has 0.8b/2b/4b/coder for other uses.
