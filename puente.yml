@@ -20,7 +20,17 @@ services:
       gpu: 0
       port: 11434
       models:
-      - llama3.1:8b-q4_k_m
+      # Was llama3.1:8b-q4_k_m, a tag that has never existed locally — the
+      # pulled tag is llama3.1:8b-instruct-q4_K_M, and llama3.1:latest is the
+      # same blob (id 46e0c10c039e), so this entry resolved to nothing.
+      - llama3.1:latest
+      # Gemma 4, measured 2026-07-24 on the 3090 at the stock 32k context:
+      #   gemma4:latest  3.4GB resident   (9.6GB on disk)
+      #   gemma4:12b     8.4GB resident   (7.6GB on disk)
+      # Newer than llama3.1 and cheaper per answer — see the picker note below
+      # for why only the 12b earns a slot in the classroom list.
+      - gemma4:latest
+      - gemma4:12b
   open_webui:
     enabled: true
     install_method: docker
@@ -174,7 +184,15 @@ services:
     # serving either axis of that comparison.
     #   qwen3.5:9b    - the local contender; big enough to be a fair fight
     #   qwen2.5vl:7b  - the ONLY local model that reads images (activity pass B)
-    # Both stay resident together (~13GB of 24GB) so switching costs nothing.
+    #   gemma4:12b    - newer local contender, added 2026-07-24
+    # THE THREE NO LONGER ALL FIT. Measured on the idle 3090 that day: loading
+    # qwen3.5:9b (6.7GB) + gemma4:12b (8.4GB) leaves 17.2GB used and only 7.0GB
+    # free, so qwen2.5vl:7b-16k (~9.5GB) is EVICTED rather than co-resident.
+    # The old "both stay resident, switching is free" property is gone; a
+    # student who switches to the vision model now pays a ~16s reload, and
+    # switching back evicts whatever it displaced. That is the load-tax
+    # thrashing pattern, so if module 01's image pass feels slow, drop
+    # gemma4:12b from this list rather than adding a fourth entry.
     # The frontier side is anthropic_models below — API-side, so no VRAM and no
     # local concurrency limit. Removing a model here does NOT delete it from
     # Ollama; `ollama list` still has 0.8b/2b/4b/coder for other uses.
@@ -188,6 +206,14 @@ services:
     #   printf 'FROM qwen2.5vl:7b\nPARAMETER num_ctx 16384\n' > vl.Modelfile
     #   ollama create qwen2.5vl:7b-16k -f vl.Modelfile
     - qwen2.5vl:7b-16k
+    # Gemma 4. Thinking is ON by default and costs a lot for classroom Q&A:
+    # same word problem, warm, think=true vs think=false —
+    #   qwen3.5:9b  1755 tok / 19.8s  ->  293 tok / 4.2s
+    #   gemma4:12b   525 tok /  9.5s  ->  153 tok / 3.5s
+    # Both still answered correctly with thinking off. Ollama takes "think":
+    # false per-request (CLI: --think=false); it is NOT a puente.yml setting,
+    # so LibreChat must send it or students wait ~5x on every reply.
+    - gemma4:12b
     # Not in the picker on purpose — titling is a background call, so it should
     # use the cheapest model on the box, not one students would choose.
     title_model: qwen3.5:0.8b
