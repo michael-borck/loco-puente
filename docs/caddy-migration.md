@@ -119,10 +119,16 @@ Puente is an AI-platform orchestrator — it only fronts the AI services it runs
 Personal / unrelated infrastructure (e.g. Plex, `books.serveur.au`,
 `boxes.borck.dev`) is deliberately out of scope: those hosts aren't in
 `puente.yml`, so they never appear in the generated Caddyfile. Keep them on
-whatever proxy you like (NPM, a separate Caddy), or add them to the
-hand-maintained `proxy/Caddyfile`. The `proxy/` directory holds a full
-standalone Caddyfile (all 23 original hosts) as a bootstrap/reference; the
-puente-generated one covers only puente services.
+whatever proxy you like (NPM, a separate Caddy).
+
+The `proxy/` directory used to hold a hand-maintained standalone Caddyfile of
+all 23 original hosts, used to bootstrap this migration. It was removed once
+puente-caddy was serving live traffic: its only content not in the generated
+config was two hosts dropped on purpose (`plex.serveur.au`, `books.serveur.au`)
+and one retired service (`chatterbox.locoensayo.org`), and it had drifted far
+enough to be actively misleading — its `ollama` block still named a
+`127.0.0.1:11434` placeholder long after the real backend moved. Recover it
+from git if ever needed: `git show ec0681b:proxy/Caddyfile`.
 
 ## Regenerating
 
