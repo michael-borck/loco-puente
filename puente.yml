@@ -178,44 +178,39 @@ services:
     creds_key: 312c3ed097b353814db93a4881bbaa4a4a7bd067ea2609b8d8135aacb7f3a356
     creds_iv: 6ec53bf663221014099fbb678cf203d9
     ollama_base_url: null
-    # Picker list, in picker order. Trimmed for ISYS6014 module 01, which runs
-    # one prompt across a local and a frontier model, then repeats it with an
-    # image attached. Four near-identical qwens were choice paralysis without
-    # serving either axis of that comparison.
-    #   qwen3.5:9b    - the local contender; big enough to be a fair fight
-    #   qwen2.5vl:7b  - the ONLY local model that reads images (activity pass B)
-    #   gemma4:12b    - newer local contender, added 2026-07-24
-    # THREE MODELS, TWO RESIDENT SLOTS. The cap is OLLAMA_MAX_LOADED_MODELS=2
-    # in deploy/ollama-classroom/10-classroom.conf, so a third model always
-    # costs an evict + reload from disk on first use, whatever the free VRAM.
-    # Raising the cap to 3 is not a free fix: the original pair already needs
-    # ~27.8GB combined (qwen2.5vl:7b-16k alone is ~17GB — see that file, and
-    # docs/classroom-models.md) and only co-fits because CUDA_VISIBLE_DEVICES
-    # spans both cards. Adding gemma4:12b (8.4GB measured 2026-07-24) exceeds
-    # that headroom. Prefer keeping the two models a given module actually
-    # needs in this list over holding all three.
-    # Residency is an operator decision, not a puente.yml one.
-    # The frontier side is anthropic_models below — API-side, so no VRAM and no
-    # local concurrency limit. Removing a model here does NOT delete it from
-    # Ollama; `ollama list` still has 0.8b/2b/4b/coder for other uses.
+    # Picker list, in picker order. ONE local model on purpose: gemma4:12b.
+    # This side of LibreChat exists to give students a felt sense of a local
+    # model's pros/cons *against* the frontier models below — not to be a daily
+    # driver for their AI work. A single local option keeps that comparison
+    # clean and, more importantly, leaves the shared 24GB card free: other
+    # services (comfyui, swarmui, voicebox, avatar nodes) load their own weights
+    # on demand, and holding two chat models resident starved them. With one
+    # ~8GB chat model the operator has room to manage VRAM across everything.
+    #
+    # gemma4:12b is text+image (capabilities: vision, audio, tools, thinking),
+    # verified reading an image over the /v1 endpoint — so it covers both the
+    # text and image-attachment activities that previously needed qwen3.5:9b +
+    # qwen2.5vl:7b-16k. Those two remain in `ollama list` for any module that
+    # wants a dedicated vision model back; add them here to restore that.
+    # (OLLAMA_MAX_LOADED_MODELS=2 in deploy/ollama-classroom/10-classroom.conf
+    # still caps residency at two — one slot is now spare.)
+    #
+    # The frontier side is anthropic_models below — API-side, so no VRAM.
     models:
-    - qwen3.5:9b
-    # NOT stock qwen2.5vl:7b — that declares a 128k context, and Ollama sizes
-    # KV cache from the declared context, so it demands ~36GB and fails to load
-    # on a 24GB card. This variant is the same weights with num_ctx baked to
-    # 16384 (see docs/classroom-models.md); it offloads 33/33 layers and uses
-    # ~9.5GB. Recreate with:
-    #   printf 'FROM qwen2.5vl:7b\nPARAMETER num_ctx 16384\n' > vl.Modelfile
-    #   ollama create qwen2.5vl:7b-16k -f vl.Modelfile
-    - qwen2.5vl:7b-16k
-    # Gemma 4. Thinking is ON by default and costs a lot for classroom Q&A:
-    # same word problem, warm, think=true vs think=false —
+    - gemma4:12b
+    # gemma4's thinking is ON by default and ~5x'd latency for no gain on
+    # classroom Q&A (same word problem, warm, think=true vs false):
     #   qwen3.5:9b  1755 tok / 19.8s  ->  293 tok / 4.2s
     #   gemma4:12b   525 tok /  9.5s  ->  153 tok / 3.5s
-    # Both still answered correctly with thinking off. Ollama takes "think":
-    # false per-request (CLI: --think=false); it is NOT a puente.yml setting,
-    # so LibreChat must send it or students wait ~5x on every reply.
-    - gemma4:12b
+    # Both answered correctly either way. disable_thinking makes LibreChat send
+    # reasoning_effort:none on every request (see services/librechat.py for why
+    # it's that field and not Ollama's think:false on this /v1 endpoint).
+    disable_thinking: true
+    # Adds a second picker entry "Ollama (thinking)" serving the same gemma4:12b
+    # with thinking left ON, so students can compare the same model both ways.
+    # Same loaded weights => no extra VRAM. Not the default experience (the
+    # plain "Ollama" endpoint is thinking-off); this is a teaching extra.
+    thinking_comparison: true
     # Not in the picker on purpose — titling is a background call, so it should
     # use the cheapest model on the box, not one students would choose.
     title_model: qwen3.5:0.8b

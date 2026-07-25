@@ -39,20 +39,70 @@ class LibreChatService(ServiceBase):
         # deliberately not used here — see titleModel below.
         title_model = getattr(config, "title_model", None) or allowed[-1]
 
-        # Ollama options forced on every request to this endpoint.
+        # Ollama options forced on every request to this endpoint, merged into
+        # the request body LibreChat sends. Two keys are wired here:
         #
-        # NOTE: this does NOT reliably control context size. It was tried as a
+        # num_ctx — does NOT reliably control context size. It was tried as a
         # fix for a model whose declared context was too large to load, and
         # Ollama still sized its KV cache from the model's own declared
         # context — the load kept failing with the pre-addParams memory figure.
         # To cap context, bake it into the model instead:
         #   printf 'FROM <model>\nPARAMETER num_ctx 16384\n' > m.Modelfile
         #   ollama create <model>-16k -f m.Modelfile
-        # and pin the variant in `models`. Left here for other Ollama options.
+        # and pin the variant in `models`.
+        #
+        # disable_thinking — turns reasoning OFF on thinking-capable models
+        # (gemma4, qwen3.5). Emitted as OpenAI's `reasoning_effort: none`, NOT
+        # Ollama's `think: false`: this endpoint is the OpenAI-compatible /v1
+        # route, which has no `think` field, but Ollama's /v1 shim maps
+        # reasoning_effort:none to think:false internally (verified against
+        # Ollama 0.32.3 — think:false only exists on the native /api/chat, and
+        # `PARAMETER think false` is not a valid Modelfile param). Applies to
+        # every model on this endpoint; harmless for non-thinking models.
         num_ctx = getattr(config, "num_ctx", None)
-        addparams_yaml = ""
-        if num_ctx:
-            addparams_yaml = f"      addParams:\n        num_ctx: {num_ctx}\n"
+        disable_thinking = bool(getattr(config, "disable_thinking", None))
+
+        def endpoint(name: str, *, thinking_off: bool) -> str:
+            """One custom-endpoint block. All endpoints serve the same `models`
+            from the same Ollama, differing only in whether reasoning_effort is
+            forced off — the (thinking) companion, when present, exists purely
+            so students can pick the same model with thinking on vs off."""
+            params: list[str] = []
+            if num_ctx:
+                params.append(f"        num_ctx: {num_ctx}\n")
+            if thinking_off:
+                params.append("        reasoning_effort: none\n")
+            addparams_yaml = "      addParams:\n" + "".join(params) if params else ""
+            return (
+                f"    - name: '{name}'\n"
+                f"      baseURL: '{ollama_base}'\n"
+                "      apiKey: '${OLLAMA_API_KEY}'\n"
+                "      models:\n"
+                "        # fetch:false + an explicit default = the picker shows only\n"
+                "        # these. fetch:true would overwrite the list from Ollama.\n"
+                f"        fetch: {fetch}\n"
+                "        default:\n"
+                f"{models_yaml}"
+                f"{addparams_yaml}"
+                "      titleConvo: true\n"
+                # Titling fires a *second* inference alongside the live chat. With
+                # 'current_model' both hit the same large model and contend for the
+                # card — the title request loses and aborts ("This operation was
+                # aborted"), so chats stay untitled. Point this at a small model so
+                # titling never competes with the conversation.
+                f"      titleModel: '{title_model}'\n"
+                f"      modelDisplayLabel: '{name}'\n"
+            )
+
+        # Primary endpoint reflects disable_thinking. When both disable_thinking
+        # AND thinking_comparison are on, add a companion "Ollama (thinking)"
+        # that leaves reasoning ON, so the picker offers e.g. Ollama → gemma4:12b
+        # (off) vs Ollama (thinking) → gemma4:12b (on). Same weights, same loaded
+        # copy — no extra VRAM. Only meaningful when thinking is otherwise off;
+        # with thinking already on, a second identical endpoint is redundant.
+        endpoints_yaml = endpoint("Ollama", thinking_off=disable_thinking)
+        if disable_thinking and getattr(config, "thinking_comparison", None):
+            endpoints_yaml += endpoint("Ollama (thinking)", thinking_off=False)
 
         # Enforced in AuthService.registerUser — a non-matching address gets a
         # 403 at signup. This is the real gate on an open registration page;
@@ -71,24 +121,7 @@ class LibreChatService(ServiceBase):
             f"{registration_yaml}"
             "endpoints:\n"
             "  custom:\n"
-            "    - name: 'Ollama'\n"
-            f"      baseURL: '{ollama_base}'\n"
-            "      apiKey: '${OLLAMA_API_KEY}'\n"
-            "      models:\n"
-            "        # fetch:false + an explicit default = the picker shows only\n"
-            "        # these. fetch:true would overwrite the list from Ollama.\n"
-            f"        fetch: {fetch}\n"
-            "        default:\n"
-            f"{models_yaml}"
-            f"{addparams_yaml}"
-            "      titleConvo: true\n"
-            # Titling fires a *second* inference alongside the live chat. With
-            # 'current_model' both hit the same large model and contend for the
-            # card — the title request loses and aborts ("This operation was
-            # aborted"), so chats stay untitled. Point this at a small model so
-            # titling never competes with the conversation.
-            f"      titleModel: '{title_model}'\n"
-            "      modelDisplayLabel: 'Ollama'\n"
+            f"{endpoints_yaml}"
         )
 
     def _write_env_file(self, config: ServiceConfig, data_dir: str) -> None:

@@ -1,14 +1,14 @@
-# Re-warms the classroom models after Ollama starts.
+# Re-warms the classroom model after Ollama starts.
 #
-# WHY: the two models only coexist if they are loaded in the right order — the
-# vision model first, so it fills the 3090 and forces qwen3.5:9b to split onto
-# the 2060S (see deploy/ollama-classroom/10-classroom.conf). Load them the other
-# way round and each model switch costs a 13-20s reload instead of ~0.4s.
+# WHY: the picker's local model (gemma4:12b, ~8GB) is loaded from disk on first
+# use, and Ollama forgets it on restart — and this box gets rebooted often while
+# being tweaked. Without this unit, the first student after a reboot eats the
+# cold-load stall (longer still on a cold page cache), with nothing in any log to
+# say why. Warming it here moves that cost off the students.
 #
-# Ollama forgets all of that on restart, and this box gets rebooted often while
-# being tweaked. Without this unit, the first student to pick the TEXT model
-# after a reboot silently locks the box into the slow configuration for the rest
-# of the lab, with nothing in any log to say why.
+# (History: this used to preload TWO models in a load-bearing ORDER — vision
+# first to force qwen3.5:9b to split onto the 2060S — see the git log and
+# deploy/ollama-classroom/10-classroom.conf. One model now, so order is moot.)
 #
 # Deliberately calls `warm`, NOT `open`: opening the chat is a scheduled,
 # cost-controlled decision (cron, three lab windows — the public endpoint
@@ -20,7 +20,7 @@
 #
 # It fires on boot and on every `systemctl restart ollama`.
 [Unit]
-Description=Preload Ollama classroom models in GPU-placement order
+Description=Preload the Ollama classroom model (gemma4:12b)
 # Ordering only — no Requires. If Ollama is not running there is nothing to
 # warm, and the script's curl calls fail harmlessly.
 After=ollama.service network-online.target
@@ -32,9 +32,9 @@ User=michael
 Group=michael
 WorkingDirectory=/home/michael/loco-puente
 ExecStart=/home/michael/loco-puente/deploy/chat-window.sh warm
-# Loading ~27GB of weights from disk takes well under a minute warm, longer on
-# a cold page cache after a reboot. Generous ceiling; the script's own curl
-# timeouts (300s per model) bound it in practice.
+# Loading ~8GB of weights from disk is quick warm, longer on a cold page cache
+# after a reboot. Generous ceiling; the script's own curl timeouts (300s per
+# model) bound it in practice.
 TimeoutStartSec=900
 # Ollama accepts connections slightly before it can serve a load request; a
 # cold-boot warm can catch that window and fail. One retry covers it.

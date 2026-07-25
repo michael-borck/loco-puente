@@ -138,6 +138,20 @@ class LibreChatConfig(ServiceConfig):
     # failure is a hard runner abort at load time, not a graceful degradation,
     # so the model appears in the picker and then 500s on first use.
     num_ctx: int | None = None
+    # Turn reasoning OFF on thinking-capable Ollama models (gemma4, qwen3.5).
+    # Sent as OpenAI's `reasoning_effort: none` on the /v1 endpoint (Ollama's
+    # shim maps it to think:false); the native think:false and a Modelfile
+    # param are both unavailable on this path. For classroom Q&A the thinking
+    # pass roughly 5x'd latency for no gain — see the models comment in
+    # puente.yml. Applies to every Ollama model in the picker.
+    disable_thinking: bool = False
+    # Add a companion "Ollama (thinking)" endpoint that serves the SAME models
+    # with thinking left ON, so the picker offers each model both ways (Ollama →
+    # model = off, Ollama (thinking) → model = on). For classroom side-by-side
+    # comparison of the reasoning tradeoff. Same loaded weights, so no extra
+    # VRAM. Only takes effect when disable_thinking is also true (otherwise the
+    # primary endpoint already has thinking on and the companion is redundant).
+    thinking_comparison: bool = False
     # Anthropic (Claude) endpoint. The key is read from the host environment —
     # named here, never stored here, so it stays out of git. `user_provided`
     # makes LibreChat prompt each user for their own key instead.

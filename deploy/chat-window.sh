@@ -59,23 +59,23 @@ load_resend_key() {
   fi
 }
 
-# Preload the classroom models — IN THIS ORDER. Order is load-bearing.
+# Preload the classroom model.
 #
-# Ollama splits a model across GPUs only when it does not fit on one. Loading
-# the VISION model first fills the 3090 (17GB), so qwen3.5:9b no longer fits
-# alone and Ollama splits it, putting ~5GB on the 2060S — both stay resident and
-# a model switch costs ~0.4s.
+# The picker now offers ONE local model, gemma4:12b (~8GB), served both with
+# thinking off ("Ollama") and on ("Ollama (thinking)") — same loaded weights, so
+# warming it once covers both. It fits the 3090 alone, so the old two-GPU load
+# ORDER no longer matters: there is no second resident model to split or evict.
+# (History: the previous pair, qwen2.5vl:7b-16k + qwen3.5:9b, only co-fit by
+# loading the vision model first to force a split onto the 2060S — see the git
+# log and deploy/ollama-classroom/10-classroom.conf if that pair ever returns.)
 #
-# Load them the other way round and qwen3.5:9b takes the 3090 by itself (9.5GB,
-# 2060S idle); the vision model then cannot fit in what is left, so Ollama
-# EVICTS the text model instead of splitting it. Only one survives and every
-# switch costs a 13-20s reload — which with 40 students means one person's
-# switch stalls the room.
-#
-# Measured 2026-07-20; see deploy/ollama-classroom/10-classroom.conf.
+# The warm request itself must NOT force thinking on the model, or the keep_alive
+# probe pays the thinking cost. reasoning_effort is a /v1 concept; this hits the
+# native /api/generate, which does not think unless asked — so a plain prompt is
+# already thinking-free here.
 warm_models() {
   local ollama="${OLLAMA_URL:-http://localhost:11434}"
-  for m in qwen2.5vl:7b-16k qwen3.5:9b; do
+  for m in gemma4:12b; do
     if curl -sf --max-time 300 "$ollama/api/generate" \
          -d "{\"model\":\"$m\",\"prompt\":\"hi\",\"stream\":false,\"keep_alive\":\"6h\"}" \
          -o /dev/null 2>/dev/null; then
