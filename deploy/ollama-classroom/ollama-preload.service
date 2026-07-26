@@ -1,0 +1,53 @@
+# Preloads the classroom chat model into VRAM once per boot, so the first
+# student of the day does not pay a cold read of ~7.6GB off disk.
+#
+# Install:
+#   sudo cp deploy/ollama-classroom/ollama-preload.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now ollama-preload
+#
+# Why a separate unit instead of something in 10-classroom.conf: a drop-in can
+# only set environment on ollama.service itself, and Ollama has no "load this
+# model at startup" env var — residency is established by making a request. So
+# preloading is necessarily a second thing that runs AFTER the server is up.
+#
+# This pairs with OLLAMA_KEEP_ALIVE=-1 in 10-classroom.conf. The keep-alive is
+# what makes the model STAY; this unit is what gets it there in the first place.
+# Neither is sufficient alone.
+[Unit]
+Description=Preload gemma4:12b into VRAM (GPU 1)
+After=ollama.service
+Requires=ollama.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+
+# ollama.service being "active" only means the process started — it does not
+# mean the HTTP listener is accepting yet, and a POST to a not-yet-listening
+# socket would fail this unit for no good reason. Poll /api/tags until it
+# answers (up to ~60s) before asking for the load.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 60); do curl -sf http://127.0.0.1:11434/api/tags >/dev/null && exit 0; sleep 1; done; echo "ollama did not become ready in 60s" >&2; exit 1'
+
+# An empty prompt loads the weights without generating any tokens — this is the
+# documented way to warm a model. keep_alive:-1 is repeated here on purpose:
+# the request-level value overrides the server default, so the model stays
+# resident even if OLLAMA_KEEP_ALIVE is ever changed back to a finite TTL.
+ExecStart=/usr/bin/curl -sf --max-time 600 http://127.0.0.1:11434/api/generate \
+    -H 'Content-Type: application/json' \
+    -d '{"model":"gemma4:12b","prompt":"","keep_alive":-1}'
+
+# Warm the title model too. LibreChat calls qwen3.5:0.8b on every new chat, so
+# without this the FIRST chat of the day pays a cold load before its title
+# appears. It is only ~1GB and occupies the second of the two slots allowed by
+# OLLAMA_MAX_LOADED_MODELS — loading it here deliberately claims that slot at
+# boot rather than mid-lab.
+ExecStart=/usr/bin/curl -sf --max-time 300 http://127.0.0.1:11434/api/generate \
+    -H 'Content-Type: application/json' \
+    -d '{"model":"qwen3.5:0.8b","prompt":"","keep_alive":-1}'
+
+# Loading 7.6GB from disk on a cold page cache can take a while; don't let
+# systemd kill it mid-load.
+TimeoutStartSec=700
+
+[Install]
+WantedBy=multi-user.target
