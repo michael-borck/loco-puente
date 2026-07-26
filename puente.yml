@@ -11,7 +11,7 @@ services:
     proxy:
       host: ollama.locollm.org
       auth: bearer
-      token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2]
+      token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2, OLLAMA_TOKEN_3]
       basic_group: null
       port: 11434
       upstream: null
@@ -213,6 +213,18 @@ services:
     thinking_comparison: true
     # Not in the picker on purpose — titling is a background call, so it should
     # use the cheapest model on the box, not one students would choose.
+    #
+    # This is load-bearing, not a preference (fixed in 2ba8e62, 2026-07-20):
+    # LibreChat's default titleModel is 'current_model', which fires titling as
+    # a SECOND CONCURRENT inference against the model already serving the live
+    # chat. On a contended GPU that second request aborts ("This operation was
+    # aborted") and chats silently stay untitled. A separate small model sidesteps
+    # the contention entirely. Do NOT point this back at the chat model.
+    #
+    # It costs a VRAM slot, which is why OLLAMA_MAX_LOADED_MODELS=2 must stay set
+    # in deploy/ollama-classroom/10-classroom.conf even though only one model is
+    # in the picker. At slot count 1 this 1GB titler would EVICT the pinned
+    # gemma4:12b on every new chat. See that file for the full argument.
     title_model: qwen3.5:0.8b
     anthropic_key_env: ANTHROPIC_API_KEY
     anthropic_models:
