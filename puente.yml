@@ -230,9 +230,20 @@ services:
     anthropic_models:
     - claude-sonnet-5
     - claude-haiku-4-5
+    # The real postgrad domain is postgrad.curtin.edu.au. `postgraduate.` was a
+    # guess and matches nothing: on 2026-07-27 every postgrad registration was
+    # rejected ([registerUser] [Registration not allowed]) and not one account in
+    # the 71-user database has ever carried that suffix. The long spelling is
+    # kept only in case Curtin ever issues it; it costs nothing and matching is
+    # exact-suffix, not substring.
+    #
+    # A rejected domain surfaces in the UI as "You have tried to sign up too many
+    # times" — the SAME string as the rate limiter. Do not read that message as
+    # rate limiting; check the container log for the real reason first.
     allowed_registration_domains:
     - curtin.edu.au
     - student.curtin.edu.au
+    - postgrad.curtin.edu.au
     - postgraduate.curtin.edu.au
     # Verification email is REQUIRED, not optional: without it a student who
     # mistypes their address gets a working account on the wrong email, then
