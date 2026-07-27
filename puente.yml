@@ -535,8 +535,8 @@ services:
       # env change and a Caddy reload, not a config edit.
       tutors:
         michael: TUTOR_MICHAEL_BCRYPT
-        tutor1: TUTOR1_BCRYPT
-        tutor2: TUTOR2_BCRYPT
+        sisi: TUTOR_SISI_BCRYPT
+        frederik: TUTOR_FREDERIK_BCRYPT
     upstream_host: 192.168.20.120
     proxy_hosts:
     - host: audio.locopuente.org
