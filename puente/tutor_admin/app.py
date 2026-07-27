@@ -164,17 +164,26 @@ def find_duplicates() -> list[list[dict[str, Any]]]:
     users = [
         {
             "email": u["email"],
+            "id": str(u["_id"]),
+            "name": u.get("name") or "",
             "local": u["email"].split("@")[0],
             "verified": bool(u.get("emailVerified")),
             "created": u["createdAt"].strftime("%Y-%m-%d %H:%M") if u.get("createdAt") else "",
         }
-        for u in _db.users.find({}, {"email": 1, "emailVerified": 1, "createdAt": 1})
+        for u in _db.users.find({}, {"email": 1, "name": 1, "emailVerified": 1, "createdAt": 1})
     ]
     pairs = []
     for i in range(len(users)):
         for j in range(i + 1, len(users)):
             if lev(users[i]["local"], users[j]["local"]) == 1:
                 pairs.append([users[i], users[j]])
+
+    # Activity counts are what settle which address was the typo, so fetch them
+    # only for addresses that actually paired — counting for all 75 users on
+    # every page load would be wasted queries.
+    for u in {id(u): u for pair in pairs for u in pair}.values():
+        u["convos"] = _db.conversations.count_documents({"user": u["id"]})
+        u["messages"] = _db.messages.count_documents({"user": u["id"]})
     return pairs
 
 
@@ -343,7 +352,16 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(b)
 
     def _page(self, tab: str, body: str, msg: str = "", err: str = "") -> None:
-        tabs = [("", "Users"), ("unverified", "Unverified"), ("dupes", "Duplicates"), ("add", "Add account")]
+        # "Possible typos", not "Duplicates": email is unique, so these are never
+        # database conflicts — they are two valid accounts one character apart.
+        # The word "duplicate" reads as a data-integrity problem and sends people
+        # looking for one.
+        tabs = [
+            ("", "Users"),
+            ("unverified", "Unverified"),
+            ("dupes", "Possible typos"),
+            ("add", "Add account"),
+        ]
         nav = "".join(
             f'<a class="{"on" if tab == t else ""}" href="/{t}">{label}</a>' for t, label in tabs
         )
@@ -501,20 +519,31 @@ def render_dupes(pairs: list[list[dict]]) -> str:
             "mistyped student number usually shows up.</p>"
         )
     out = [
-        '<div class=hint>These addresses differ by one character, so one is probably a typo. '
-        "An <b>unverified</b> account paired with a <b>verified</b> one is almost always the "
-        "discarded first attempt — check before removing anything; removal is operator-only.</div>"
+        "<div class=hint>These are <b>separate accounts on different addresses</b> — email is "
+        "unique, so nothing here is a database conflict. They differ by a single character in "
+        "the part before the @, which is what a mistyped student number looks like.<br><br>"
+        "An <b>unverified</b> account with <b>no activity</b>, registered minutes from a "
+        "<b>verified</b> one under the same name, is almost always the discarded first attempt: "
+        "the confirmation email went to an address that does not exist. Removal is "
+        "operator-only — send the pair to Michael.</div>"
     ]
     for a, b in pairs:
-        out.append(
-            "<div class=pair>"
-            + "".join(
-                f'<div>{esc(u["email"])} — {"verified" if u["verified"] else "<b class=no>unverified</b>"}'
-                f' · registered {esc(u["created"])}</div>'
-                for u in (a, b)
+        rows = []
+        for u in (a, b):
+            state = "verified" if u["verified"] else '<b class=no>unverified</b>'
+            # Activity is what actually decides which one to keep: a typo'd
+            # address can never receive its confirmation mail, so it stays at
+            # zero forever while the corrected account gets used.
+            act = (
+                f'{u["convos"]} conversation(s), {u["messages"]} message(s)'
+                if (u["convos"] or u["messages"])
+                else "<b>never used</b>"
             )
-            + "</div>"
-        )
+            rows.append(
+                f'<div>{esc(u["email"])} — {state} · {esc(u["name"]) or "(no name)"}'
+                f' · registered {esc(u["created"])} · {act}</div>'
+            )
+        out.append("<div class=pair>" + "".join(rows) + "</div>")
     return "".join(out)
 
 
