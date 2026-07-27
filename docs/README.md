@@ -27,6 +27,9 @@ noise on the website.
 
 | File | Subject |
 |---|---|
+| `host-setup.md` | **Everything outside puente**: prerequisites, secrets, systemd units, crontab, DNS. Start here for a clean install or a move to new hardware |
+| `adr/` | Architecture Decision Records — why the non-obvious choices were made, and what was rejected |
+| `tutor-admin.md` | The tutor-facing LibreChat account UI and its host-side runner |
 | `service-topology.md` | What runs in vs outside puente; the voice-service overlap |
 | `caddy-migration.md` | The nginx-proxy-manager → Caddy cutover |
 | `gpu-swap-3090.md` | The 2060 Super → 3090 swap, and its verification |
