@@ -1,0 +1,32 @@
+# The privileged half of the tutor admin tool.
+#
+# Runs as the operator (NOT root) and NOT inside the container: it holds the
+# Docker socket, which is root-equivalent, so it must stay off the
+# internet-facing web app. See deploy/tutor-admin-runner.sh for the argument.
+#
+# Install:
+#   sudo cp deploy/tutor-admin-runner.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now tutor-admin-runner
+#
+# Without this running, the web UI still lists, searches, resends verification
+# and force-verifies — only `create` and `invite` block, and they report that
+# the runner is not active rather than failing silently.
+
+[Unit]
+Description=Tutor admin runner (LibreChat account actions)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=michael
+Group=michael
+ExecStart=/home/michael/loco-puente/deploy/tutor-admin-runner.sh
+Restart=always
+RestartSec=5
+# The spool holds plaintext passwords in flight; keep it out of world view.
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

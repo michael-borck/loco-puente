@@ -120,8 +120,21 @@ def _site_block(
             lines.append("\t}")
             multi_token_bearer = True
 
+    # Pass the authenticated username to the app. Only meaningful with
+    # basic_auth, where Caddy has actually verified who this is; on an
+    # unauthenticated host {http.auth.user.id} is empty and the header would be
+    # a lie the app might trust. The app must still treat it as attribution
+    # only — anything reachable without going through Caddy could forge it.
+    forward_user = proxy.auth == "basic" and proxy.forward_user_header
     if not multi_token_bearer:
-        lines.append(f"\treverse_proxy {upstream}:{port}")
+        if forward_user:
+            lines.append(f"\treverse_proxy {upstream}:{port} {{")
+            lines.append(
+                f"\t\theader_up {proxy.forward_user_header} {{http.auth.user.id}}"
+            )
+            lines.append("\t}")
+        else:
+            lines.append(f"\treverse_proxy {upstream}:{port}")
 
     # Optional friendly page for when the upstream is down. Without this a
     # stopped container gives a bare 502, which reads as "broken" rather than

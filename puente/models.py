@@ -36,6 +36,12 @@ class ProxyConfig(BaseModel):
     # For auth="basic": name of the basic-auth user group in CaddyConfig.users
     # to require. Defaults to the sole group when there's exactly one.
     basic_group: str | None = None
+    # For auth="basic": forward the authenticated username to the app in this
+    # header (e.g. "X-Tutor-User"), for attribution in the app's own audit log.
+    # Ignored for other auth modes, where Caddy has verified no identity to
+    # forward. The app must never use it for authorisation: it is only
+    # trustworthy because the app is unreachable except through Caddy.
+    forward_user_header: str | None = None
     # Optional upstream port override. Defaults to the service's own port. Set it
     # when a hostname fronts a different port than the service default, or when
     # two hostnames share one backend (e.g. a UI + an API on the same service).
@@ -192,6 +198,25 @@ class PortalConfig(ServiceConfig):
     host: str = "localhost"  # hostname/IP used in generated service URLs
 
 
+class TutorAdminConfig(ServiceConfig):
+    """Tutor-facing account admin for LibreChat.
+
+    Deliberately cannot delete accounts, ban users, or change roles: those are
+    irreversible or privilege-escalating, and stay with the operator's CLI
+    (deploy/librechat-users.sh). Everything it does offer is additive or
+    reversible.
+
+    It performs no authentication of its own — put it behind Caddy with
+    `proxy: {auth: basic}` and bind it to localhost, which the service does by
+    default.
+    """
+
+    # Domains an account may be created for. create/invite bypass the signup
+    # page's own allowlist by design, so this is re-checked here AND in the
+    # host-side runner. Empty means fall back to the app's built-in default.
+    allowed_domains: list[str] = Field(default_factory=list)
+
+
 class CaddyConfig(ServiceConfig):
     """The reverse proxy. When enabled, Caddy fronts every service that has a
     `proxy:` block, terminating TLS (automatic Let's Encrypt) and enforcing the
@@ -275,6 +300,9 @@ class StackConfig(BaseModel):
     )
     swarmui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=7801, enabled=False)
+    )
+    tutor_admin: TutorAdminConfig = Field(
+        default_factory=lambda: TutorAdminConfig(port=8091, enabled=False)
     )
     fooocus: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=7865, enabled=False)

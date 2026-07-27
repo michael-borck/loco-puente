@@ -260,6 +260,46 @@ services:
     email_password_env: RESEND_API_KEY
     email_from: librechat@onboarding.locoensayo.org
     email_from_name: Libre Chat
+  # Tutor-facing account admin for LibreChat. Tutors have no shell on this box,
+  # and LibreChat's own admin API is read-only (list/search only), so without
+  # this every stuck student has to come through the operator.
+  #
+  # Scope is deliberate: resend, force-verify, create and invite — all additive
+  # or reversible. Delete, ban and role changes stay on deploy/librechat-users.sh,
+  # because delete is irreversible and granting ADMIN is privilege escalation.
+  #
+  # It authenticates nothing itself. Caddy does (auth: basic, one account per
+  # tutor) and forwards the username in X-Tutor-User for the audit log. The
+  # container therefore binds to 127.0.0.1 — publishing this port on the LAN
+  # would expose unauthenticated account administration.
+  #
+  # NOTE: `create` and `invite` need deploy/tutor-admin-runner.sh running on the
+  # host. The web app has no Docker socket by design, so those two verbs are
+  # spooled to that runner; without it they time out and report so.
+  tutor_admin:
+    enabled: true
+    install_method: docker
+    port: 8091
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+    allowed_domains:
+    - curtin.edu.au
+    - student.curtin.edu.au
+    - postgrad.curtin.edu.au
+    proxy:
+    - host: tutors.locopuente.org
+      auth: basic
+      basic_group: tutors
+      forward_user_header: X-Tutor-User
+      # Reach it by CONTAINER NAME over the compose network, not via
+      # upstream_host. The container deliberately publishes only on
+      # 127.0.0.1, so the LAN address in upstream_host has nothing
+      # listening on it and Caddy would get a 502. Going over the shared
+      # network is also what keeps the port off the LAN — this app does
+      # its own authentication nowhere, so Caddy must be the only path in.
+      upstream: tutor-admin
   open_notebook:
     enabled: false
     install_method: docker
@@ -487,6 +527,16 @@ services:
       boxes:
         michael: $2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6
         callum: $2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6
+      # One entry PER TUTOR, never a shared login. tutor_admin forwards the
+      # authenticated username into its audit log, so a shared account would
+      # make every entry read "tutors" and the log would answer "somebody" when
+      # asked who force-verified an account. Hashes come from env vars (set in
+      # ~/.puente/caddy.env) rather than inline, so revoking one person is an
+      # env change and a Caddy reload, not a config edit.
+      tutors:
+        michael: TUTOR_MICHAEL_BCRYPT
+        tutor1: TUTOR1_BCRYPT
+        tutor2: TUTOR2_BCRYPT
     upstream_host: 192.168.20.120
     proxy_hosts:
     - host: audio.locopuente.org

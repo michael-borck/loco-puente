@@ -25,6 +25,7 @@ from .searxng import SearXNGService
 from .speaches import SpeachesService
 from .stirling_pdf import StirlingPDFService
 from .swarmui import SwarmUIService
+from .tutor_admin import TutorAdminService
 from .vane import VaneService
 from .voicebox import VoiceboxService
 
@@ -51,6 +52,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "swarmui": SwarmUIService,
     "fooocus": FooocusService,
     "voicebox": VoiceboxService,
+    "tutor_admin": TutorAdminService,
     "portal": PortalService,
     "caddy": CaddyService,
 }
