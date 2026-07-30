@@ -124,21 +124,42 @@ systemctl is-enabled puente-boot ollama-preload tutor-admin-runner
 SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/bin:/bin
 
-# Mon 07:30-10:30, Wed & Thu 15:30-18:30  (Australia/Perth)
-30 7  * * 1  /home/michael/loco-puente/deploy/chat-window.sh open
-30 10 * * 1  /home/michael/loco-puente/deploy/chat-window.sh close
-30 15 * * 3  /home/michael/loco-puente/deploy/chat-window.sh open
-30 18 * * 3  /home/michael/loco-puente/deploy/chat-window.sh close
-30 15 * * 4  /home/michael/loco-puente/deploy/chat-window.sh open
-30 18 * * 4  /home/michael/loco-puente/deploy/chat-window.sh close
+# Labs: Mon 08:00-10:00, Wed & Thu 16:00-18:00  (Australia/Perth)
+# `open` fires at :58 — it recreates the container, waits for a 200 and warms
+# the model (~25-30s), so opening on the hour would leave the first arrivals
+# with no Claude models in the picker. `close` fires on the hour.
+58 7  * * 1  /home/michael/loco-puente/deploy/chat-window.sh open
+0  10 * * 1  /home/michael/loco-puente/deploy/chat-window.sh close
+58 15 * * 3  /home/michael/loco-puente/deploy/chat-window.sh open
+0  18 * * 3  /home/michael/loco-puente/deploy/chat-window.sh close
+58 15 * * 4  /home/michael/loco-puente/deploy/chat-window.sh open
+0  18 * * 4  /home/michael/loco-puente/deploy/chat-window.sh close
 
 # Safety net: force-close nightly
 0 23 * * *   /home/michael/loco-puente/deploy/chat-window.sh close
 ```
 
+The windows are the lab times themselves. They used to carry a ±30min buffer
+(Mon 07:30-10:30, Wed & Thu 15:30-18:30); that was dropped on 2026-07-30 to cut
+exposure of the paid Anthropic key from 9h/week to ~6h/week. Labs finish ~10min
+before the hour in practice, so the close needs no tail padding.
+
 `PATH` is set explicitly because cron's default is minimal and `docker` would
 otherwise not be found — the same near-empty-environment trap as the secrets
 above.
+
+Cron's **working directory** is a second, separate trap. `puente` resolves
+`puente.yml` from the *current* directory, and cron runs jobs from `$HOME`, so an
+absolute path to the venv binary is not sufficient: it is found, but exits 1 with
+`No puente.yml found`. Any scheduled `puente` invocation must `cd` to the repo
+first (`chat-window.sh` does this — see the comment at its `cd "$REPO"`). This
+silently broke every lab window from the 2026-07-25 reboot to 2026-07-30: the
+error goes to *stdout*, which the script's `up` calls were discarding, and
+`set -e` then aborted before the first log line — so `chat-window.log` simply
+stopped while the cron journal showed each job firing normally. When debugging
+this class of failure, note that running the script by hand cannot reproduce it,
+because the interactive cwd is the repo; schedule a real cron entry wrapping it
+in `bash -x … >>trace.log 2>&1` and read the last traced line.
 
 ## 7. DNS and TLS
 
