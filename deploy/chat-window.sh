@@ -43,6 +43,16 @@ RESEND_KEY_FILE=/home/michael/.puente/resend.key
 REPO=/home/michael/loco-puente
 PUENTE="$REPO/.venv/bin/puente"
 
+# `puente` finds puente.yml by looking in the CURRENT directory, so the absolute
+# binary path above is not enough on its own — cron runs jobs from $HOME, where
+# there is no puente.yml, and `puente up` exits 1 with "No puente.yml found".
+# That killed every scheduled open and close from the 2026-07-25 reboot until
+# 2026-07-30 while looking like nothing had happened: the message goes to stdout,
+# which the `up` calls below send to /dev/null, and `set -e` then aborts the
+# script before it reaches its first log() line. Hence a silent no-op, an empty
+# log, and a lab with no Claude models in the picker.
+cd "$REPO"
+
 log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$1" | tee -a "$LOG"; }
 
 # Load the Resend key for any `puente up`, open or close. Not fatal if absent —
@@ -108,7 +118,10 @@ case "${1:-}" in
     # Recreates the container with the key baked in. RESEND_API_KEY is passed
     # through too: pre_start rewrites the SMTP env_file on every up, and an
     # unset value there would silently disable verification email.
-    "$PUENTE" up librechat >/dev/null
+    # Output goes to $LOG, not /dev/null: puente reports fatal errors (a missing
+    # puente.yml, an unreachable Docker socket) on stdout, and discarding them is
+    # what made the cwd bug above invisible for five days.
+    "$PUENTE" up librechat >>"$LOG" 2>&1
     # Don't report success until it actually serves; boot takes ~20-30s.
     for _ in $(seq 1 30); do
       if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://localhost:3080/ 2>/dev/null)" = "200" ]; then
@@ -146,7 +159,9 @@ case "${1:-}" in
     # value is what removes the Claude models from the picker.
     export ANTHROPIC_API_KEY=""
     load_resend_key
-    "$PUENTE" up librechat >/dev/null
+    # See the `open` branch: logged rather than discarded so a failed close, which
+    # would leave the paid key live, cannot pass silently.
+    "$PUENTE" up librechat >>"$LOG" 2>&1
     # Confirm the key is actually gone rather than assuming the recreate worked.
     if docker inspect "$APP" --format '{{range .Config.Env}}{{println .}}{{end}}' \
          2>/dev/null | grep -q '^ANTHROPIC_API_KEY=..*'; then
