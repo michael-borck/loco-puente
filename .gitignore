@@ -9,6 +9,13 @@ dist_pypi/
 build/
 .pytest_cache/
 
+# Secrets. This repo is public, and a pushed credential is not recoverable by
+# deleting it later — GitHub caches and indexes it. Real keys live in
+# ~/.puente/*.key and are resolved at `puente up` (see docs/host-setup.md).
+.env
+*.env
+!*.env.example
+
 # Private correspondence, not for the public repo
 eval/ts_server/email-draft.md
 # TextSynth Server binaries are non-redistributable (see eval/ts_server/README.md)
