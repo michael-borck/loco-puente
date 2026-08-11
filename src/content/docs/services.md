@@ -93,4 +93,4 @@ Beyond AI services, LocoPuente includes tools for everyday work:
 
 - **[Stirling PDF](https://stirlingtools.com)** -- merge, split, compress, OCR, annotate, and convert PDFs. Everyone needs PDF tools; no data leaves the machine.
 - **[Excalidraw](https://excalidraw.com)** -- collaborative whiteboard and diagramming. Group projects, case study mapping, business process diagrams.
-- **[CiteSight](https://citesight.eduserver.au)** -- citation verification and writing quality checker. Pre-submission check that catches citation errors and AI-generated writing patterns before they cost marks.
+- **[CiteSight](https://citesight.borck.education)** -- citation verification and writing quality checker. Pre-submission check that catches citation errors and AI-generated writing patterns before they cost marks.

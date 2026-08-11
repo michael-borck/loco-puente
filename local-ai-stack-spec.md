@@ -233,7 +233,7 @@ The following productivity and supporting tools run alongside the minimal PoC on
 - **SearXNG** -- shared private web search backend (Docker, port 8888); consumed by Perplexica and by OpenWebUI's optional web-search plugin
 - **Stirling PDF** -- self-hosted PDF toolkit (Docker, port 8089)
 - **Excalidraw** -- self-hosted collaborative whiteboard (Docker, port 3333)
-- **CiteSight** -- academic citation verification and writing quality checker, externally hosted at citesight.eduserver.au (calls Crossref, Semantic Scholar, OpenAlex)
+- **CiteSight** -- academic citation verification and writing quality checker, externally hosted at citesight.borck.education (calls Crossref, Semantic Scholar, OpenAlex)
 - **Keep Asking custom chat** -- NBF research environment at chat.locolabo.org, the only interface with participant consent and turn-based logging
 - **Perplexica** -- cited AI web search using SearXNG as its search backend (Docker, port 3001)
 - **AnythingLLM** -- unit-specific RAG chatbots embedded in Blackboard (Docker, port 3002)
@@ -295,7 +295,7 @@ All available free from https://civitai.com.
 | SearXNG | 8888 | HTTP | -- | Shared private search backend |
 | Stirling PDF | 8089 | HTTP | -- | PDF toolkit |
 | Excalidraw | 3333 | HTTP | -- | Collaborative whiteboard |
-| CiteSight | external | HTTPS | -- | citesight.eduserver.au -- citation checker |
+| CiteSight | external | HTTPS | -- | citesight.borck.education -- citation checker |
 
 All services bind to localhost by default. For LAN access within LocoLabo, bind to the workstation's local IP address. Do not expose to the public internet without authentication.
 
@@ -342,7 +342,7 @@ Client-side desktop apps (installed per user, point at Puente endpoints)
 
 External / separately hosted
 ├── chat.locolabo.org (NBF Keep Asking research tool -- connects to Ollama API)
-└── citesight.eduserver.au (citation checker -- calls Crossref, Semantic Scholar, OpenAlex)
+└── citesight.borck.education (citation checker -- calls Crossref, Semantic Scholar, OpenAlex)
 ```
 
 ### 6.2 Data Persistence
