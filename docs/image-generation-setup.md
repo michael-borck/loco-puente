@@ -140,7 +140,7 @@ Two sub-problems surfaced when ComfyUI tried to import the Swarm nodes:
 
 Image gen is pinned to one GPU via `gpu:` in `puente.yml` (compose
 `device_ids`). On the PoC box ComfyUI + SwarmUI share **GPU 0** (RTX 3090, 24 GB);
-**GPU 1** (RTX 2060 Super, 8 GB) runs Voicebox. Never run a bare `puente up` (it
+**GPU 1** (RTX 4060 Ti, 16 GB) runs Voicebox. Never run a bare `puente up` (it
 starts every enabled service, including any other GPU-0 service that would
 contend). Always scope: `puente up swarmui`.
 

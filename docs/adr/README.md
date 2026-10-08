@@ -39,3 +39,4 @@ reversal being proposed a third time.
 | [0005](0005-lab-window-scopes-the-key.md) | The lab window scopes the Anthropic key, not the app | Supersedes an earlier stop-the-container approach |
 | [0006](0006-tutor-admin-privilege-split.md) | Tutor admin: web app in a container, privileged runner on the host | Accepted |
 | [0007](0007-tutor-admin-scope.md) | Tutor admin withholds delete, ban and role changes | Accepted |
+| [0008](0008-imagegen-self-heal-layers.md) | Image-gen self-heals in layers: reconcile loop, watchdog, weekly restart | Accepted |

@@ -1,0 +1,18 @@
+# Self-heals SwarmUI ↔ ComfyUI image generation. Paired with
+# swarmui-watchdog.timer — this unit does nothing on its own. See
+# swarmui-watchdog.sh for the two failure modes it covers (backend latched
+# `errored`, and stale CUDA inside a long-lived container).
+[Unit]
+Description=Self-heal SwarmUI/ComfyUI (backend errored, stale CUDA)
+After=docker.service
+# Deliberately NOT Requires=docker.service: if Docker is down there is nothing
+# to heal, and the script exits 0 when the containers are not running.
+
+[Service]
+Type=oneshot
+User=@PUENTE_USER@
+Group=@PUENTE_USER@
+ExecStart=@PUENTE_HOME@/deploy/swarmui-watchdog.sh
+# Worst case: CUDA-dead path restarts both containers, waits for comfyui's
+# healthcheck (~4 min budget), then reconciles the backend (~3 min more).
+TimeoutStartSec=600

@@ -122,3 +122,50 @@ sudo systemctl enable puente-boot.service
 **Manual recovery** (if the backend is ever errored right now):
 `puente up swarmui` re-runs the reconcile. Or call the API directly — see
 [[swarmui-no-backends-race]] in memory for the raw `curl` recovery.
+
+---
+
+## Image-gen watchdog + weekly restart — the layers above the boot unit
+
+The boot self-heal above failed once in practice (2026-08-31): its reconcile
+fired `RestartBackends` **once** and polled 60 s, but ComfyUI was still importing
+nodes, so the backend re-latched `errored` — and sat that way for six days.
+Two further layers now cover what a single reconcile can't:
+
+**1. `reconcile_backends()` is now a rounds loop** (`puente/services/swarmui.py`).
+Each round re-fires `RestartBackends` if the backend is still errored, polling
+in between — up to ~3 min of patience instead of one shot. A single attempt
+loses whenever ComfyUI is slower to become ready than SwarmUI's probe.
+
+**2. `deploy/swarmui-watchdog.{sh,service,timer}`** — ticks every 10 min, quiet
+no-op when healthy. Heals two failure modes:
+
+- *Backend latched `errored`* (the race, or anything else that broke it) →
+  `RestartBackends` with retries, deferred to the next tick if not healed.
+- *Stale CUDA inside a long-lived container* — observed 2026-09-07 after ~7
+  days uptime: host GPUs fine, driver libs matched, yet in-container NVML
+  failed and torch saw **0 GPUs**, so every model load failed with a
+  misleading OOM error. Nothing but a container restart fixes this; the
+  watchdog detects it (`torch.cuda.device_count()` via `docker exec`) and
+  restarts `puente-comfyui` + `puente-swarmui` — never while ComfyUI has a
+  job queued, and it re-heals the backend afterwards (the restart re-arms
+  the race).
+
+**3. `deploy/imagegen-weekly-restart.{service,timer}`** — Sunday ~04:30,
+`docker restart puente-comfyui puente-swarmui` followed by a watchdog run.
+The stale-CUDA state develops over long uptimes; this resets the clock
+weekly instead of waiting for it to bite. `Persistent=true` catches a
+missed slot.
+
+Note: a ComfyUI-only restart does *not* re-arm the race (SwarmUI's
+`comfyui_api` backend auto-reconnects) — the latch needs both containers
+starting around the same time, which is exactly the cold-boot and
+weekly-restart shape.
+
+Install (host-side, like the other units):
+
+```
+sudo cp deploy/swarmui-watchdog.{service,timer} deploy/imagegen-weekly-restart.{service,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now swarmui-watchdog.timer imagegen-weekly-restart.timer
+```

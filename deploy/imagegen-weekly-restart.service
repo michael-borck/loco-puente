@@ -1,0 +1,17 @@
+# Preventive weekly restart of the image-gen containers. The stale-CUDA failure
+# mode (see swarmui-watchdog.sh) develops over long container uptimes; this
+# resets the clock once a week in the middle of the night instead of waiting
+# for it to bite. The watchdog run right after the restart re-heals SwarmUI's
+# backend (the restart re-arms the startup race).
+[Unit]
+Description=Weekly preventive restart of puente-comfyui + puente-swarmui
+After=docker.service
+
+[Service]
+Type=oneshot
+User=@PUENTE_USER@
+Group=@PUENTE_USER@
+ExecStart=/usr/bin/docker restart puente-comfyui puente-swarmui
+# Then heal the backend the restart just broke (quiet no-op if it stayed up).
+ExecStart=@PUENTE_HOME@/deploy/swarmui-watchdog.sh
+TimeoutStartSec=600

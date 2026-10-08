@@ -1,0 +1,15 @@
+# Ticks every 10 min; the watchdog script is a quiet no-op when healthy, so the
+# interval only bounds how long a broken image-gen stack stays broken. Starts
+# 15 min after boot: puente-boot.service owns the immediate post-boot window,
+# this catches what it gave up on (and everything after).
+[Unit]
+Description=Periodically self-heal SwarmUI/ComfyUI
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=10min
+# Don't stack ticks if one run is slow.
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

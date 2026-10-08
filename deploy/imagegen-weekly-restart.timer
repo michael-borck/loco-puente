@@ -1,0 +1,12 @@
+# Sunday ~04:30 AWST. Persistent=true so a box that was off at the slot runs
+# this once at next boot instead of skipping the week.
+[Unit]
+Description=Weekly image-gen container restart
+
+[Timer]
+OnCalendar=Sun *-*-* 04:30:00
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

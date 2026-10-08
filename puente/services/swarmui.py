@@ -260,7 +260,7 @@ class SwarmUIService(ServiceBase):
         # Self-heal the external-ComfyUI backend if it latched `errored`.
         self.reconcile_backends()
 
-    def reconcile_backends(self, retries: int = 30) -> None:
+    def reconcile_backends(self, rounds: int = 6, polls_per_round: int = 15) -> None:
         """Recover SwarmUI's external-ComfyUI backend if it latched `errored`.
 
         SwarmUI probes its external ComfyUI backend once at startup. If it wins
@@ -273,6 +273,14 @@ class SwarmUIService(ServiceBase):
         API (idempotent: a no-op when the backend is already `running`), which is
         what fires on every `puente up` and — via the boot systemd unit — once
         per cold boot.
+
+        One RestartBackends call is not always enough: on a cold boot ComfyUI
+        can still be importing nodes when the backend restarts, so its probe
+        fails and SwarmUI re-latches `errored` (observed 2026-08-31 — the boot
+        unit fired, reconciled once, gave up, and the backend sat errored for
+        six days). So this loops: each round re-fires RestartBackends if still
+        errored, polling between rounds, until the backend reports `running`
+        (worst case ~rounds * polls_per_round * 2s ≈ 3 min).
 
         All calls go through localhost inside puente-swarmui (docker exec + curl)
         so no host-side HTTP client or auth token is needed. The API demands a
@@ -297,7 +305,7 @@ class SwarmUIService(ServiceBase):
         # SwarmUI may still be booting its web server right after container
         # start; poll GetNewSession until it answers before we probe backends.
         session = ""
-        for _ in range(retries):
+        for _ in range(30):
             resp = _api("GetNewSession")
             if '"session_id"' in resp:
                 session = resp.split('"session_id":"', 1)[1].split('"', 1)[0]
@@ -310,26 +318,44 @@ class SwarmUIService(ServiceBase):
             )
             return
 
-        backends = _api("ListBackends", session)
-        if '"status":"errored"' not in backends:
-            return  # already running (or none configured) — nothing to do.
-
-        console.print(
-            "  [cyan]SwarmUI backend is errored (startup race); "
-            "calling RestartBackends...[/cyan]"
-        )
-        _api("RestartBackends", session)
-
-        # Poll until the backend leaves the errored state (or we give up).
-        for _ in range(retries):
-            time.sleep(2)
+        for round_no in range(1, rounds + 1):
             backends = _api("ListBackends", session)
-            if '"status":"running"' in backends:
-                console.print("  [green]SwarmUI backend recovered (running).[/green]")
-                return
             if '"status":"errored"' not in backends:
+                # Already running (or none configured) — the common no-op path
+                # on every `puente up` when things are healthy. Silent.
+                if round_no > 1:
+                    console.print(
+                        "  [green]SwarmUI backend recovered (running).[/green]"
+                    )
                 return
+
+            if round_no == 1:
+                console.print(
+                    "  [cyan]SwarmUI backend is errored (startup race); "
+                    "calling RestartBackends...[/cyan]"
+                )
+            else:
+                console.print(
+                    f"  [cyan]SwarmUI backend still errored; RestartBackends "
+                    f"retry {round_no}/{rounds}...[/cyan]"
+                )
+            _api("RestartBackends", session)
+
+            # Poll until the backend leaves the errored state (or the round's
+            # budget is spent and we fire another restart).
+            for _ in range(polls_per_round):
+                time.sleep(2)
+                backends = _api("ListBackends", session)
+                if '"status":"running"' in backends:
+                    console.print(
+                        "  [green]SwarmUI backend recovered (running).[/green]"
+                    )
+                    return
+                if '"status":"errored"' not in backends:
+                    return  # in flux (e.g. starting) — leave it alone.
+
         console.print(
-            "[yellow]SwarmUI backend still not running after RestartBackends. "
-            "Is puente-comfyui healthy? Check `docker ps`.[/yellow]"
+            f"[yellow]SwarmUI backend still not running after {rounds} "
+            "RestartBackends rounds. Is puente-comfyui healthy? Check `docker ps` "
+            "— deploy/swarmui-watchdog.timer will keep retrying.[/yellow]"
         )

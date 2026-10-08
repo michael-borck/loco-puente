@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import time
 import urllib.error
 import urllib.request
@@ -21,19 +22,31 @@ class SpeachesService(ServiceBase):
     description = "Voice: speech-to-text (Whisper) and text-to-speech (Kokoro)"
     default_port = 8000
     install_method = "docker"
-    docker_image = "ghcr.io/speaches-ai/speaches:latest-cuda-12.4.1"
+    # Current upstream GPU tag (v0.9.x line). The old latest-cuda-12.4.1 pin
+    # stopped moving; latest-cuda tracks the newest CUDA base the image ships.
+    docker_image = "ghcr.io/speaches-ai/speaches:latest-cuda"
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
         port = config.port or self.default_port
         env = dict(config.environment)
 
+        # v0.9 config surface (pydantic-settings, env_nested_delimiter="__").
+        # PRELOAD_MODELS takes a JSON list and downloads+registers each model
+        # at startup, so the service is usable the moment /v1/models answers.
+        models = getattr(config, "models", None)
+        if models:
+            env["PRELOAD_MODELS"] = json.dumps(models)
+
         fragment: dict[str, Any] = {
             "speaches": {
                 "image": self.docker_image,
                 "container_name": "puente-speaches",
                 "ports": [f"{port}:8000"],
-                "volumes": [f"{data_dir}/speaches:/root/.cache"],
+                # The v0.9 image runs as `ubuntu`; the old image cached under
+                # /root/.cache. Same host dir, new mount point inside the
+                # container — the HF hub-cache layout below it is unchanged.
+                "volumes": [f"{data_dir}/speaches:/home/ubuntu/.cache/huggingface/hub"],
                 "environment": env,
                 "restart": "unless-stopped",
             }

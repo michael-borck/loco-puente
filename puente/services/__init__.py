@@ -26,6 +26,7 @@ from .speaches import SpeachesService
 from .stirling_pdf import StirlingPDFService
 from .swarmui import SwarmUIService
 from .tutor_admin import TutorAdminService
+from .uptime_kuma import UptimeKumaService
 from .vane import VaneService
 from .voicebox import VoiceboxService
 
@@ -53,6 +54,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "fooocus": FooocusService,
     "voicebox": VoiceboxService,
     "tutor_admin": TutorAdminService,
+    "uptime_kuma": UptimeKumaService,
     "portal": PortalService,
     "caddy": CaddyService,
 }
