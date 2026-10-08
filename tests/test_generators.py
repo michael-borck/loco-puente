@@ -123,16 +123,52 @@ def test_compose_empty_when_nothing_enabled():
     assert generate_compose(_only(comfyui={"enabled": False})) == {}
 
 
-def test_compose_pins_gpu_to_requested_device():
-    """`gpu: N` must reach the container as compose `device_ids: ["N"]`.
+def test_compose_pins_gpu_uuid_to_requested_device():
+    """`gpu: GPU-<uuid>` must reach the container verbatim as `device_ids`.
 
     Getting this wrong silently puts a workload on the wrong card — which on this
-    box is the difference between a 24 GB 3090 and an 8 GB 2060 Super.
+    box is the difference between a 24 GB 3090 and a 16 GB 4060 Ti. The UUID
+    form is the one that survives the cards being reordered.
     """
+    uuid = "GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f"
+    compose = generate_compose(_config(comfyui={"enabled": True, "gpu": uuid}))
+    devices = compose["services"]["comfyui"]["deploy"]["resources"]["reservations"][
+        "devices"
+    ]
+    assert devices[0]["device_ids"] == [uuid]
+    assert devices[0]["driver"] == "nvidia"
+
+
+def test_compose_accepts_legacy_integer_gpu_pin():
+    """Existing configs pin integers and must keep working unchanged."""
     compose = generate_compose(_config(comfyui={"enabled": True, "gpu": 1}))
-    dumped = yaml.safe_dump(compose["services"]["comfyui"])
-    assert "device_ids" in dumped
-    assert "'1'" in dumped or '"1"' in dumped or "- 1" in dumped
+    devices = compose["services"]["comfyui"]["deploy"]["resources"]["reservations"][
+        "devices"
+    ]
+    assert devices[0]["device_ids"] == ["1"]
+
+
+def test_compose_omits_gpu_block_when_unpinned():
+    """No pin means NO deploy block — which means the container sees EVERY card,
+    not no card. Worth pinning in place so the distinction can't be "fixed" by
+    someone assuming the block is a restriction."""
+    compose = generate_compose(_config(comfyui={"enabled": True}))
+    assert "deploy" not in compose["services"]["comfyui"]
+
+
+def test_every_gpu_service_pins_identically():
+    """All GPU services share one reservation helper.
+
+    A service that built its own block could drift — e.g. forgetting the UUID
+    form — and the difference only shows up as a workload on the wrong card.
+    """
+    uuid = "GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f"
+    for name in ("comfyui", "swarmui", "speaches", "fooocus", "voicebox", "musicgen"):
+        compose = generate_compose(_config(**{name: {"enabled": True, "gpu": uuid}}))
+        devices = compose["services"][name.replace("_", "-")]["deploy"][
+            "resources"
+        ]["reservations"]["devices"]
+        assert devices == [{"driver": "nvidia", "device_ids": [uuid], "capabilities": ["gpu"]}], name
 
 
 # --------------------------------------------------------------------------

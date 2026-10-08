@@ -75,13 +75,14 @@ class ChatterboxService(ServiceBase):
             }
         }
 
-        # GPU request. Portable pattern:
-        #   config.gpu is an int  -> pin to that specific device (this box: GPU 1,
-        #                            keeping Chatterbox off the image-gen GPU 0).
-        #   config.gpu is None    -> request ANY one GPU (count: 1), so a single-
+        # GPU request:
+        #   config.gpu set       -> pin to that device (UUID preferred; an index
+        #                            is accepted but silently wrong if the cards
+        #                            are ever re-enumerated).
+        #   config.gpu is None   -> request ANY one GPU (count: 1), so a single-
         #                            GPU box still works instead of erroring on a
         #                            missing device id.
-        # NOTE: pinning to device_ids:['1'] on a 1-GPU box is a HARD ERROR (no
+        # NOTE: pinning to a device that isn't present is a HARD ERROR (no
         # fallback to GPU 0 or CPU), which is why None -> count:1 here.
         device: dict[str, Any] = {"driver": "nvidia", "capabilities": ["gpu"]}
         if config.gpu is not None:

@@ -13,20 +13,21 @@
 # and colliding with the manually-started puente-portal-gpu-stats sidecar. It
 # also violates the "never bare `puente up`" mixed-GPU-ordering rule. We only
 # need swarmui's reconcile to run, so we scope to just that service.
+# PUENTE_CONFIG is injected by deploy/install-units.sh, so this unit no longer
+# depends on WorkingDirectory to find puente.yml. See deploy/install-units.sh,
+# which fills in the placeholders.
 Description=Puente post-boot reconcile (runs `puente up swarmui` once)
 After=docker.service
 Requires=docker.service
 
 [Service]
 Type=oneshot
-User=michael
-Group=michael
-# puente.yml is loaded relative to the CWD (models.CONFIG_FILE = "puente.yml"),
-# so we MUST run from the repo root or puente silently loads defaults.
-WorkingDirectory=/home/michael/loco-puente
-ExecStart=/home/michael/loco-puente/.venv/bin/puente up swarmui
-# Docker + comfyui can be slow to become healthy on this box; give the whole
-# `puente up` (which waits on comfyui's healthcheck and then reconciles) room.
+User=@PUENTE_USER@
+Group=@PUENTE_USER@
+WorkingDirectory=@PUENTE_HOME@
+ExecStart=@PUENTE_BIN@ up swarmui
+# Docker + comfyui can be slow to become healthy; give the whole `puente up`
+# (which waits on comfyui's healthcheck and then reconciles) room.
 TimeoutStartSec=600
 # Don't wedge the boot if reconcile can't complete — log and move on.
 RemainAfterExit=no

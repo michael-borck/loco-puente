@@ -11,13 +11,17 @@ services:
     proxy:
       host: ollama.locollm.org
       auth: bearer
-      token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2, OLLAMA_TOKEN_3]
+      token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2, OLLAMA_TOKEN_3, OLLAMA_TOKEN_4, OLLAMA_TOKEN_5]
       basic_group: null
       port: 11434
       upstream: null
+      cors_origins:
+        - https://michael-borck.github.io
+        - https://lessonloom.borck.education
     instances:
     - name: primary
-      gpu: 0
+      # was gpu: 0 — index is not stable across reordering
+      gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
       port: 11434
       models:
       # Was llama3.1:8b-q4_k_m, a tag that has never existed locally — the
@@ -32,7 +36,9 @@ services:
       - gemma4:latest
       - gemma4:12b
   open_webui:
-    enabled: true
+    # Intentionally parked 2026-09-05: superseded by LibreChat for classroom
+    # chat; container removed in the host cleanup. Re-enable to bring it back.
+    enabled: false
     install_method: docker
     port: 3000
     gpu: null
@@ -43,17 +49,33 @@ services:
     review: false
     proxy: null
   speaches:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 8000
-    gpu: 0
+    # was gpu: 0 — index is not stable across reordering
+    gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment:
-      CHAT_COMPLETION_BASE_URL: http://192.168.20.120:11434
+      # v0.9 expects the /v1 suffix on chat_completion_base_url (voice-chat
+      # audio summarisation hits it; Ollama ignores the API key).
+      CHAT_COMPLETION_BASE_URL: http://192.168.20.120:11434/v1
       CHAT_COMPLETION_API_KEY: Curtin2026ISYS20015002
     review: false
     proxy:
-      host: speaches.locopuente.org
+    # Two doors to the same Speaches backend, same pattern as swarmui/image
+    # and voice/voicebox: the basic-auth hostname fronts the built-in Gradio
+    # playground (browser door, shared "ui" group); the bearer hostname is
+    # for programmatic API access (curl, OpenAI SDKs). Neither alone covers
+    # :8000. Speaches v0.9 also has its own API_KEY option, left unset on
+    # purpose: Open WebUI reaches it over the trusted compose network and
+    # would need the key mirrored into its AUDIO_*_API_KEY envs.
+    - host: speech.locopuente.org
+      auth: basic
+      token_env: null
+      basic_group: null
+      port: 8000
+      upstream: null
+    - host: speaches.locopuente.org
       auth: bearer
       token_env: SPEACHES_TOKEN
       basic_group: null
@@ -66,7 +88,8 @@ services:
     enabled: true
     install_method: docker
     port: 8188
-    gpu: 0
+    # was gpu: 0 — index is not stable across reordering
+    gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
     review: false
@@ -391,7 +414,8 @@ services:
     enabled: false
     install_method: docker
     port: 7860
-    gpu: 0
+    # was gpu: 0 — index is not stable across reordering
+    gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
     review: true
@@ -406,11 +430,15 @@ services:
     enabled: true
     install_method: docker
     port: 7801
-    gpu: 0
+    # was gpu: 0 — index is not stable across reordering
+    gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
     review: true
     proxy:
+    # Two doors to the same SwarmUI backend: the bearer hostname is for
+    # programmatic API access (curl/scripts); the basic-auth hostname is the
+    # browser-friendly web UI. Both must stay gated — neither alone covers :7801.
     - host: swarmui.locopuente.org
       auth: bearer
       token_env: SWARMUI_TOKEN
@@ -427,7 +455,8 @@ services:
     enabled: false
     install_method: docker
     port: 7865
-    gpu: 0
+    # was gpu: 0 — index is not stable across reordering
+    gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
     review: true
@@ -451,11 +480,14 @@ services:
     enabled: true
     install_method: docker
     port: 17493
-    gpu: 1
+    # was gpu: 1 — index is not stable across reordering
+    gpu: GPU-ce79654c-917a-e928-ad48-aca7c8014f47
     managed: true
     environment: {}
     review: false
     proxy:
+    # Same pattern as swarmui/image: bearer hostname for programmatic API
+    # access, basic-auth hostname for the browser UI. Same backend :17493.
     - host: voice.locopuente.org
       auth: basic
       token_env: null
@@ -468,12 +500,21 @@ services:
       basic_group: null
       port: 17493
       upstream: null
-    build_ref: michael-borck/voicebox@feat/idle-model-unload
+    # Pinned to the commit, not the branch: `build-images.yml` builds the
+    # published image from this exact SHA, so a pull and a local source build
+    # produce the same thing. The branch head is 4137a969 (jamiepine/voicebox#889,
+    # "Add opt-in idle model unloading to free VRAM" — open upstream).
+    #
+    # The image is linux/amd64. Set `image: null` to force a source build (needed
+    # on arm64, or to pick up a newer voicebox commit).
+    image: ghcr.io/michael-borck/puente-voicebox:latest
+    build_ref: michael-borck/voicebox@4137a969bf110930ab563a74391517360a804554
   chatterbox:
     enabled: false
     install_method: docker
     port: 8004
-    gpu: 1
+    # was gpu: 1 — index is not stable across reordering
+    gpu: GPU-ce79654c-917a-e928-ad48-aca7c8014f47
     managed: true
     environment: {}
     review: true
@@ -557,3 +598,20 @@ services:
       basic_group: null
       port: 8001
       upstream: null
+    # Uptime Kuma, run outside puente (hand-launched container). Its own login
+    # is the auth layer, so Caddy fronts it bare. Host port is 3002 because
+    # Kuma's default 3001 is taken by AnythingLLM.
+    - host: status.locopuente.org
+      auth: none
+      token_env: null
+      basic_group: null
+      port: 3002
+      upstream: null
+    # Plex on the Unraid host (192.168.20.3), unmanaged by puente. Its own
+    # account auth is the auth layer, so Caddy fronts it bare.
+    - host: plex.borck.au
+      auth: none
+      token_env: null
+      basic_group: null
+      port: 32400
+      upstream: 192.168.20.3

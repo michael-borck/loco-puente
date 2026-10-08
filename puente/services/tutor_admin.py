@@ -23,10 +23,16 @@ class TutorAdminService(ServiceBase):
     description = "Tutor-facing LibreChat account admin"
     default_port = 8091
     install_method = "docker"
-    # Plain python image + a pip install at start; the app is one stdlib file
-    # plus pymongo, so a Dockerfile and a build step would be more machinery
-    # than the thing it builds.
-    docker_image = "python:3.12-slim"
+    # Purpose-built image: stock python:3.12-slim plus a PINNED pymongo. The app
+    # itself is one stdlib file that pre_start copies into the bind mount on every
+    # up, so the image holds no application code and code changes still ship
+    # without a rebuild.
+    #
+    # This replaced a `pip install pymongo` in the container's entrypoint, which
+    # meant the container needed outbound PyPI access to start, ran an arbitrary
+    # version chosen that day, and failed in a way that looked like a hung app.
+    docker_image = "ghcr.io/michael-borck/puente-tutor-admin:latest"
+    puente_published = True
     requires_gpu = False
 
     def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
@@ -68,6 +74,12 @@ class TutorAdminService(ServiceBase):
         return {
             "tutor-admin": {
                 "image": self.docker_image,
+                # Fall back to building the image locally. Cheaper than the other
+                # custom services — no torch, no CUDA, seconds rather than
+                # minutes — so this is a genuinely usable escape hatch when the
+                # published tag is missing, e.g. before the first publish or on
+                # an architecture the amd64 image can't run.
+                "build": {"context": "./dockerfiles/tutor-admin"},
                 "container_name": "puente-tutor-admin",
                 # 127.0.0.1 ON PURPOSE. This app performs no authentication of
                 # its own — Caddy does it (proxy.auth: basic) and passes the
@@ -77,11 +89,9 @@ class TutorAdminService(ServiceBase):
                 "ports": [f"127.0.0.1:{port}:{port}"],
                 "volumes": [f"{data_dir}/tutor-admin:/data"],
                 "environment": env,
-                "command": [
-                    "sh",
-                    "-c",
-                    "pip install --quiet --no-cache-dir pymongo && python /data/app.py",
-                ],
+                # No pip install: the dependency is baked into the image. The app
+                # lives in the bind mount, so this path is rewritten on every up.
+                "command": ["python", "/data/app.py"],
                 # NO docker.sock. Creating accounts needs LibreChat's own npm
                 # scripts, which need `docker exec`, which needs a writable
                 # socket — root on the host, mounted into an internet-facing

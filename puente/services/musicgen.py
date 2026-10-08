@@ -61,19 +61,8 @@ class MusicGenService(ServiceBase):
             }
         }
 
-        if config.gpu is not None:
-            fragment["musicgen"]["deploy"] = {
-                "resources": {
-                    "reservations": {
-                        "devices": [
-                            {
-                                "driver": "nvidia",
-                                "device_ids": [str(config.gpu)],
-                                "capabilities": ["gpu"],
-                            }
-                        ]
-                    }
-                }
-            }
+        deploy = self.gpu_reservation(config.gpu)
+        if deploy:
+            fragment["musicgen"]["deploy"] = deploy
 
         return fragment

@@ -266,6 +266,7 @@ class ComfyUIService(ServiceBase):
     default_port = 8188
     install_method = "docker"
     docker_image = "ghcr.io/michael-borck/puente-comfyui:latest"
+    puente_published = True
     requires_gpu = True
 
     def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
@@ -393,19 +394,8 @@ class ComfyUIService(ServiceBase):
             }
         }
 
-        if config.gpu is not None:
-            fragment["comfyui"]["deploy"] = {
-                "resources": {
-                    "reservations": {
-                        "devices": [
-                            {
-                                "driver": "nvidia",
-                                "device_ids": [str(config.gpu)],
-                                "capabilities": ["gpu"],
-                            }
-                        ]
-                    }
-                }
-            }
+        deploy = self.gpu_reservation(config.gpu)
+        if deploy:
+            fragment["comfyui"]["deploy"] = deploy
 
         return fragment

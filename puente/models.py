@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class OllamaInstance(BaseModel):
     name: str = "primary"
-    gpu: int | None = None
+    # Same convention as ServiceConfig.gpu: UUID preferred, index accepted.
+    gpu: str | int | None = None
     port: int = 11434
     models: list[str] = Field(default_factory=lambda: ["llama3.1:8b-q4_k_m"])
 
@@ -56,6 +58,11 @@ class ProxyConfig(BaseModel):
     # browser error. Also covers unplanned outages, which is a bonus, not the
     # main goal.
     offline_page: str | None = None
+    # CORS origins to allow for browser requests. When set, Caddy will:
+    #   1. Respond to OPTIONS preflight requests without auth, with CORS headers
+    #   2. Add Access-Control-Allow-Origin header to actual API responses
+    # This is required for browser-based apps (e.g., GitHub Pages) to call the API.
+    cors_origins: str | list[str] | None = None
 
     def token_envs(self) -> list[str]:
         """`token_env` as a list, whether it was written as one name or several.
@@ -74,13 +81,33 @@ class ServiceConfig(BaseModel):
     enabled: bool = True
     install_method: Literal["docker", "native", "external"] = "docker"
     port: int | None = None
-    gpu: int | None = None
+    # Which GPU this service is pinned to. Accepts a UUID string (preferred —
+    # stable across reordering and reboots) or an integer index (legacy; valid
+    # but silently wrong if the cards are ever re-enumerated).
+    #
+    # Left None, no GPU reservation is emitted at all — which does NOT mean "no
+    # GPU": with the nvidia runtime as the Docker default, the container sees
+    # every card. Set this explicitly whenever a service must not share.
+    gpu: str | int | None = None
     managed: bool = True  # False = coexist with existing install
     environment: dict[str, str] = Field(default_factory=dict)
     review: bool = False  # True = surface in portal "Under Evaluation" section
     # Reverse-proxy exposure (Caddy service). A single block, or a list when the
     # service is published at several hostnames (e.g. a UI + an API route).
     proxy: ProxyConfig | list[ProxyConfig] | None = None
+
+    @field_validator("gpu", mode="before")
+    @classmethod
+    def _normalise_gpu(cls, v):
+        """Accept a bare YAML index as a string so both forms stay distinguishable.
+
+        pydantic's int-first union would coerce "0" to 0 and then treat a UUID
+        string as an int lookup. Keeping everything textual here lets
+        `gpu.resolve_gpu` do one unambiguous match.
+        """
+        if isinstance(v, int):
+            return str(v)
+        return v
 
 
 class AnythingLLMConfig(ServiceConfig):
@@ -94,15 +121,26 @@ class AnythingLLMConfig(ServiceConfig):
 
 
 class VoiceboxConfig(ServiceConfig):
-    # Voicebox builds from a git context rather than a published image. Upstream
-    # has no idle-model-unload, so an idle instance pins its weights (~5.6GB for
-    # qwen-tts-1.7B) until the process restarts — most of an 8GB card. We build
-    # from a fork carrying that patch (jamiepine/voicebox#889); once it merges,
-    # drop build_ref from puente.yml to track upstream again.
+    # Voicebox publishes no prebuilt image, so it builds from a git context —
+    # upstream has no idle-model-unload, and an idle instance then pins its
+    # weights (~5.6GB for qwen-tts-1.7B) until the process restarts, which is
+    # most of a small card. We build from a fork carrying that patch
+    # (jamiepine/voicebox#889); once it merges, drop build_ref to track upstream.
     #
-    # Format: "owner/repo@ref". Bare "owner/repo" builds that repo's default
-    # branch. Set to None to build upstream jamiepine/voicebox.
+    # Format: "owner/repo@ref". Bare "owner/repo" builds the default branch.
+    # Set to None to build upstream jamiepine/voicebox.
+    #
+    # Pin @ref to a COMMIT SHA, not a branch name. A branch makes the build
+    # non-reproducible: the same config produces a different image whenever the
+    # branch moves, and the CI-published image would drift from what a local
+    # build produces. The SHA of the branch head is what build-images.yml builds
+    # from, so the two agree.
     build_ref: str | None = None
+
+    # Prebuilt image published by .github/workflows/build-images.yml, preferred
+    # over building from source. linux/amd64 only. Set to null to force a
+    # source build (e.g. on arm64, or to pick up a newer voicebox commit).
+    image: str | None = None
 
 
 class ChatterboxConfig(ServiceConfig):
@@ -321,6 +359,9 @@ class StackConfig(BaseModel):
     glances: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=61208, enabled=False, review=True)
     )
+    uptime_kuma: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=3002, enabled=False, review=True)
+    )
     portal: PortalConfig = Field(
         default_factory=lambda: PortalConfig(port=8080, enabled=False)
     )
@@ -329,8 +370,23 @@ class StackConfig(BaseModel):
     )
 
 
+class NetworkConfig(BaseModel):
+    """Docker network for the stack.
+
+    Defaults to the values puente has always pinned, which live in compose.py so
+    the UFW rule (`sudo ufw allow in on puente0`) and `host.docker.internal`
+    resolution keep working unchanged. Override only when the default range is
+    already taken — 172.28.0.0/16 is a common VPN or k8s pool.
+    """
+
+    name: str | None = None  # bridge interface name
+    subnet: str | None = None
+    gateway: str | None = None
+
+
 class PuenteConfig(BaseModel):
     data_dir: Path = Path("~/.puente")
+    network: NetworkConfig = Field(default_factory=NetworkConfig)
     services: StackConfig = Field(default_factory=StackConfig)
 
     def resolved_data_dir(self) -> Path:
@@ -339,19 +395,72 @@ class PuenteConfig(BaseModel):
 
 CONFIG_FILE = "puente.yml"
 
+#: Env var that pins the config to an absolute path, bypassing discovery.
+#: The escape hatch for cron/systemd, where CWD is not the stack.
+CONFIG_ENV_VAR = "PUENTE_CONFIG"
 
-def load_config(path: Path | None = None) -> PuenteConfig:
-    """Load config from puente.yml, or return defaults if not found."""
-    config_path = path or Path(CONFIG_FILE)
-    if config_path.exists():
+
+class ConfigNotFound(Exception):
+    """No puente.yml could be located.
+
+    Raised by :func:`load_config` when `require=True` so a command that would
+    otherwise act on defaults fails loudly instead.
+    """
+
+
+def find_config_path(start: Path | None = None) -> Path | None:
+    """Locate puente.yml: explicit env var, then upward from `start`/cwd.
+
+    Searches ancestors rather than only the current directory so `puente up`
+    behaves the same from the stack root or from a subdirectory. Returns None
+    if nothing is found.
+    """
+    pinned = os.environ.get(CONFIG_ENV_VAR)
+    if pinned:
+        p = Path(pinned).expanduser()
+        return p if p.exists() else None
+
+    here = (start or Path.cwd()).resolve()
+    for directory in (here, *here.parents):
+        candidate = directory / CONFIG_FILE
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def load_config(path: Path | None = None, require: bool = False) -> PuenteConfig:
+    """Load config from puente.yml.
+
+    Falls back to schema defaults only when `require=False` and no file is
+    found. `require=True` raises :class:`ConfigNotFound` instead.
+
+    The fallback is a footgun for anything that *writes*: `puente up`
+    regenerates docker-compose.yml from whatever config it loaded, so silently
+    defaulting rewrites a real stack's compose file with the 3-service default.
+    `find_config_path` walking upward makes that far less likely, but a stack
+    whose config genuinely isn't where we looked still deserves a hard stop.
+    """
+    config_path = path or find_config_path()
+    if config_path is not None and config_path.exists():
         raw = yaml.safe_load(config_path.read_text())
         return PuenteConfig.model_validate(raw or {})
+    if require:
+        where = f" (via {CONFIG_ENV_VAR})" if os.environ.get(CONFIG_ENV_VAR) else ""
+        raise ConfigNotFound(
+            f"No {CONFIG_FILE} found{where}. Searched upward from {Path.cwd()}. "
+            f"Run `puente init` to create one, or set {CONFIG_ENV_VAR}=/path/to/{CONFIG_FILE}."
+        )
     return PuenteConfig()
 
 
 def save_config(config: PuenteConfig, path: Path | None = None) -> Path:
-    """Write config to puente.yml."""
-    config_path = path or Path(CONFIG_FILE)
+    """Write config to puente.yml.
+
+    Writes to the file that was loaded when one can be found, so `puente enable`
+    from a subdirectory edits the stack's config rather than dropping a second
+    one in the subdirectory.
+    """
+    config_path = path or find_config_path() or Path(CONFIG_FILE)
 
     # Convert to dict, using aliases for yaml-friendly keys
     data = config.model_dump(mode="json")

@@ -19,6 +19,7 @@ class FooocusService(ServiceBase):
     # below mirrors what Fooocus expects internally so model downloads
     # persist across restarts.
     docker_image = "ghcr.io/michael-borck/puente-fooocus:latest"
+    puente_published = True
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -41,19 +42,8 @@ class FooocusService(ServiceBase):
             }
         }
 
-        if config.gpu is not None:
-            fragment["fooocus"]["deploy"] = {
-                "resources": {
-                    "reservations": {
-                        "devices": [
-                            {
-                                "driver": "nvidia",
-                                "device_ids": [str(config.gpu)],
-                                "capabilities": ["gpu"],
-                            }
-                        ]
-                    }
-                }
-            }
+        deploy = self.gpu_reservation(config.gpu)
+        if deploy:
+            fragment["fooocus"]["deploy"] = deploy
 
         return fragment

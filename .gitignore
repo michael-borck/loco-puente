@@ -8,6 +8,7 @@ business-case-m3-ultra.docx
 dist_pypi/
 build/
 .pytest_cache/
+.ruff_cache/
 
 # Secrets. This repo is public, and a pushed credential is not recoverable by
 # deleting it later — GitHub caches and indexes it. Real keys live in

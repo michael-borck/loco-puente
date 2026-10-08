@@ -38,6 +38,16 @@ puente up        # start the stack + a launcher portal
 
 Then `puente status` to see what's live. That's it.
 
+On a new host, run `puente doctor` before and after — it checks Docker, the
+NVIDIA container runtime, your GPU pins, ports and secrets, and prints the fix
+for anything missing. Read-only, and exits non-zero if something's wrong, so it
+doubles as a deployment gate:
+
+```bash
+puente doctor            # what's missing, and how to fix it
+puente doctor --json     # for CI or monitoring
+```
+
 ## Expose services (optional)
 
 Enable the built-in **Caddy** service and give any service a `proxy:` block to
@@ -71,7 +81,9 @@ in [docs/caddy-migration.md](docs/caddy-migration.md).
 ## What it does
 
 - **Detects your hardware** and proposes a service set it can actually run,
-  pinning models to the right GPU.
+  pinning models to the right GPU. Pins are GPU **UUIDs**, not indices — indices
+  get reassigned when cards are reordered, which silently loads a model onto the
+  wrong card.
 - **Orchestrates the containers** — you toggle services in `puente.yml`, Puente
   handles Docker, GPUs, models, and (optionally) a reverse proxy.
 - **Config as code.** The whole stack is one committable `puente.yml`. No web UI,
@@ -96,11 +108,16 @@ A pick-and-choose menu, all running locally:
 Plus an optional **Caddy** reverse-proxy service (automatic TLS) that fronts
 whichever services you expose — see [docs/caddy-migration.md](docs/caddy-migration.md).
 
-Most services pull a prebuilt image and start in seconds. **Voicebox is the
-exception:** upstream publishes a Dockerfile but no image, so the first
-`puente up voicebox` compiles it from source (torch + CUDA — budget 10–20
-minutes, with long silent stretches). It's a one-off; later starts reuse the
-built image.
+Most services pull a prebuilt image and start in seconds. Five are built by
+Puente itself and published to GHCR: swarmui, fooocus, comfyui, nodepad, and
+voicebox (which upstream ships only as a Dockerfile, so Puente builds it from a
+pinned commit).
+
+Each of those services will fall back to compiling from source if the pull fails
+— budget 10–20 minutes with long silent stretches for voicebox. Set
+`image: null` in that service's config to force the source build, or run
+`puente doctor` to check your host against them first. These images are
+`linux/amd64`; on an arm64 host, expect to build from source.
 
 ## Commands
 
@@ -112,7 +129,7 @@ puente down      Stop the stack (or a specific service)
 puente enable    Enable a service in puente.yml
 puente disable   Disable a service in puente.yml
 puente status    Status of all enabled services
-puente doctor    Health-check enabled services
+puente doctor    Check the host environment (read-only; --json, --services)
 puente gpu       Detect and display GPUs
 puente connect   Connection details for external tools
 puente portal    Generate the service launcher page

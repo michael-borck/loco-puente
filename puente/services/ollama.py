@@ -97,19 +97,8 @@ class OllamaService(ServiceBase):
             "restart": "unless-stopped",
         }
 
-        if config.gpu is not None:
-            service["deploy"] = {
-                "resources": {
-                    "reservations": {
-                        "devices": [
-                            {
-                                "driver": "nvidia",
-                                "device_ids": [str(config.gpu)],
-                                "capabilities": ["gpu"],
-                            }
-                        ]
-                    }
-                }
-            }
+        deploy = self.gpu_reservation(config.gpu)
+        if deploy:
+            service["deploy"] = deploy
 
         return {"ollama": service}

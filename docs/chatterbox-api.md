@@ -29,14 +29,18 @@ ML deps) — cached layers make rebuilds fast, but a cold build takes a while.
 
 The service requests a GPU based on `config.gpu` in `puente.yml`:
 
-- **`gpu: 1`** (this box) → pins to physical device 1, keeping Chatterbox off
-  the image-gen GPU 0. Inside the container that device shows as "GPU 0" — that
-  is normal Docker renumbering, not a misassignment (verify via UUID if unsure).
+- **`gpu: GPU-<uuid>`** (this box: the 4060 Ti) → pins to that physical card,
+  keeping Chatterbox off the image-gen GPU. An integer index also works while it
+  matches current hardware, but prefer the UUID — see
+  [gpu-swap-3090](gpu-swap-3090.md). Inside the container the card shows as
+  "GPU 0" whatever its host index: that is normal Docker renumbering, not a
+  misassignment (verify via `nvidia-smi -L` if unsure).
 - **`gpu: null`** → requests `count: 1` (any one GPU), so a **single-GPU box
   still starts** instead of hard-erroring on a missing device id.
 
-⚠️ Pinning `device_ids: ['1']` on a 1-GPU box is a HARD ERROR — no fallback to
-GPU 0 or CPU. That is why `gpu: null` maps to `count: 1` here.
+⚠️ Pinning a `device_ids` entry that isn't present on the host is a HARD ERROR —
+no fallback to GPU 0 or CPU. That is why `gpu: null` maps to `count: 1` here,
+and why `puente doctor` validates pins against real hardware.
 
 ---
 
@@ -47,9 +51,9 @@ GPU 0 or CPU. That is why `gpu: null` maps to `count: 1` here.
     enabled: true
     install_method: docker      # or "external" to point at an existing one
     port: 8004
-    gpu: 1                       # or null for any-GPU
+    gpu: GPU-<uuid>              # or an index, or null for any-GPU
     review: true
-    build_context: /home/michael/Chatterbox-TTS-Server
+    build_context: /path/to/Chatterbox-TTS-Server
 ```
 
 `build_context` is the local checkout (its Dockerfile pins the tuned CUDA/torch

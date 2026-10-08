@@ -46,6 +46,15 @@ def iter_proxied_services(config: PuenteConfig):
             yield svc_name, svc_config, proxy
 
 
+def _cors_origins_list(proxy: ProxyConfig) -> list[str]:
+    """`cors_origins` as a list, whether it was written as one origin or several."""
+    if proxy.cors_origins is None:
+        return []
+    if isinstance(proxy.cors_origins, str):
+        return [proxy.cors_origins]
+    return list(proxy.cors_origins)
+
+
 def _site_block(
     proxy: ProxyConfig,
     upstream: str,
@@ -57,6 +66,21 @@ def _site_block(
     # Set by the multi-token bearer branch, which must wrap the upstream in its
     # own `handle` and so emits reverse_proxy itself.
     multi_token_bearer = False
+
+    # CORS handling: when cors_origins is set
+    cors_origins = _cors_origins_list(proxy)
+    if cors_origins:
+        # Browser preflight: no auth, just CORS headers
+        # Note: We don't add Access-Control-Allow-Origin here because Ollama
+        # already adds it. Adding it in Caddy would result in duplicate headers.
+        lines.append("\t@options method OPTIONS")
+        lines.append("\thandle @options {")
+        lines.append('\t\theader Access-Control-Allow-Origin {http.request.header.Origin}')
+        lines.append('\t\theader Access-Control-Allow-Methods "GET, POST, OPTIONS"')
+        lines.append('\t\theader Access-Control-Allow-Headers "authorization, content-type"')
+        lines.append('\t\theader Access-Control-Max-Age 86400')
+        lines.append("\t\trespond 204")
+        lines.append("\t}")
 
     if proxy.auth == "basic":
         group = proxy.basic_group
@@ -97,6 +121,7 @@ def _site_block(
                 f'\t@unauthorized not header Authorization "Bearer {{${envs[0]}}}"'
             )
             lines.append("\trespond @unauthorized 401")
+            # CORS header already set at site level above
         else:
             # Several accepted tokens — how a key is rotated without a flag-day
             # cutover: add the new one, migrate clients, drop the old.
@@ -113,6 +138,7 @@ def _site_block(
             # The upstream then has to live inside `handle @authorized`, so the
             # shared reverse_proxy line below is skipped for this branch.
             lines.append("\thandle @authorized {")
+            # CORS header already set at site level above
             lines.append(f"\t\treverse_proxy {upstream}:{port}")
             lines.append("\t}")
             lines.append("\thandle {")
@@ -127,6 +153,7 @@ def _site_block(
     # only — anything reachable without going through Caddy could forge it.
     forward_user = proxy.auth == "basic" and proxy.forward_user_header
     if not multi_token_bearer:
+        # CORS header already set at site level above
         if forward_user:
             lines.append(f"\treverse_proxy {upstream}:{port} {{")
             lines.append(
@@ -219,7 +246,8 @@ def write_caddyfile(config: PuenteConfig, output_path: Path | None = None) -> Pa
 def proxy_urls(config: PuenteConfig) -> dict[str, str]:
     """Map service name -> public https URL, derived from proxy blocks.
 
-    Replaces the hand-maintained PROXY_URLS dict in portal.py.
+    The single source of truth for a service's public URL. The portal builds its
+    own links from the same blocks (see portal.py).
     """
     out: dict[str, str] = {}
     for svc_name, _cfg, proxy in iter_proxied_services(config):

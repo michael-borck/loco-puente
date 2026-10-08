@@ -28,10 +28,10 @@ Wants=ollama.service
 
 [Service]
 Type=oneshot
-User=michael
-Group=michael
-WorkingDirectory=/home/michael/loco-puente
-ExecStart=/home/michael/loco-puente/deploy/chat-window.sh warm
+User=@PUENTE_USER@
+Group=@PUENTE_USER@
+WorkingDirectory=@PUENTE_HOME@
+ExecStart=@PUENTE_HOME@/deploy/chat-window.sh warm
 # Loading ~8GB of weights from disk is quick warm, longer on a cold page cache
 # after a reboot. Generous ceiling; the script's own curl timeouts (300s per
 # model) bound it in practice.

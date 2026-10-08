@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -12,14 +13,16 @@ from rich.table import Table
 from puente import __version__
 from puente.compose import ensure_volume_dirs, generate_compose, write_compose
 from puente.detect import detect_all
-from puente.gpu import detect_gpus, print_gpu_table, suggest_gpu_assignment
+from puente.doctor import Check, exit_code, report_dict, run_checks
+from puente.gpu import detect_gpus, print_gpu_table, resolve_gpu, suggest_gpu_assignment
 from puente.models import (
-    CONFIG_FILE,
+    ConfigNotFound,
     OllamaConfig,
     OllamaInstance,
     PuenteConfig,
     ServiceConfig,
     StackConfig,
+    find_config_path,
     load_config,
     save_config,
 )
@@ -31,6 +34,44 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 console = Console()
+
+#: Absolute path of the config in use, set by the callback below so every command
+#: -- including ones that never call `_require_config` -- can report where it is.
+#: Populated by find_config_path, which searches upward from the cwd.
+_active_config: Path | None = None
+
+
+@app.callback()
+def main(
+    config: Path | None = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Path to puente.yml (default: search upward from the current directory)",
+    ),
+):
+    """Locate the stack config once, up front, for every command."""
+    global _active_config
+    if config is not None:
+        resolved = config.expanduser()
+        if not resolved.exists():
+            console.print(f"[red]No config at {resolved}[/red]")
+            raise typer.Exit(1)
+        _active_config = resolved
+    else:
+        _active_config = find_config_path()
+
+    # Record the resolved path for the systemd units we generate, so they point
+    # at the same config this invocation used rather than guessing a directory.
+    if _active_config is not None:
+        try:
+            cfg = load_config(_active_config)
+            data = cfg.resolved_data_dir()
+            (data / "config-path").write_text(f"{_active_config.resolve()}\n")
+        except Exception:
+            # Recording the path is a convenience for `puente install-units`;
+            # never let it stop the command the user actually asked for.
+            pass
 
 
 # -- Service display names for pretty printing --------------------------------
@@ -307,6 +348,14 @@ def up(service: str | None = typer.Argument(None, help="Start a specific service
     data_dir = config.resolved_data_dir()
     compose_path = data_dir / "docker-compose.yml"
 
+    # Validate GPU pins before generating anything. A pin that no longer matches
+    # real hardware either fails the compose file or — worse — resolves to a
+    # different card, putting a 12B model on the wrong GPU. Catching it here
+    # gives a named message instead of a mid-deploy failure. Skipped for a
+    # scoped `up <svc>` that isn't GPU-backed, so a CPU-only service can still
+    # be started while the host is being repaired.
+    _warn_invalid_gpu_pins(config, scoped=service)
+
     # Always regenerate so upstream changes to compose.py / service fragments
     # are picked up without requiring users to manually delete the file.
     compose_data = generate_compose(config)
@@ -401,7 +450,9 @@ def _resolve_service(service: str) -> str:
 def enable(
     service: str = typer.Argument(..., help="Service name (e.g. musicgen, swarmui)"),
     port: int | None = typer.Option(None, help="Override the service port"),
-    gpu: int | None = typer.Option(None, help="GPU id to assign (for GPU services)"),
+    gpu: str | None = typer.Option(
+        None, help="GPU to pin to: a UUID (preferred) or an index. See `puente gpu`"
+    ),
     review: bool = typer.Option(
         False,
         "--review",
@@ -416,6 +467,15 @@ def enable(
     if port is not None:
         svc_config.port = port
     if gpu is not None:
+        resolved = resolve_gpu(gpu)
+        if resolved is None:
+            console.print(
+                f"[red]No GPU matches {gpu!r}.[/red] Run [bold]puente gpu[/bold] for the "
+                f"available cards.\n  The pin is still written, so you can fix puente.yml "
+                f"by hand."
+            )
+        else:
+            console.print(f"  GPU: {resolved.name}")
         svc_config.gpu = gpu
     if review:
         svc_config.review = True
@@ -504,31 +564,82 @@ def status():
 
 
 @app.command()
-def doctor():
-    """Health check all enabled services."""
+def doctor(
+    services: bool = typer.Option(
+        False, "--services", help="Also probe each enabled service's health endpoint"
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Machine-readable output for CI or monitoring"
+    ),
+):
+    """Check the host environment, and optionally the running services.
+
+    Read-only: reports problems and prints the command that would fix each one,
+    but never installs or changes anything. Exits non-zero if any check fails,
+    so it works as a deployment gate.
+    """
     config = _require_config()
-    all_ok = True
+    checks = run_checks(config)
 
-    console.print("[bold]Running health checks...[/bold]\n")
+    # Service-level probes: only if enabled, and kept separate from host checks
+    # because they report on runtime state rather than host readiness.
+    if services:
+        checks += _service_checks(config)
 
+    if json_output:
+        typer.echo(json.dumps(report_dict(checks), indent=2))
+        raise typer.Exit(exit_code(checks))
+
+    console.print("[bold]Host environment checks[/bold]\n")
+    for c in checks:
+        style = {
+            "pass": "green",
+            "warn": "yellow",
+            "fail": "red",
+            "skip": "dim",
+        }[c.status]
+        icon = {"pass": "PASS", "warn": "WARN", "fail": "FAIL", "skip": "SKIP"}[c.status]
+        console.print(f"  [{style}]{icon}[/{style}] {c.name}")
+        if c.detail:
+            console.print(f"        [dim]{c.detail}[/dim]")
+        if c.fix and c.status in ("warn", "fail"):
+            console.print(f"        [dim]fix:[/dim] [cyan]{c.fix}[/cyan]")
+        console.print()
+
+    fails = [c for c in checks if c.status == "fail"]
+    warns = [c for c in checks if c.status == "warn"]
+    if fails:
+        console.print(f"[red]{len(fails)} check(s) failed.[/red] See the fixes above.")
+    elif warns:
+        console.print(f"[yellow]All required checks passed, {len(warns)} warning(s).[/yellow]")
+    else:
+        console.print("[green]All checks passed.[/green]")
+
+    raise typer.Exit(exit_code(checks))
+
+
+def _service_checks(config: PuenteConfig) -> list[Check]:
+    """TCP-probe each enabled service and report reachability."""
+    checks = []
     for svc_name, svc_class in ALL_SERVICES.items():
         svc_config = getattr(config.services, svc_name, None)
         if svc_config is None or not svc_config.enabled:
             continue
-
+        if svc_name == "ollama":
+            continue
         svc = svc_class()
         healthy = svc.health_check(svc_config)
         name = DISPLAY_NAMES.get(svc_name, svc_name)
-        if healthy:
-            console.print(f"  [green]PASS[/green] {name}")
-        else:
-            console.print(f"  [red]FAIL[/red] {name}")
-            all_ok = False
-
-    if all_ok:
-        console.print("\n[green]All services healthy.[/green]")
-    else:
-        console.print("\n[yellow]Some services are not responding.[/yellow]")
+        checks.append(
+            Check(
+                f"service-{svc_name}",
+                "pass" if healthy else "warn",
+                "responding" if healthy else "not responding",
+                None if healthy else f"Try `puente up {svc_name}`.",
+            )
+        )
+        del name
+    return checks
 
 
 # -- gpu -----------------------------------------------------------------------
@@ -696,12 +807,61 @@ def _ufw_warning_if_needed() -> None:
     )
 
 
+def _warn_invalid_gpu_pins(config: PuenteConfig, scoped: str | None = None) -> None:
+    """Print any `gpu:` pin that doesn't match real hardware.
+
+    Advisory, not fatal: `puente up` is often the first command run on a box
+    whose driver is mid-repair, and refusing to start the whole stack over one
+    bad pin would be worse than reporting it. The compose file still goes
+    through, so Docker remains the final authority — this just turns an opaque
+    failure into a named one.
+    """
+    from puente.doctor import check_gpu_pins
+
+    try:
+        checks = check_gpu_pins(config)
+    except Exception:  # detection is best-effort; never block startup on it
+        return
+
+    for c in checks:
+        if c.status == "fail":
+            console.print(f"[red]GPU pin problem:[/red] {c.detail}")
+            if c.fix:
+                console.print(f"  [dim]{c.fix}[/dim]")
+        elif c.status == "warn":
+            console.print(f"[yellow]{c.name}:[/yellow] {c.detail}")
+
+
 def _require_config() -> PuenteConfig:
-    """Load config or exit with a helpful message."""
-    if not Path(CONFIG_FILE).exists():
-        console.print(f"[red]No {CONFIG_FILE} found.[/red] Run [bold]puente init[/bold] first.")
-        raise typer.Exit(1)
-    return load_config()
+    """Load the stack config or exit with a helpful message.
+
+    Never falls back to schema defaults here. Every caller is about to generate
+    or overwrite deployment artifacts from whatever config it returns, so a
+    missing file has to stop the command rather than quietly write the
+    3-service default over a real stack.
+
+    `--config` wins; otherwise discovery already ran in the CLI callback, and
+    failing here means it found nothing. An explicit path that exists always
+    loads, even if discovery would have found a different file.
+    """
+    explicit = _resolved_config_path()
+    if explicit is not None:
+        return load_config(explicit)
+    try:
+        return load_config(require=True)
+    except ConfigNotFound as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(1) from exc
+
+
+def _resolved_config_path() -> Path | None:
+    """The config the CLI callback settled on, or None if nothing was found.
+
+    Set once in the `main` callback: from `--config` if given, otherwise by
+    searching upward from the cwd. None means discovery failed, which is the
+    case `load_config(require=True)` turns into a helpful error.
+    """
+    return _active_config
 
 
 def _print_config_summary(config: PuenteConfig) -> None:

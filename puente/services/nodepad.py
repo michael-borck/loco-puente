@@ -15,6 +15,7 @@ class NodepadService(ServiceBase):
     default_port = 3004
     install_method = "docker"
     docker_image = "ghcr.io/michael-borck/puente-nodepad:latest"
+    puente_published = True
     requires_gpu = False
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:

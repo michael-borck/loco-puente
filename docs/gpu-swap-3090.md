@@ -8,6 +8,10 @@ provided it sits in the lower-numbered PCIe slot. Verified, not assumed (see bel
 
 The plan and its rationale are kept for the next box.
 
+> **Superseded since:** GPU 1 is no longer the 2060 Super — it is now an RTX 4060 Ti
+> (16 GB). References to a 2060 Super below describe the state at the time of this
+> swap and are kept as the record; for current hardware see `host-setup.md`.
+
 ## Why
 
 GPU 0 currently carries ComfyUI, SwarmUI **and** Ollama on 8 GB. Every constraint we hit
@@ -32,19 +36,26 @@ The Ryzen 5 2600 (2018) would also throttle a 4090 on anything not purely GPU-bo
 
 ## The card ordering trap
 
-`nvidia-smi` numbers by **PCI bus order** (`06:00.0` → 0, `07:00.0` → 1). Docker's
-`device_ids` uses that same ordering, so `gpu: 0` in `puente.yml` follows the slot.
+`nvidia-smi` numbers by **PCI bus order** (`06:00.0` → 0, `07:00.0` → 1). That index
+is only a *slot position* — it changes if you move a card, add one, or if the host
+re-enumerates. Docker's `device_ids` accepts it, which is how an integer `gpu: 0`
+ends up pointing at a different physical card after a hardware change.
 
 But **CUDA defaults to `CUDA_DEVICE_ORDER=FASTEST_FIRST`**, so code *inside* a container
 may renumber the 3090 as its device 0 even if it sits in the second slot. With two
 identical 2060s this never mattered; with mixed cards it does.
 
-Two rules keep this sane:
+Three rules keep this sane:
 
 1. Put the **3090 in the lower-numbered slot** (currently `06:00.0`). Then PCI order and
    fastest-first agree, and nothing is ambiguous.
 2. Where it matters, pin explicitly rather than relying on either default:
    `CUDA_DEVICE_ORDER=PCI_BUS_ID`.
+3. **In `puente.yml`, pin by UUID, not index.** `gpu: GPU-<uuid>` names the card
+   itself, so swapping slots or re-seating a cable changes nothing. `puente gpu`
+   prints the UUIDs; `puente doctor` flags any integer pin left behind. Integer
+   pins still work when they match current hardware, which is why this rule exists
+   only in the docs and not as a hard error.
 
 ## After the swap — verify before trusting
 
@@ -75,17 +86,21 @@ to CPU on 8 GB.
 
 ## puente.yml — no change needed (3090 in slot 0)
 
-Current assignments already put everything heavy on GPU 0:
+Current assignments already put everything heavy on the 3090. Shown by UUID, which is
+how `puente.yml` now pins them — the card stays identified even if it moves slot:
 
 ```yaml
-comfyui:   { gpu: 0 }   # -> 3090 (24 GB)
-swarmui:   { gpu: 0 }   # -> 3090
-voicebox:  { gpu: 1 }   # -> 2060 Super (8 GB), lazy, ~4-5 GB when generating
+comfyui:   { gpu: GPU-15c8ed7d-… }   # -> 3090 (24 GB)
+swarmui:   { gpu: GPU-15c8ed7d-… }   # -> 3090
+voicebox:  { gpu: GPU-ce79654c-… }   # -> 4060 Ti (16 GB), lazy, ~4-5 GB when generating
 ```
 
+(This box previously showed a 2060 Super as index 1; it is now a 4060 Ti.)
+
 Ollama is a **host systemd service, not puente-managed**. It is pinned in
-`/etc/systemd/system/ollama.service` via `CUDA_VISIBLE_DEVICES=0`, which also follows
-PCI order. No change needed, but note puente cannot manage it.
+`/etc/systemd/system/ollama.service` via `CUDA_VISIBLE_DEVICES`, set to the card's
+**UUID** rather than an index — see the post-mortem in that drop-in for why the index
+form put a model on the wrong card. No change needed, but note puente cannot manage it.
 
 ## Optional: exploit the 24 GB
 

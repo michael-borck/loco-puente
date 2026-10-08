@@ -1,9 +1,9 @@
 name: Build container images
 
-# Builds the custom puente service images (swarmui, fooocus) and pushes
-# them to GHCR. The corresponding service classes specify both `image:`
-# (for fast pulls in normal use) and `build:` (as a fallback when the
-# image hasn't been published yet — e.g. forks, dev, first push).
+# Builds the custom puente service images and pushes them to GHCR. The
+# corresponding service classes specify both `image:` (for fast pulls in normal
+# use) and `build:` (a fallback when the image isn't available — first push, or
+# an arm64 host, since these are amd64-only).
 #
 # musicgen is intentionally not built here — we use the upstream
 # ashleykza/tts-webui image (a multi-model TTS bundle that already
@@ -11,8 +11,8 @@ name: Build container images
 # inherit). See puente/services/musicgen.py for context.
 #
 # Triggers:
-#   - push to main when a Dockerfile or this workflow changes
-#   - manual dispatch (force a rebuild)
+#   - push to main when a Dockerfile, the workflow, or a pinned build ref changes
+#   - manual dispatch (force a rebuild, or pass ref=<sha> to build a specific commit)
 #   - release publication (build with semver tags)
 
 on:
@@ -21,7 +21,13 @@ on:
     paths:
       - 'puente/dockerfiles/**'
       - '.github/workflows/build-images.yml'
+      - 'puente.yml'
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit SHA to build voicebox from (blank = the SHA pinned in puente.yml)'
+        required: false
+        type: string
   release:
     types: [published]
 
@@ -29,13 +35,58 @@ permissions:
   contents: read
   packages: write
 
+# One build at a time. Voicebox takes ~20 min and a source build of the others is
+# not cheap either; overlapping runs waste the runner minutes and race on the
+# same :latest tag.
+concurrency:
+  group: build-images
+  cancel-in-progress: false
+
 jobs:
-  build:
+  # Read the voicebox build ref out of puente.yml so the image and the config
+  # can't disagree. A plain grep is enough — the line is `build_ref: owner/repo@<sha>`
+  # and the service class pins it to a commit, not a branch.
+  resolve:
     runs-on: ubuntu-latest
+    outputs:
+      voicebox_ref: ${{ steps.ref.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ref
+        name: Resolve voicebox build ref
+        env:
+          OVERRIDE: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          if [ -n "${OVERRIDE:-}" ]; then
+            echo "Using workflow_dispatch override: ${OVERRIDE}"
+            sha="${OVERRIDE}"
+          else
+            line=$(grep -E '^ *build_ref: .*@' puente.yml | tail -1)
+            sha="${line##*@}"
+          fi
+          # Reject a branch name: a moving ref makes the published image differ
+          # from what `puente up` builds locally, which is exactly the drift
+          # this pipeline exists to remove.
+          case "${sha}" in
+            [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
+              ;;
+            *)
+              echo "::error::'${sha}' is not a full commit SHA. Pin build_ref in puente.yml."
+              exit 1
+              ;;
+          esac
+          echo "Building voicebox from ${sha}"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        service: [swarmui, fooocus, comfyui, nodepad]
+        service: [swarmui, fooocus, comfyui, nodepad, voicebox, tutor-admin]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,6 +100,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Voicebox is built from a git context (upstream publishes no image), so
+      # the pinned SHA has to reach the builder as a remote context. The other
+      # services build from directories in this repo.
+      - name: Resolve voicebox build context
+        if: matrix.service == 'voicebox'
+        env:
+          SHA: ${{ needs.resolve.outputs.voicebox_ref }}
+          REPO: michael-borck/voicebox
+        run: echo "CONTEXT=https://github.com/${REPO}.git#${SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Compute image metadata
         id: meta
@@ -64,9 +125,40 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: puente/dockerfiles/${{ matrix.service }}
+          context: ${{ matrix.service == 'voicebox' && steps.voicebox.outputs.CONTEXT || format('puente/dockerfiles/{0}', matrix.service) }}
+          # tutor-admin's image is arch-independent (stdlib python + pymongo),
+          # so publish both and let the host pick. It builds in seconds, so the
+          # extra manifest costs nothing.
+          platforms: ${{ matrix.service == 'tutor-admin' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          # No multi-arch: these images are GPU services with CUDA/torch bases,
+          # and every current target is x86. The M3 Ultra in the Phase 2 roadmap
+          # is arm64 and cannot run them — `puente doctor`'s image-arch check
+          # says so, and the `build:` fallback in each service is the escape
+          # hatch. Do not add `platforms:` without also adding arm64 base images
+          # and re-testing; CUDA does not exist on Apple silicon, so a naive
+          # multi-arch build would produce an arm64 image that cannot do GPU work.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,scope=${{ matrix.service }},mode=max
+
+      # Prove the artifact actually runs the thing it claims to. A build that
+      # succeeds but produces an image with the wrong torch variant or a broken
+      # entrypoint is worse than a build failure, because it surfaces later as
+      # a mysterious service problem.
+      - name: Smoke test voicebox
+        if: matrix.service == 'voicebox'
+        run: |
+          set -euo pipefail
+          img="ghcr.io/${{ github.repository_owner }}/puente-voicebox:latest"
+          echo "Pulling ${img} back from the registry..."
+          docker pull "${img}"
+          echo "Checking the image carries a working torch build:"
+          docker run --rm --entrypoint python "${img}" -c \
+            "import torch; print('torch', torch.__version__); print('cuda build:', torch.version.cuda)"
+          echo "Checking the idle-unload module the fork adds is present:"
+          docker run --rm --entrypoint python "${img}" -c \
+            "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('backend.services.idle_unload') else 1)" \
+            || { echo "::error::idle_unload module missing — the pinned commit may predate PR #889"; exit 1; }

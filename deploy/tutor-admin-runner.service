@@ -20,9 +20,9 @@ Requires=docker.service
 
 [Service]
 Type=simple
-User=michael
-Group=michael
-ExecStart=/home/michael/loco-puente/deploy/tutor-admin-runner.sh
+User=@PUENTE_USER@
+Group=@PUENTE_USER@
+ExecStart=@PUENTE_HOME@/deploy/tutor-admin-runner.sh
 Restart=always
 RestartSec=5
 # The spool holds plaintext passwords in flight; keep it out of world view.

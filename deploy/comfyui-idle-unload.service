@@ -9,9 +9,9 @@ After=docker.service
 
 [Service]
 Type=oneshot
-User=michael
-Group=michael
-ExecStart=/home/michael/loco-puente/deploy/comfyui-idle-unload.sh
+User=@PUENTE_USER@
+Group=@PUENTE_USER@
+ExecStart=@PUENTE_HOME@/deploy/comfyui-idle-unload.sh
 # The script's own curl timeouts cap the real runtime well under this; this is
 # only a backstop against a hung connection.
 TimeoutStartSec=60

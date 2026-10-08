@@ -121,6 +121,7 @@ class SwarmUIService(ServiceBase):
     # talk to the existing puente-comfyui container instead of spinning
     # up its own bundled ComfyUI via the UI settings on first run.
     docker_image = "ghcr.io/michael-borck/puente-swarmui:latest"
+    puente_published = True
     requires_gpu = True
 
     def compose_fragment(self, config: ServiceConfig, data_dir: str) -> dict[str, Any] | None:
@@ -163,20 +164,9 @@ class SwarmUIService(ServiceBase):
             }
         }
 
-        if config.gpu is not None:
-            fragment["swarmui"]["deploy"] = {
-                "resources": {
-                    "reservations": {
-                        "devices": [
-                            {
-                                "driver": "nvidia",
-                                "device_ids": [str(config.gpu)],
-                                "capabilities": ["gpu"],
-                            }
-                        ]
-                    }
-                }
-            }
+        deploy = self.gpu_reservation(config.gpu)
+        if deploy:
+            fragment["swarmui"]["deploy"] = deploy
 
         return fragment
 

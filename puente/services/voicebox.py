@@ -77,7 +77,6 @@ class VoiceboxService(ServiceBase):
         env.update(config.environment)
 
         service: dict[str, Any] = {
-            "build": {"context": self._build_context(config)},
             "container_name": "puente-voicebox",
             "ports": [f"{port}:17493"],
             "volumes": ["voicebox-data:/app/data"],
@@ -85,33 +84,55 @@ class VoiceboxService(ServiceBase):
             "restart": "unless-stopped",
         }
 
-        if config.gpu is not None:
-            service["deploy"] = {
-                "resources": {
-                    "reservations": {
-                        "devices": [
-                            {
-                                "driver": "nvidia",
-                                "device_ids": [str(config.gpu)],
-                                "capabilities": ["gpu"],
-                            }
-                        ]
-                    }
-                }
-            }
+        # Prefer the published image; fall back to building from the git context.
+        #
+        # BOTH keys are emitted deliberately, which is what makes compose try the
+        # pull first and only build if it fails. The hazard is that a failed pull
+        # drops the operator into a silent 10-20 minute compile — so
+        # `pre_start` says so explicitly, and the other four custom-image services
+        # use the same pattern.
+        image = getattr(config, "image", None)
+        if image:
+            service["image"] = image
+        service["build"] = {"context": self._build_context(config)}
+
+        deploy = self.gpu_reservation(config.gpu)
+        if deploy:
+            service["deploy"] = deploy
 
         return {"voicebox": service}
 
     def pre_start(self, config: ServiceConfig, data_dir: str) -> None:
-        """Warn that the first `up` compiles voicebox from source.
+        """Warn when `up` is about to compile voicebox from source.
 
-        Unlike most puente services there is no image to pull — upstream ships a
-        Dockerfile but publishes no image, so Compose builds it here. That build
-        pulls a full torch/CUDA stack and takes a long time, with no output for
-        minutes at a stretch. Say so up front, or a first-time user reasonably
-        concludes it has hung. Only fires when the image is genuinely absent, so
-        routine restarts stay quiet.
+        Normally this doesn't happen: build-images.yml publishes a prebuilt image
+        and compose pulls it. It falls back to building only when that pull
+        fails — no such tag yet, no arm64 build, or the registry is
+        unreachable. That build pulls a full torch/CUDA stack and takes a long
+        time with no output for minutes at a stretch, so a first-time user
+        reasonably concludes it has hung. Only fires when the image is genuinely
+        absent, so routine restarts stay quiet.
         """
+        if getattr(config, "image", None):
+            try:
+                probe = subprocess.run(
+                    ["docker", "image", "inspect", config.image],
+                    capture_output=True,
+                    timeout=10,
+                )
+                if probe.returncode == 0:
+                    return  # already have it — this will be a fast pull at worst
+            except (OSError, subprocess.SubprocessError):
+                return  # can't tell; compose will surface any real error
+
+            console.print(
+                f"  [yellow]Note:[/yellow] {config.image} is not present locally; "
+                f"composepull will fetch it.\n"
+                f"  If that pull fails, docker will [bold]compile from source[/bold] "
+                f"(10-20 min, long silent stretches)."
+            )
+            return
+
         try:
             probe = subprocess.run(
                 ["docker", "image", "inspect", "puente-voicebox"],

@@ -40,3 +40,4 @@ reversal being proposed a third time.
 | [0006](0006-tutor-admin-privilege-split.md) | Tutor admin: web app in a container, privileged runner on the host | Accepted |
 | [0007](0007-tutor-admin-scope.md) | Tutor admin withholds delete, ban and role changes | Accepted |
 | [0008](0008-imagegen-self-heal-layers.md) | Image-gen self-heals in layers: reconcile loop, watchdog, weekly restart | Accepted |
+| [0009](0009-custom-images-published-to-ghcr.md) | Custom images published to GHCR from a pinned commit, amd64-only | Accepted |

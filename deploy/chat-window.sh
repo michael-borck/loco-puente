@@ -26,31 +26,41 @@
 # rather than quietly opening a lab with no Claude models in the picker.
 #
 # Usage: chat-window.sh open|close|status|warm
-# Cron:  0 14 * * 1 /home/michael/loco-puente/deploy/chat-window.sh open
+# Cron:  0 14 * * 1 /path/to/loco-puente/deploy/chat-window.sh open
 set -euo pipefail
 
 APP=puente-librechat
 DB=puente-librechat-mongo
-LOG=/home/michael/.puente/chat-window.log
-KEY_FILE=/home/michael/.puente/anthropic.key
+
+# Host-specific paths, all overridable so this script works on another machine.
+# `$HOME` rather than a hardcoded /home/<user>: cron runs with a real HOME, so
+# %h-equivalent expansion is reliable here (unlike in the systemd units, where
+# the checkout is not necessarily inside $HOME).
+PUENTE_HOME="${PUENTE_HOME:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+PUENTE_DATA_DIR="${PUENTE_DATA_DIR:-${HOME}/.puente}"
+LOG="${PUENTE_DATA_DIR}/chat-window.log"
+KEY_FILE="${PUENTE_DATA_DIR}/anthropic.key"
 # Same cron-safety argument as the Anthropic key. puente's pre_start rewrites
 # LibreChat's SMTP env_file on EVERY `up`, resolving this from the ambient
 # environment — so if it is unset here, a scheduled open/close would silently
 # blank the Resend password and kill verification email and password reset.
-RESEND_KEY_FILE=/home/michael/.puente/resend.key
+RESEND_KEY_FILE="${PUENTE_DATA_DIR}/resend.key"
 # Absolute paths: cron runs with a minimal PATH and an arbitrary cwd, and
 # `puente` lives in the project venv rather than on the system PATH.
-REPO=/home/michael/loco-puente
-PUENTE="$REPO/.venv/bin/puente"
+REPO="${PUENTE_HOME}"
+PUENTE="${PUENTE_BIN:-$REPO/.venv/bin/puente}"
 
-# `puente` finds puente.yml by looking in the CURRENT directory, so the absolute
-# binary path above is not enough on its own — cron runs jobs from $HOME, where
-# there is no puente.yml, and `puente up` exits 1 with "No puente.yml found".
-# That killed every scheduled open and close from the 2026-07-25 reboot until
-# 2026-07-30 while looking like nothing had happened: the message goes to stdout,
-# which the `up` calls below send to /dev/null, and `set -e` then aborts the
-# script before it reaches its first log() line. Hence a silent no-op, an empty
-# log, and a lab with no Claude models in the picker.
+# PUENTE_CONFIG is exported rather than relying on the `cd` below. Discovery now
+# searches upward from the cwd, so the cd is no longer strictly required — but
+# the export is the explicit, self-documenting form, and it keeps working if
+# discovery ever changes again.
+#
+# This was a real production failure: `puente up` from cron (cwd = $HOME, no
+# puente.yml) exited 1, and because the message went to stdout while the `up`
+# calls below sent stdout to /dev/null, `set -e` aborted the script before its
+# first log() line. Silent no-op, empty log, lab with no Claude models in the
+# picker — from the 2026-07-25 reboot until 2026-07-30.
+export PUENTE_CONFIG="${PUENTE_CONFIG:-$REPO/puente.yml}"
 cd "$REPO"
 
 log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$1" | tee -a "$LOG"; }

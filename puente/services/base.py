@@ -28,6 +28,38 @@ class ServiceBase(ABC):
     install_method: str  # "docker" | "native" | "external"
     docker_image: str | None = None
     requires_gpu: bool = False
+    #: True when `docker_image` is a reference in puente's own GHCR namespace,
+    #: published by .github/workflows/build-images.yml. Those images are
+    #: linux/amd64 only (see the workflow's `platforms:`), which every current
+    #: target is — but an arm64 host (e.g. an M3 Ultra) cannot run them, and
+    #: `puente doctor` says so rather than letting the pull fail obscurely.
+    puente_published: bool = False
+
+    def gpu_reservation(self, gpu: str | int | None) -> dict[str, Any] | None:
+        """Compose `deploy` block pinning this service to one GPU, or None.
+
+        Centralised so every GPU service pins identically. Accepts a UUID or a
+        legacy integer index; see ServiceConfig.gpu.
+
+        Returns None when nothing is pinned, which emits NO deploy block at all.
+        Note that is not "no GPU" — with the nvidia runtime as Docker's default,
+        an unpinned container sees every card.
+        """
+        if gpu is None:
+            return None
+        return {
+            "resources": {
+                "reservations": {
+                    "devices": [
+                        {
+                            "driver": "nvidia",
+                            "device_ids": [str(gpu)],
+                            "capabilities": ["gpu"],
+                        }
+                    ]
+                }
+            }
+        }
 
     def is_port_active(self, port: int) -> bool:
         try:

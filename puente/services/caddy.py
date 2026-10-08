@@ -118,7 +118,10 @@ class CaddyService(ServiceBase):
         """
         from puente.models import load_config
 
-        full = load_config()
+        # `require=True`: the Caddyfile is *the* description of the public
+        # surface. Regenerating it from schema defaults would silently retire
+        # every route that isn't one of the three default-on services.
+        full = load_config(require=True)
         caddy_dir = Path(data_dir) / "caddy"
         caddy_dir.mkdir(parents=True, exist_ok=True)
         # Bind source for the offline pages. Must exist before the container

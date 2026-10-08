@@ -54,20 +54,28 @@ SERVICE_META = {
     "librechat": ("💬", "LibreChat", "Multi-provider chat UI (evaluating)"),
     "chatterbox": ("🔊", "Chatterbox", "Voice-cloning TTS server (evaluating)"),
     "glances": ("📊", "System Monitor", "CPU, RAM, disk, GPU, containers"),
+    "uptime_kuma": ("🟢", "Uptime Kuma", "Service uptime monitoring + alerts"),
 }
 
-# Proxy URLs — services accessible via reverse proxy (overrides host:port)
-PROXY_URLS = {
-    "open_webui": "https://chat.locopuente.org",
-    "vane": "https://search.locopuente.org",
-    "open_notebook": "https://notes.locopuente.org",
-    "stirling_pdf": "https://pdf.locopuente.org",
-    "excalidraw": "https://whiteboard.locopuente.org",
-    "citesight": "https://cite.locopuente.org",
-    "swarmui": "https://swarmui.locopuente.org",
-    "musicgen": "https://musicgen.locopuente.org",
-    "fooocus": "https://fooocus.locopuente.org",
-    "voicebox": "https://voice.locopuente.org",
+# Hostnames this deployment published historically. NOT a fallback — nothing
+# reads this to build a link. It exists for one reason: `puente doctor` uses it
+# to spot a stale `proxy:` block still pointing at a host this machine no longer
+# serves, which would send a student clicking the launcher page to another box.
+#
+# A service's `proxy:` block in puente.yml is the single source of truth. A
+# service with no block links to host:port on the machine the portal was
+# generated for.
+FOREIGN_PROXY_HOSTS = {
+    "chat.locopuente.org",
+    "search.locopuente.org",
+    "notes.locopuente.org",
+    "pdf.locopuente.org",
+    "whiteboard.locopuente.org",
+    "cite.locopuente.org",
+    "swarmui.locopuente.org",
+    "musicgen.locopuente.org",
+    "fooocus.locopuente.org",
+    "voice.locopuente.org",
 }
 
 # View definitions
@@ -129,9 +137,6 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
 
     icon, display_name, desc = SERVICE_META.get(svc_name, ("🔧", svc_name, ""))
 
-    # Prefer a proxy URL derived from the service's own `proxy:` block (single
-    # source of truth); fall back to the static PROXY_URLS map for services not
-    # yet migrated, then to host:port.
     # A service may front several hostnames (swarmui, voicebox, portal each do),
     # in which case `proxy` is a list — the first entry is the canonical one.
     proxy = getattr(svc_config, "proxy", None)
@@ -139,9 +144,9 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
         proxy = proxy[0] if proxy else None
     if proxy is not None:
         url = f"https://{proxy.host}"
-    elif svc_name in PROXY_URLS:
-        url = PROXY_URLS[svc_name]
     else:
+        # No declared proxy block → link to this machine on its own port. Never
+        # fall back to a hardcoded hostname: see FOREIGN_PROXY_HOSTS above.
         port = svc_config.port or svc_class.default_port
         url = f"http://{host}:{port}"
 

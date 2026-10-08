@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from ipaddress import ip_address, ip_network
 from pathlib import Path
 
 import yaml
@@ -21,8 +22,49 @@ PUENTE_NETWORK_BRIDGE_NAME = "puente0"
 PUENTE_NETWORK_SUBNET = "172.28.0.0/24"
 PUENTE_NETWORK_GATEWAY = "172.28.0.1"
 
+#: Overridable network for a host that already uses the default range. Set
+#: `network: {subnet:, gateway:, name:}` in puente.yml. 172.28.0.0/16 is claimed
+#: by plenty of VPNs and k8s setups; without this, the only fix was editing
+#: source.
+DEFAULT_NETWORK = {
+    "subnet": PUENTE_NETWORK_SUBNET,
+    "gateway": PUENTE_NETWORK_GATEWAY,
+    "name": PUENTE_NETWORK_BRIDGE_NAME,
+}
 
-def _rewrite_host_gateway(services: dict) -> None:
+
+def resolve_network(config: PuenteConfig) -> dict[str, str]:
+    """Network settings for this stack, from config or the pinned defaults.
+
+    A partial override is completed by deriving the gateway from the subnet's
+    first host address, so setting just `subnet:` is enough.
+    """
+    override = getattr(config, "network", None)
+    given = {
+        k: v
+        for k, v in (override.model_dump() if override is not None else {}).items()
+        if v is not None
+    }
+    net = {**DEFAULT_NETWORK, **given}
+
+    # Derive the gateway when the caller supplied a subnet but no gateway. Also
+    # re-derive it when the gateway doesn't belong to the supplied subnet — a
+    # stale gateway from another range is worse than none, because Docker
+    # accepts it and then the host cannot route to its own containers.
+    if "subnet" in given:
+        try:
+            network = ip_network(given["subnet"])
+            if "gateway" not in given or ip_address(given["gateway"]) not in network:
+                net["gateway"] = str(network.network_address + 1)
+        except ValueError:
+            # Leave the default in place; compose will reject a bad subnet with
+            # a better message than we could invent here.
+            pass
+
+    return net
+
+
+def _rewrite_host_gateway(services: dict, gateway: str) -> None:
     """Replace `host-gateway` in extra_hosts with the puente network gateway.
 
     Docker's `host-gateway` alias works on Docker Desktop but on Linux it always
@@ -35,7 +77,7 @@ def _rewrite_host_gateway(services: dict) -> None:
         if not extra_hosts:
             continue
         svc["extra_hosts"] = [
-            h.replace("host-gateway", PUENTE_NETWORK_GATEWAY) for h in extra_hosts
+            h.replace("host-gateway", gateway) for h in extra_hosts
         ]
 
 
@@ -65,6 +107,7 @@ def _prune_dangling_depends_on(services: dict) -> None:
 def generate_compose(config: PuenteConfig) -> dict:
     """Collect compose fragments from all enabled Docker services."""
     data_dir = str(config.resolved_data_dir())
+    net = resolve_network(config)
     services: dict = {}
     volumes: dict = {}
 
@@ -86,7 +129,7 @@ def generate_compose(config: PuenteConfig) -> dict:
     if not services:
         return {}
 
-    _rewrite_host_gateway(services)
+    _rewrite_host_gateway(services, net["gateway"])
     _prune_dangling_depends_on(services)
 
     compose: dict = {
@@ -95,13 +138,13 @@ def generate_compose(config: PuenteConfig) -> dict:
             "default": {
                 "driver": "bridge",
                 "driver_opts": {
-                    "com.docker.network.bridge.name": PUENTE_NETWORK_BRIDGE_NAME,
+                    "com.docker.network.bridge.name": net["name"],
                 },
                 "ipam": {
                     "config": [
                         {
-                            "subnet": PUENTE_NETWORK_SUBNET,
-                            "gateway": PUENTE_NETWORK_GATEWAY,
+                            "subnet": net["subnet"],
+                            "gateway": net["gateway"],
                         }
                     ]
                 },
