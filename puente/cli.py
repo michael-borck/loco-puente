@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.table import Table
 
 from puente import __version__
+from puente.catalog import PROFILES, all_entries, entries_for_profile
 from puente.compose import ensure_volume_dirs, generate_compose, write_compose
 from puente.detect import detect_all
 from puente.doctor import Check, exit_code, report_dict, run_checks
@@ -78,6 +79,7 @@ def main(
 
 DISPLAY_NAMES = {
     "ollama": "Ollama",
+    "localai": "LocalAI",
     "open_webui": "Open WebUI",
     "speaches": "Speaches",
     "comfyui": "ComfyUI",
@@ -448,7 +450,7 @@ def _resolve_service(service: str) -> str:
 
 @app.command()
 def enable(
-    service: str = typer.Argument(..., help="Service name (e.g. musicgen, swarmui)"),
+    service: str = typer.Argument(..., help="Service name, or @profile to enable a group"),
     port: int | None = typer.Option(None, help="Override the service port"),
     gpu: str | None = typer.Option(
         None, help="GPU to pin to: a UUID (preferred) or an index. See `puente gpu`"
@@ -459,7 +461,15 @@ def enable(
         help="Mark the service as Under Evaluation in the portal",
     ),
 ):
-    """Enable a service in puente.yml without touching other config."""
+    """Enable a service in puente.yml without touching other config.
+
+    `@profile` enables a whole group instead — `puente enable @office` turns on
+    the CPU-only document and diagramming tools in one go, rather than three
+    edits to puente.yml.
+    """
+    if service.startswith("@"):
+        return _enable_profile(service[1:])
+
     name = _resolve_service(service)
     config = _require_config()
     svc_config = getattr(config.services, name)
@@ -483,6 +493,96 @@ def enable(
     write_compose(config)
     console.print(f"[green]Enabled[/green] {DISPLAY_NAMES.get(name, name)} in puente.yml")
     console.print(f"  Run [bold cyan]puente up {name}[/bold cyan] to start it.")
+
+
+def _enable_profile(profile: str) -> None:
+    """Enable every catalog entry a profile names.
+
+    A typo must not silently enable nothing, so an unknown profile exits 1 with
+    the list of real ones rather than reporting success.
+    """
+    config = _require_config()
+    try:
+        entries = entries_for_profile(profile, config.resolved_data_dir())
+    except KeyError:
+        console.print(f"[red]Unknown profile:[/red] {profile}")
+        console.print(f"[dim]Available:[/dim] {', '.join(sorted(PROFILES))}")
+        raise typer.Exit(1)
+
+    enabled: list[str] = []
+    skipped: list[str] = []
+    for entry in entries:
+        svc_config = getattr(config.services, entry.id, None)
+        if svc_config is None:
+            skipped.append(f"{entry.id} (no config block)")
+            continue
+        if svc_config.enabled:
+            skipped.append(f"{entry.id} (already on)")
+            continue
+        svc_config.enabled = True
+        enabled.append(DISPLAY_NAMES.get(entry.id, entry.name))
+
+    save_config(config)
+    write_compose(config)
+    console.print(f"[green]Enabled profile [bold]{profile}[/bold]:[/green] "
+                  f"{', '.join(enabled) if enabled else 'nothing'}")
+    for s in skipped:
+        console.print(f"  [dim]skipped {s}[/dim]")
+    if enabled:
+        console.print("  Run [bold cyan]puente up[/bold cyan] to start them.")
+
+
+@app.command()
+def catalog(
+    profile: str | None = typer.Argument(None, help="Show only this profile's entries"),
+    available: bool = typer.Option(
+        True, "--available/--all", help="Off: include entries already enabled"
+    ),
+):
+    """List what the catalog declares.
+
+    The catalog is how a third-party image joins the stack without Puente
+    shipping a service class for it (ADR0012). Everything here is opt-in.
+    """
+    config = load_config()
+    entries = (
+        entries_for_profile(profile, config.resolved_data_dir())
+        if profile
+        else all_entries(config.resolved_data_dir())
+    )
+    if not entries:
+        console.print(f"[red]Unknown profile:[/red] {profile}")
+        console.print(f"[dim]Available:[/dim] {', '.join(sorted(PROFILES))}")
+        raise typer.Exit(1)
+
+    table = Table(title=f"Service catalog{f' — {profile}' if profile else ''}")
+    table.add_column("Service", style="bold")
+    table.add_column("Provides")
+    table.add_column("VRAM")
+    table.add_column("Profiles")
+    table.add_column("On", justify="center")
+
+    for entry in sorted(entries, key=lambda e: e.id):
+        svc_config = getattr(config.services, entry.id, None)
+        on = bool(svc_config and svc_config.enabled)
+        if not available and on:
+            continue
+        vram = "—" if entry.needs_vram_mb == 0 else f"{entry.needs_vram_mb // 1024} GB"
+        table.add_row(
+            entry.name,
+            ", ".join(entry.provides) or "—",
+            vram,
+            ", ".join(entry.profiles) or "—",
+            "[green]yes[/green]" if on else "[dim]no[/dim]",
+        )
+
+    console.print(table)
+    if not profile:
+        console.print(
+            "[dim]All catalog entries are opt-in. Enable one with[/dim] "
+            "[cyan]puente enable <name>[/cyan][dim], or a group with[/dim] "
+            "[cyan]puente enable @<profile>[/cyan][dim].[/dim]"
+        )
 
 
 @app.command()
