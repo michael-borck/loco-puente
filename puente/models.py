@@ -290,6 +290,42 @@ class LlamaCppConfig(ServiceConfig):
     models_dir: str | None = None
 
 
+class AceStepConfig(ServiceConfig):
+    """ACE-Step 1.5 — lyrics-to-song generation.
+
+    A separate service rather than a ComfyUI custom node, and not for tidiness:
+    ACE-Step pins torch 2.10.0+cu128 while the ComfyUI image carries 2.6.0+cu124.
+    Installing it into ComfyUI's venv would break one or the other. Its own
+    container gets its own torch, its own GPU pin and its own healthcheck.
+    """
+
+    install_method: Literal["docker", "native", "external"] = "docker"
+    #: "2b" is ~4.7GB of weights and fits beside other services; "xl" is the 4B
+    #: DiT at ~9GB, which needs >=12GB free with offload. Default 2b because a
+    #: card shared with ComfyUI and Voicebox has no room for the other.
+    variant: Literal["2b", "xl"] = "2b"
+    #: Keep weights resident instead of loading per request. Off by default: this
+    #: is a VRAM policy decision, and on a contended card the honest default is
+    #: "load when asked, give it back after".
+    resident: bool = False
+    #: Seconds an idle model stays in VRAM when resident is false. Zero evicts
+    #: as soon as the last request finishes.
+    keep_alive: int = 300
+    #: Generation is CPU-offload aware: offload experts/tensors to system RAM so
+    #: a model that does not fit still runs. Slower, but it is what makes a
+    #: shared card viable.
+    cpu_offload: bool = True
+    #: "0.6B" / "1.7B" / "4B" — the 5Hz language model that adds thinking mode,
+    #: CoT captioning and sample generation. Only loaded when resident is true.
+    lm_model: str = "acestep-5Hz-lm-1.7B"
+    #: vllm is faster but claims VRAM of its own; pt is lighter and the right
+    #: default beside other services on the same card.
+    lm_backend: Literal["vllm", "pt"] = "pt"
+    #: Commit SHA of ace-step/ACE-Step-1.5 to build. Pin it — a branch makes the
+    #: image non-reproducible (see ADR0009). None tracks main.
+    build_ref: str | None = None
+
+
 class SpeachesConfig(ServiceConfig):
     models: list[str] = Field(
         default_factory=lambda: [
@@ -362,6 +398,9 @@ class StackConfig(BaseModel):
     )
     speaches: SpeachesConfig = Field(
         default_factory=lambda: SpeachesConfig(port=8000, enabled=False)
+    )
+    ace_step: AceStepConfig = Field(
+        default_factory=lambda: AceStepConfig(port=8002, enabled=False)
     )
     comfyui: ComfyUIConfig = Field(
         default_factory=lambda: ComfyUIConfig(

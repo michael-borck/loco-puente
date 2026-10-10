@@ -102,6 +102,7 @@ A pick-and-choose menu, all running locally:
 | **Open WebUI** | Chat over your models |
 | **SwarmUI / ComfyUI** | Image generation |
 | **Voicebox / Speaches** | Voice-cloning TTS, speech-to-text |
+| **ACE-Step** | Song generation from lyrics — ~5 GB, fits beside other services |
 | **SearXNG** | Private meta-search |
 | **AnythingLLM** | Docs + RAG workspaces |
 | **Open Notebook, Stirling PDF, Excalidraw, Jupyter, …** | Tools |

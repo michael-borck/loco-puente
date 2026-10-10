@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .ace_step import AceStepService
 from .anythingllm import AnythingLLMService
 from .caddy import CaddyService
 from .chatterbox import ChatterboxService
@@ -56,6 +57,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "voicebox": VoiceboxService,
     "tutor_admin": TutorAdminService,
     "llama_cpp": LlamaCppService,
+    "ace_step": AceStepService,
     "uptime_kuma": UptimeKumaService,
     "portal": PortalService,
     "caddy": CaddyService,
