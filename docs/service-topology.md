@@ -81,6 +81,37 @@ on `:8004`. See `voicebox-api.md` for the endpoints.
 > served even when the service is `enabled: false`, so the block had to be set to
 > `null` to stop the dead route being routed. See `caddy.iter_proxied_services`.
 
+### GPU 1 is the contended card — this is why boot races happen
+
+Worth stating plainly, because it caused a real outage and the symptom points
+somewhere unhelpful.
+
+| Card | Services | Concurrent weight |
+| --- | --- | --- |
+| GPU 0 — RTX 3090, 24 GB | speaches, comfyui, swarmui, ollama-classroom | comfortable |
+| GPU 1 — RTX 4060 Ti, 16 GB | **voicebox**, and ollama's classroom preload | **~13 GB of 16 GB** |
+
+`gemma4:12b` (7.6 GB) and Voicebox's TTS weights (~5.6 GB) do not leave much
+headroom. At boot both try to load within seconds of each other and the transient
+peak tips the card over. Observed **2026-10-10**:
+
+- Voicebox: `cudaErrorDevicesUnavailable`, then it exited — while
+  `restart: unless-stopped` brought it straight back, so the log showed a
+  shutdown and a healthy `/health` in the same minute and it read as a non-event.
+- Ollama: `timed out waiting for llama-server to start` after 5m9s → HTTP 500,
+  so `ollama-preload.service` failed and the classroom model sat cold. That unit
+  had no retry policy, so one collision left it broken until the next reboot.
+
+Both recovered on their own this time, but only because Docker's restart policy
+happened to cover voicebox and nothing covered ollama. The fixes are in
+`deploy/ollama-classroom/ollama-preload.service` (retry, backoff, a settle delay,
+and `curl -sSf` so a failure says why) and in `puente/services/voicebox.py`
+(`restart_delay` plus a healthcheck with a real `start_period`).
+
+**If you add a third GPU-1 consumer, expect this to get worse.** The durable fix
+is serialising GPU-1 startup with explicit systemd ordering rather than relying
+on retries to paper over the collision.
+
 ---
 
 ## SwarmUI "No backends available!" — cold-boot self-heal

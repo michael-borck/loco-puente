@@ -81,7 +81,30 @@ class VoiceboxService(ServiceBase):
             "ports": [f"{port}:17493"],
             "volumes": ["voicebox-data:/app/data"],
             "environment": env,
+            # unless-stopped, but with backoff: voicebox and ollama share the
+            # 16GB card this service is pinned to, and at boot both try to load
+            # at once. Observed 2026-10-10: voicebox lost with
+            # `cudaErrorDevicesUnavailable`, served /health 200, then exited —
+            # and plain `unless-stopped` restarted it so fast that the container
+            # logged a shutdown and a successful health in the same minute,
+            # which reads as nothing having happened.
+            #
+            # restart_delay spreads the retries so it stops competing with
+            # ollama's own boot preload (deploy/ollama-classroom/ollama-preload.service),
+            # which now retries for the same reason. start_period gives the app
+            # room to load its weights before a slow first response counts as a
+            # failed healthcheck.
             "restart": "unless-stopped",
+            "restart_delay": "30s",
+            "healthcheck": {
+                "test": ["CMD-SHELL", "curl -sf http://localhost:17493/health || exit 1"],
+                "interval": "30s",
+                "timeout": "10s",
+                # Loading weights for a TTS model off disk takes minutes on a
+                # cold page cache; without this Docker kills it mid-load.
+                "start_period": "300s",
+                "retries": 3,
+            },
         }
 
         # Prefer the published image; fall back to building from the git context.

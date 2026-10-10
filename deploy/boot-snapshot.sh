@@ -9,10 +9,13 @@
 # turns "is it up?" into "did anything fail to come back?".
 #
 # Usage:
-#   ./deploy/boot-snapshot.sh pre        > /tmp/boot-pre.txt
+#   ./deploy/boot-snapshot.sh pre
 #   sudo reboot
-#   ./deploy/boot-snapshot.sh post       > /tmp/boot-post.txt
-#   diff -u /tmp/boot-pre.txt /tmp/boot-post.txt
+#   ./deploy/boot-snapshot.sh post
+#   diff -u ~/.puente/boot-snapshot-pre.txt ~/.puente/boot-snapshot-post.txt
+#
+# Snapshots land in ~/.puente/ (override with OUT=) because they must survive
+# the reboot they are meant to bracket.
 #
 # Read-only: reads state, starts and stops nothing.
 
@@ -21,7 +24,13 @@ set -uo pipefail
 PHASE="${1:-post}"
 PUENTE_HOME="${PUENTE_HOME:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PUENTE_CONFIG="${PUENTE_CONFIG:-${PUENTE_HOME}/puente.yml}"
-OUT="${OUT:-/tmp/boot-${PHASE}.txt}"
+# NOT /tmp. The whole point is to diff a snapshot taken before a reboot against
+# one taken after, and /tmp is not a safe place to keep that: this file was
+# written to /tmp on 2026-10-10 and was gone after the reboot. The data dir
+# survives reboots and is already where puente keeps generated artifacts.
+DATA_DIR="${PUENTE_DATA_DIR:-${HOME}/.puente}"
+OUT="${OUT:-${DATA_DIR}/boot-snapshot-${PHASE}.txt}"
+mkdir -p "$DATA_DIR"
 
 section() { printf '\n===== %s =====\n' "$1"; }
 # Never let a probe failure abort the snapshot — a broken thing is exactly what
@@ -50,7 +59,7 @@ probe docker ps --format '{{.Names}}\t{{.Status}}\t{{.Image}}'
 
 section "docker containers (puente project, all states)"
 # Includes Exited/Created, which is where a failed-to-start service shows up.
-probe docker compose -f "${PUENTE_DATA_DIR:-$HOME/.puente}/docker-compose.yml" ps -a
+probe docker compose -f "${DATA_DIR}/docker-compose.yml" ps -a
 
 section "containers expected but NOT running"
 # Diff "enabled in puente.yml" against "running", so a service that silently
@@ -130,9 +139,9 @@ for hp in chat:3080 librechat:3080 speech:8000 image:8188 voice:17493 \
 done
 
 section "persistent data present (not recreatable)"
-for p in "$HOME/.puente/librechat" "$HOME/.puente/anythingllm" \
-         "$HOME/.puente/comfyui-basedir" "$HOME/.puente/swarmui" \
-         "$HOME/.puente/tutor-admin/audit.log"; do
+for p in "$DATA_DIR/librechat" "$DATA_DIR/anythingllm" \
+         "$DATA_DIR/comfyui-basedir" "$DATA_DIR/swarmui" \
+         "$DATA_DIR/tutor-admin/audit.log"; do
   if [ -e "$p" ]; then printf '  present  %s\n' "$p"
   else printf '  MISSING  %s\n' "$p"; fi
 done

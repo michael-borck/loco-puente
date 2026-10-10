@@ -148,7 +148,22 @@ caused thrashing. Change one setting at a time.
 
 ## 5. systemd units
 
-Install with the renderer, which fills in this host's paths and account:
+Verify a cold boot actually brought everything back — a reboot is the only time
+startup ordering is exercised, and it fails silently otherwise:
+
+```sh
+./deploy/boot-snapshot.sh pre
+sudo reboot
+./deploy/boot-snapshot.sh post
+diff -u ~/.puente/boot-snapshot-pre.txt ~/.puente/boot-snapshot-post.txt
+```
+
+Snapshots go to `~/.puente/`, not `/tmp` — they must survive the reboot they
+bracket. The sections worth reading are *enabled but NOT running* (diffed against
+`puente.yml`), *systemd: failed units*, and *journal errors since boot*. See
+[service-topology](service-topology.md) for the known boot races.
+
+Install the units with the renderer, which fills in this host's paths and account:
 
 ```sh
 ./deploy/install-units.sh              # dry run — renders and prints, installs nothing

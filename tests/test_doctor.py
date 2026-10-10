@@ -404,6 +404,39 @@ def test_app_source_is_present_in_package_data():
     assert APP_SOURCE.is_file(), f"missing {APP_SOURCE}"
 
 
+def test_voicebox_has_a_healthcheck_with_a_start_period():
+    """Voicebox needs a healthcheck with a generous start_period.
+
+    It loads TTS weights off disk, which takes minutes on a cold page cache.
+    Without start_period, Docker starts counting a slow first response as a
+    failed healthcheck and kills the container mid-load.
+    """
+    from puente.compose import generate_compose
+
+    vb = generate_compose(_only(voicebox={"enabled": True}))["services"]["voicebox"]
+    hc = vb["healthcheck"]
+    assert "/health" in " ".join(hc["test"])
+    assert int(str(hc["start_period"]).rstrip("s")) >= 120, (
+        "start_period must cover a cold weight load"
+    )
+
+
+def test_voicebox_restart_is_backed_off():
+    """`restart_delay` spaces the retries.
+
+    Voicebox and ollama share the 16GB card, and at boot both load at once.
+    Observed 2026-10-10: voicebox exited on cudaErrorDevicesUnavailable and
+    plain `unless-stopped` restarted it immediately, so the log showed a
+    shutdown and a health in the same minute — indistinguishable from nothing
+    having happened.
+    """
+    from puente.compose import generate_compose
+
+    vb = generate_compose(_only(voicebox={"enabled": True}))["services"]["voicebox"]
+    assert vb["restart"] == "unless-stopped"
+    assert int(str(vb["restart_delay"]).rstrip("s")) >= 15, "retries must back off"
+
+
 # --------------------------------------------------------------------------
 # network: overridable subnet / bridge
 # --------------------------------------------------------------------------

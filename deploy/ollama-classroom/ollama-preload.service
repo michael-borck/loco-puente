@@ -18,22 +18,45 @@
 Description=Preload gemma4:12b into VRAM (GPU 1)
 After=ollama.service
 Requires=ollama.service
+# Retry without a restart-limit cutoff. This unit races every other GPU-1
+# consumer at boot: voicebox is pinned to the same 16GB card, and the two loading
+# at once pushes past the card and Ollama returns 500 after ~5min
+# ("timed out waiting for llama-server to start"). That is transient, not fatal,
+# so retrying is the correct response — but systemd's default StartLimitBurst
+# (5 within 10s) would abandon it and leave the classroom model cold until the
+# next reboot. Observed failing 2026-10-05 and again 2026-10-10.
+StartLimitIntervalSec=0
 
 [Service]
 Type=oneshot
 RemainAfterExit=no
 
+# Retry the whole unit on failure. Combined with the delay below, this gives the
+# GPU-1 consumers time to settle instead of colliding with them.
+Restart=on-failure
+RestartSec=90
+
 # ollama.service being "active" only means the process started — it does not
 # mean the HTTP listener is accepting yet, and a POST to a not-yet-listening
 # socket would fail this unit for no good reason. Poll /api/tags until it
-# answers (up to ~60s) before asking for the load.
-ExecStartPre=/bin/sh -c 'for i in $(seq 1 60); do curl -sf http://127.0.0.1:11434/api/tags >/dev/null && exit 0; sleep 1; done; echo "ollama did not become ready in 60s" >&2; exit 1'
+# answers (up to ~120s) before asking for the load.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do curl -sf http://127.0.0.1:11434/api/tags >/dev/null && exit 0; sleep 1; done; echo "ollama did not become ready in 120s" >&2; exit 1'
+
+# Then let the GPU settle. At boot the containers on this card (voicebox) start
+# at the same time as ollama, and a load issued into that contention fails. This
+# is the cheap half of the fix — the restart policy above is the half that
+# actually recovers, since the delay only reduces the odds.
+ExecStartPre=/bin/sleep 45
 
 # An empty prompt loads the weights without generating any tokens — this is the
 # documented way to warm a model. No keep_alive in the payload: the request
 # would otherwise override the server's OLLAMA_KEEP_ALIVE TTL and re-pin the
 # model forever, which is exactly what this unit used to do by accident.
-ExecStart=/usr/bin/curl -sf --max-time 600 http://127.0.0.1:11434/api/generate \
+#
+# -sS rather than -sf: on failure, print Ollama's error to the journal. A bare
+# `curl -sf` exits 22 with no message at all, which is why the 2026-10-05 and
+# 2026-10-10 failures took until a boot diff to explain.
+ExecStart=/usr/bin/curl -sSf --max-time 600 http://127.0.0.1:11434/api/generate \
     -H 'Content-Type: application/json' \
     -d '{"model":"gemma4:12b","prompt":""}'
 
@@ -43,12 +66,13 @@ ExecStart=/usr/bin/curl -sf --max-time 600 http://127.0.0.1:11434/api/generate \
 # OLLAMA_MAX_LOADED_MODELS — loading it here deliberately claims that slot at
 # boot rather than mid-lab. Like above, no request-level keep_alive: it rides
 # the server TTL.
-ExecStart=/usr/bin/curl -sf --max-time 300 http://127.0.0.1:11434/api/generate \
+ExecStart=/usr/bin/curl -sSf --max-time 300 http://127.0.0.1:11434/api/generate \
     -H 'Content-Type: application/json' \
     -d '{"model":"qwen3.5:0.8b","prompt":""}'
 
 # Loading 7.6GB from disk on a cold page cache can take a while; don't let
-# systemd kill it mid-load.
+# systemd kill it mid-load. Must exceed the curl --max-time above, and leave
+# room for the restart policy to fire at least twice before the operator gives up.
 TimeoutStartSec=700
 
 [Install]
