@@ -43,3 +43,4 @@ reversal being proposed a third time.
 | [0009](0009-custom-images-published-to-ghcr.md) | Custom images published to GHCR from a pinned commit, amd64-only | Accepted |
 | [0010](0010-llamacpp-for-small-card-hardware.md) | llama.cpp as the LLM backend for single small cards — MoE expert offload | Accepted |
 | [0011](0011-route-by-decision-not-generation.md) | Route requests by decision, not by generation | Accepted |
+| [0012](0012-localai-as-engine-and-the-catalog.md) | LocalAI as the engine; a catalog for everything else | Accepted |

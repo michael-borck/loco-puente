@@ -129,6 +129,7 @@ on a machine that can run it; the rest are opt-in.
 | Service | What it is |
 |---|---|
 | **Ollama** | Local LLM inference — the default backend |
+| **LocalAI** | The successor engine: OpenAI/Anthropic/ElevenLabs-compatible APIs across 60+ backends ([ADR0012](docs/adr/0012-localai-as-engine-and-the-catalog.md)). Opt-in while Ollama is the proven path |
 | **llama.cpp** | GGUF inference with MoE experts offloaded to system RAM. Opt-in; the one to use on a single small card ([ADR0010](docs/adr/0010-llamacpp-for-small-card-hardware.md)) |
 | **Open WebUI** | Chat over your models |
 | **SearXNG** | Private meta-search |
@@ -136,11 +137,22 @@ on a machine that can run it; the rest are opt-in.
 | **ACE-Step** | Song generation from lyrics — ~5 GB, so it fits beside other services ([docs](docs/ace-step-api.md)) |
 | **Voicebox / Speaches** | Voice-cloning TTS, speech-to-text |
 | **AnythingLLM** | Docs + RAG workspaces |
-| **Open Notebook, Stirling PDF, Excalidraw, Jupyter, …** | Tools |
+| **Open Notebook, Stirling PDF, Excalidraw, Jupyter, …** | Tools, from the catalog |
 
-Both LLM backends are first-class and neither is being retired: Ollama is
-easier to operate, llama.cpp is what makes a large model usable on a small card.
-The choice belongs to whoever installs it.
+All three LLM backends are supported and none is being retired: Ollama is easier
+to operate, llama.cpp is what makes a large model usable on a small card, and
+LocalAI is where the project is heading. The choice belongs to whoever installs
+it.
+
+**Puente is not an AI engine** — it is a hardware-assessment and orchestration
+layer over them. That is a deliberate narrowing: see
+[ADR0012](docs/adr/0012-localai-as-engine-and-the-catalog.md).
+
+Tools like Stirling PDF, Excalidraw, Jupyter and Open Notebook are *catalog
+entries* — pinned images with declared capabilities and hardware fit, listed with
+`puente catalog` and installed with `puente enable @office` or
+`puente enable @research`. Adding a service to the stack no longer means writing
+a service class for it.
 
 Plus an optional **Caddy** reverse-proxy service (automatic TLS) that fronts
 whichever services you expose — see [docs/caddy-migration.md](docs/caddy-migration.md).
@@ -171,7 +183,24 @@ puente doctor    Check the host environment (read-only; --json, --services)
 puente gpu       Detect and display GPUs
 puente connect   Connection details for external tools
 puente portal    Generate the service launcher page
+puente catalog   List what the service catalog declares
 ```
+
+`puente enable` also takes a profile — `puente enable @office` installs the
+document and diagramming tools, `puente enable @research` the search and RAG
+set. Everything in the catalog is opt-in; nothing is enabled by a profile
+except its members.
+
+## Acknowledgements
+
+Puente stands on other people's work. In particular
+**[LocalAI](https://github.com/mudler/localai)** (MIT) is the default engine and
+**[llama.cpp](https://github.com/ggml-org/llama.cpp)** supplies the MoE expert
+offload the small-card story depends on. LocalAI added ACE-Step support in
+February 2026 and a Decisions API (`/v1/systemone`) in October 2026 — both of
+which this project had built or was about to build, which is why the engine
+decision was made deliberately. The full list is in
+[docs/vision.md](docs/vision.md#acknowledgements).
 
 ## Requirements
 

@@ -82,11 +82,32 @@ Consequences: every capability is reachable over HTTP with a documented contract
 auth is the proxy's job (ADR0001, ADR0002); and the admin surface is a separate
 concern with its own privilege split (ADR0006).
 
-### 4. Both backends, user's choice
+### 4. One engine, chosen by the operator
 
-Ollama is the default because it is easy to operate. llama.cpp is there because
-on a small card it is the difference between a 7B model and a 30B one (ADR0010).
-Neither is being retired. The choice belongs to whoever installs it.
+**Puente is not an AI engine.** It is a hardware-assessment and multi-service
+orchestration layer *over* existing engines (ADR0012).
+
+That is a change of direction, and it was forced by two facts found too late:
+LocalAI shipped ACE-Step support in February 2026, and a Decisions API
+(`/v1/systemone`) in October 2026 — the same two things this project had built
+or was about to build. LocalAI is MIT, ~49.5k stars, and offers
+OpenAI/Anthropic/ElevenLabs-compatible APIs across 60+ backends with VRAM-aware
+routing and a built-in WebUI. Rebuilding an engine against that is not a
+contribution, and the honest response is to use it.
+
+So the engine slot is LocalAI's. What stays ours is the part no upstream is
+doing:
+
+- **hardware assessment** — what this specific box can afford, per capability;
+- **heterogeneous orchestration** — ComfyUI and its node ecosystems, SearXNG,
+  AnythingLLM, Caddy's multi-tenant auth, lab-window scheduling, GPU UUID pinning;
+- **residency policy** — what stays in VRAM on a card that cannot hold it all;
+- **the catalog** — pinned third-party images with honest hardware-fit metadata.
+
+Ollama and llama.cpp both remain supported and neither is being retired. llama.cpp
+still matters because on a small card it is the difference between a 7B model and
+a 30B one (ADR0010), and LocalAI wraps llama.cpp rather than replacing that
+capability.
 
 ## What this rules out
 
@@ -102,23 +123,24 @@ Neither is being retired. The choice belongs to whoever installs it.
 
 ## Open questions
 
-- **A resident decision model.** This is the control plane the rest of this
-  document assumes and does not yet have. Not a chatty small model — a
-  *decision* model: a 0.4–4B model fine-tuned to pick from a restricted option
-  set, reading **label-token logits in one forward pass and generating zero
-  tokens**, returning calibrated probabilities over exactly the options supplied.
-  The field has names (`lev`, `SemIf`, `Laya`, `Kev`, `decider`) and a published
-  benchmark against trained classifiers.
+- **A resident decision model.** Partly answered upstream: LocalAI's
+  `/v1/systemone` is a Decisions API doing this job, and `decide.py` now
+  delegates to it. What is still open is whether a *bespoke* adapter beats it on
+  our hardware — `lev` (Qwen3.5-4B + LoRA) is the public one and is untested
+  here.
 
-  Why it matters here: it is the one model that can be **permanently resident**.
-  Everything else is swapped in and out. A decision model can sit on the card
-  permanently and answer the only question that governs everything else — *which
-  model should be loaded right now?* That turns model residency from a schedule
-  someone maintains into a policy the stack applies.
+  The reason the question survives delegation: `/v1/systemone` needs an engine
+  running. The lexical fallback in `decide.py` is the only routing that works
+  with nothing installed, no VRAM and no network, and on a fresh install that is
+  the path that runs. Whether a resident 0.4–4B model is worth the VRAM is still
+  undecided — it would be the one model that could stay permanently resident
+  while everything else is swapped in and out.
 
-  It also reframes routing. OpenClaw already routes simple queries to a cheap
-  model and complex ones to a powerful one; a decision model is the cheap half,
-  done properly, at ~0.2 s and no generation loop.
+- **ComfyUI's node ecosystems, long term.** Wan2.2-S2V, LivePortrait, SadTalker
+  and Wav2Lip are Tier 2 precisely because no engine ships them. That is a
+  defensible position, but it is also a maintenance surface on a fast-moving
+  upstream. Worth deciding whether those stay curated here or move to
+  user-supplied catalog entries with documented prerequisites.
 
 - **Agents.** OpenClaw (MIT, ~250k stars) connects local models to files, shell
   and browsers. Do we integrate, or only ensure our APIs are good enough that an
@@ -128,3 +150,40 @@ Neither is being retired. The choice belongs to whoever installs it.
 - **The launcher.** Is the portal a real UI, or a signpost? Committing to a web
   app is a maintenance cost; a good API plus a clear list of endpoints is honest
   and cheap.
+
+- **AnythingLLM vs Open WebUI.** Both are workspace/RAG UIs over an external
+  engine, and both are in the stack. ADR0012 records the redundancy rather than
+  resolving it, because AnythingLLM is in production use today. LocalAI's own
+  RAG makes the question sharper, not moot.
+
+## Acknowledgements
+
+Puente stands on other people's work and says so:
+
+- **[LocalAI](https://github.com/mudler/localai)** (MIT) — the default engine:
+  OpenAI/Anthropic/ElevenLabs-compatible APIs across 60+ backends, the Backend
+  Gallery, VRAM-aware routing, the built-in WebUI, and `/v1/systemone`.
+- **[QVAC](https://github.com/tetherto/qvac)** (Apache-2.0, Tether) — an on-device
+  SDK and server spanning the same generation surface. Not adopted; the comparison
+  is why the engine decision was made deliberately rather than by default.
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** (MIT) — `--cpu-moe` expert
+  offload is the capability the small-card story rests on.
+- **[Ollama](https://github.com/ollama/ollama)** (MIT) — still a first-class backend.
+- **[LibreChat](https://github.com/danny-avila/LibreChat)** (MIT) and
+  **[Open WebUI](https://github.com/open-webui/open-webui)** (MIT) — the chat
+  surfaces, both clients of the APIs rather than owners of them.
+- **[ComfyUI](https://github.com/comfyanonymous/ComfyUI)** (GPL-3.0) and
+  **[SwarmUI](https://github.com/mcmonkeyprojects/SwarmUI)** (AGPL-3.0) — Tier 2
+  image pipelines, including the node ecosystems no engine ships.
+- **[SearXNG](https://github.com/searxng/searxng)** (AGPL-3.0),
+  **[AnythingLLM](https://github.com/Mintplex-Labs/anything-llm)** (MIT),
+  **[Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF)** (GPL-3.0),
+  **[Excalidraw](https://github.com/excalidraw/excalidraw)** (MIT),
+  **[Jupyter](https://github.com/jupyter/notebook)** (BSD-3),
+  **[Open Notebook](https://github.com/lfnovo/open-notebook)** (MIT) — catalog
+  entries, declared rather than reimplemented.
+- **[Caddy](https://github.com/caddyserver/caddy)** (Apache-2.0) — TLS termination
+  and the per-service auth policy.
+- **[Pipecat](https://github.com/pipecat-ai/pipecat)** (BSD-2) — the reference for
+  voice orchestration. Not currently a dependency; recorded because it is what we
+  would build against rather than build.
