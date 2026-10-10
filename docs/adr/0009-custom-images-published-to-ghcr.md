@@ -57,6 +57,12 @@ for the next one, while producing an artifact nobody can audit.
    image set, not a platform flag. `puente doctor`'s `image-arch` check reports the
    mismatch on an arm64 host and names the source-build fallback.
 
+   > **Note, 2026-10-10:** the decision above stands — images remain `linux/amd64`
+   > only — but one of its justifications is now moot. The M3 Ultra referenced here
+   > is no longer part of the plan; the target audience is Linux + NVIDIA consumer
+   > hardware (ADR0010). So amd64 is the target by definition rather than because
+   > CUDA cannot run on Apple silicon. Nothing else in this ADR changes.
+
 5. **The workflow smoke-tests the artifact it just pushed.** A build that
    succeeds but produces an image with the wrong torch variant, or without the
    fork's `idle_unload` module, is worse than a build failure — it surfaces later

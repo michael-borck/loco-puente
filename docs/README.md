@@ -12,7 +12,8 @@ There are three separate web surfaces in this project, and they are easy to conf
 | **`docs/`** (here) | — | Operator runbooks. Read as plain markdown in the repo. |
 
 There is **no `puente serve` or `puente docs` subcommand.** The CLI commands are
-`init, install, up, down, enable, disable, status, doctor, gpu, connect, portal, version`.
+`capabilities, init, install, up, down, enable, disable, status, doctor, gpu,
+connect, portal, version`.
 
 ## Don't duplicate the public docs here
 
@@ -27,8 +28,10 @@ noise on the website.
 
 | File | Subject |
 |---|---|
+| `vision.md` | **What puente is for**, and the four commitments it makes. Read before changing scope |
 | `host-setup.md` | **Everything outside puente**: prerequisites, secrets, systemd units, crontab, DNS. Start here for a clean install or a move to new hardware |
-| `adr/` | Architecture Decision Records — why the non-obvious choices were made, and what was rejected |
+| `decision-layer.md` | Routing a request to a capability without generating; the two backends and the measured latency |
+| `adr/` | Architecture Decision Records — why the non-obvious choices were made, and what was rejected. Superseded records are kept, never deleted |
 | `tutor-admin.md` | The tutor-facing LibreChat account UI and its host-side runner |
 | `service-topology.md` | What runs in vs outside puente; the voice-service overlap |
 | `caddy-migration.md` | The nginx-proxy-manager → Caddy cutover |
@@ -37,4 +40,5 @@ noise on the website.
 | `sadtalker-api.md`, `wav2lip-api.md`, `liveportrait-api.md` | Talking-head / lip-sync ComfyUI nodes |
 | `voicebox-api.md` | The **active** TTS service (port 17493) |
 | `chatterbox-api.md` | **Retired.** Kept for the CUDA/GPU-pinning notes |
+| `ace-step-api.md` | Song generation (ACE-Step 1.5), and why not YuE |
 | `student-ai-options.md` | Student-facing guide to the four AI options |
