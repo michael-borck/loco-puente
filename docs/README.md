@@ -13,7 +13,8 @@ There are three separate web surfaces in this project, and they are easy to conf
 
 There is **no `puente serve` or `puente docs` subcommand.** The CLI commands are
 `capabilities, init, install, up, down, enable, disable, status, doctor, gpu,
-connect, portal, version`.
+connect, portal, catalog, version`. `enable` also takes `@<profile>` to install
+a whole group — see the catalog.
 
 ## Don't duplicate the public docs here
 
@@ -28,10 +29,11 @@ noise on the website.
 
 | File | Subject |
 |---|---|
+| **`handover-2026-10.md`** | **Start here.** What is running and must not be disturbed, what is staged but unverified, what decisions are waiting. Written at the end of the 2026-10-10 session |
 | `vision.md` | **What puente is for**, and the four commitments it makes. Read before changing scope |
 | `host-setup.md` | **Everything outside puente**: prerequisites, secrets, systemd units, crontab, DNS. Start here for a clean install or a move to new hardware |
 | `decision-layer.md` | Routing a request to a capability without generating; the two backends and the measured latency |
-| `services-inventory.md` | **All 28 services**, and which few the opinionated default should be |
+| `services-inventory.md` | **All 30 services**, the three tiers, and which few the opinionated default should be |
 | `demand.md` | Demand-driven residency: observing usage and deciding what stays loaded |
 | `adr/` | Architecture Decision Records — why the non-obvious choices were made, and what was rejected. Superseded records are kept, never deleted |
 | `tutor-admin.md` | The tutor-facing LibreChat account UI and its host-side runner |
