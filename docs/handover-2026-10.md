@@ -137,6 +137,40 @@ Wan2.2-S2V, LivePortrait, SadTalker, Wav2Lip are Tier 2 precisely because no
 engine ships them. That is defensible, and it is also a maintenance surface on
 a fast-moving upstream. Worth deciding whether they stay hand-curated.
 
+### E. QVAC — evaluated 2026-10-10, verdict: not adopted
+
+Checked so it does not get re-litigated. Sources: `github.com/tetherto/qvac`
+(685 stars, Apache-2.0, 3,131 commits, Tether-funded) and
+`docs.qvac.tether.io/ecosystem/`.
+
+QVAC is **not** a LocalAI alternative — different shape entirely:
+
+| | LocalAI | QVAC |
+|---|---|---|
+| Shape | Server-first, single Go binary | SDK-first (JS/TS + Python), npm/Bare runtime |
+| Ships as | Docker image | npm package — no container story |
+| API | OpenAI + Anthropic + ElevenLabs | OpenAI-compatible only |
+| UI | Built-in WebUI | None (QV.AC is a separate app) |
+| Multi-model | 60+ backends, OCI gallery | One model per server config |
+
+Puente is a Docker orchestration layer. QVAC's HTTP server is a native Node
+process — a second non-containerised runtime alongside native Ollama, with
+nothing for `puente doctor` to inspect. **Its server also defaults to
+`127.0.0.1:11434`, which collides with the native Ollama this box is keeping.**
+
+Two things recorded so they are findable later:
+
+- **Revisit trigger:** a mobile/edge companion app. QVAC is the only one of the
+  three engines that runs on Android/iOS, with P2P model fetching. That is the
+  one scenario where it wins.
+- **Thing worth stealing:** its model registry serves *weightless* model
+  descriptions — tensor lists and settings — so "does this model fit in memory"
+  can be answered **before downloading**. That is `puente capabilities` done
+  from the model side. If LocalAI's catalog ever exposes similar metadata,
+  wiring it into the capability report would turn the heuristic table in
+  `capabilities.py` into an answer from data. Also validation that the
+  hardware-assessment idea is aimed at the right thing.
+
 ---
 
 ## Known rough edges
