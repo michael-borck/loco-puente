@@ -8,9 +8,8 @@ hardware, from one config file. Private by default. Yours to keep.
 
 > Pay a **time tax**, not a **token tax**. Modest hardware, honest bills.
 
-Puente is the deployment layer of [LocoPuente](https://locopuente.org), a
-LocoLabo initiative: local AI for everyone who can't — or won't — send their
-data to the cloud.
+Puente is the deployment layer of [LocoPuente](https://locopuente.org): local AI
+for anyone who can't — or won't — send their data to the cloud.
 
 **What this is for, and the four commitments it makes:** [docs/vision.md](docs/vision.md).
 
@@ -187,4 +186,4 @@ risks every running service. See [docs/host-setup.md](docs/host-setup.md).
 
 ## License
 
-MIT © Michael Borck. A LocoLabo initiative, Curtin University.
+MIT © Michael Borck. An independent initiative.

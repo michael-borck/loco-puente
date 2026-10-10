@@ -419,4 +419,4 @@ The OpenAI API-compatible design means any component can be swapped or upgraded 
 
 ---
 
-*Document maintained by Michael Borck, LocoLabo, Curtin University.*
+*Document maintained by Michael Borck. An independent LocoLabo initiative.*

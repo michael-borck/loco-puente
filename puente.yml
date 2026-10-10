@@ -59,7 +59,11 @@ services:
       # v0.9 expects the /v1 suffix on chat_completion_base_url (voice-chat
       # audio summarisation hits it; Ollama ignores the API key).
       CHAT_COMPLETION_BASE_URL: http://192.168.20.120:11434/v1
-      CHAT_COMPLETION_API_KEY: Curtin2026ISYS20015002
+      # Previously set to a real-looking key, which was committed to a PUBLIC
+      # repo. It pointed at a local Ollama endpoint that ignores it, so it was
+      # doing nothing — but a value that looks like a credential belongs in the
+      # environment, not in a committed file. See docs/host-setup.md §3.
+      CHAT_COMPLETION_API_KEY: ""
     review: false
     proxy:
     # Two doors to the same Speaches backend, same pattern as swarmui/image

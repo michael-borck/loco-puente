@@ -44,8 +44,8 @@ and change any part of it? If not, the feature is wrong.
 
 Not "here are 27 services, choose some." A default that runs on this hardware:
 chat that answers, images that generate, voice that speaks, code that compiles.
-A student or a hobbyist should get something working without reading docs, and
-without a frontier-model subscription.
+Anyone should get something working without reading docs, and without a
+frontier-model subscription.
 
 The defaults are opinionated *because* they were chosen against real hardware.
 That is also what makes them defensible — not taste, but a measurement.
@@ -58,10 +58,10 @@ PoC has been drifting from.
 Chat, image, voice and song are **services with APIs**. The launcher portal, and
 any WebUI we build, is a *client* of those APIs — not the thing that owns them.
 
-Why: the mission is student equity, and the thing that creates equity is not
+Why: the mission is access, and the thing that creates access is not
 access to a chat box. It is being able to *write your own code* against a real
-AI stack. A student who has used the portal and then read its API can build
-something of their own. A student given only a chat UI cannot.
+AI stack. Someone who has used the portal and then read its API can build
+something of their own. Someone given only a chat UI cannot.
 
 Consequences: every capability is reachable over HTTP with a documented contract;
 auth is the proxy's job (ADR0001, ADR0002); and the admin surface is a separate

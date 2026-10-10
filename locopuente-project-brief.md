@@ -2,28 +2,36 @@
 
 **Domain:** locopuente.org  
 **Parent:** LocoLabo (locolabo.org)  
-**Status:** Active  
-**Lead:** Michael Borck, School of Marketing and Management, Curtin University
+**Status:** Active, independent initiative  
+**Lead:** Michael Borck
 
 ---
 
 ## Tagline
 
-*Where the research meets the student.*
+*Where the research meets the person.*
 
 ---
 
 ## One-Line Description
 
-LocoPuente is the deployment layer of LocoLabo -- a student-facing local AI service that bridges the digital divide by bringing equitable, privacy-first AI access to every student, regardless of what they can afford.
+LocoPuente is the deployment layer of LocoLabo -- a local AI service that bridges the digital divide by bringing privacy-first AI access to anyone who cannot afford a frontier model subscription.
+
+The motivation is personal and observational. Teaching a university course makes
+the disparity impossible to miss: some people in the room have a paid assistant
+they can think with, and some do not. The difference shows up in what gets asked
+and what gets attempted. That observation is the origin of this project -- it is
+not a policy position imported from elsewhere, and it is not about students
+specifically. It is about anyone for whom the price of a frontier subscription
+is a real barrier.
 
 ---
 
 ## The Problem
 
-Some students have access to powerful AI tools. Some do not. The difference is not aptitude or motivation. It is money.
+Some people have access to powerful AI tools. Some do not. The difference is not aptitude or motivation. It is money.
 
-Students who can afford a monthly subscription to a premium AI service have a genuine academic advantage over those who cannot. That gap is growing. LocoPuente exists to close it.
+Being able to afford a monthly subscription to a premium AI service is now a genuine advantage -- in study, in work, in anything that rewards thinking well. That gap is widening, and it is widening by subscription tier. LocoPuente exists to close it.
 
 ---
 
@@ -31,9 +39,9 @@ Students who can afford a monthly subscription to a premium AI service have a ge
 
 LocoPuente is not a research project. It is where the research becomes real.
 
-Every other project in the LocoLabo family asks the same question from a different angle: what can local AI actually do on modest hardware? LocoPuente takes those answers and turns them into something a student can open in a browser on a Tuesday afternoon.
+Every other project in the LocoLabo family asks the same question from a different angle: what can local AI actually do on modest hardware? LocoPuente takes those answers and turns them into something anyone can open in a browser on a Tuesday afternoon.
 
-The name is deliberate. *Puente* is Spanish for bridge -- consistent with the LocoLabo naming family, and accurate about the mission. LocoPuente bridges the gap between students who can afford frontier AI tools and those who cannot, using infrastructure the University owns and controls.
+The name is deliberate. *Puente* is Spanish for bridge -- consistent with the LocoLabo naming family, and accurate about the mission. LocoPuente bridges the gap between those who can afford frontier AI tools and those who cannot, using infrastructure whoever runs it owns and controls.
 
 ---
 
@@ -41,21 +49,21 @@ The name is deliberate. *Puente* is Spanish for bridge -- consistent with the Lo
 
 A single on-campus server running a suite of locally hosted AI services, accessible to all students on the university network. No subscription fees. No data leaving the institution. No dependency on external providers.
 
-| Service | What Students Get |
+| Service | What It Provides |
 |---|---|
 | AI Chat Interface | A chat experience comparable to commercial tools, designed to encourage critical thinking rather than passive use |
 | Voice Interaction | Speak to the system, hear responses. Fully local speech-to-text and text-to-speech |
 | Research and Notes | An AI-powered environment for reading, annotating, and synthesising sources |
 | Image Generation | Generate images for presentations, projects, and creative work |
-| API Access | For students building their own tools as part of assessed work or personal projects |
+| API Access | For people building their own tools on top of it |
 | Embedded Unit Assistants | AI support embedded directly within course platforms, tailored to specific unit content |
-| Rehearsal Environments | Simulated professional organisations where students practice before the stakes are real |
+| Rehearsal Environments | Simulated organisations to practise against before the stakes are real |
 
 ---
 
 ## The Deployment Layer
 
-LocoPuente is the convergence point for the entire LocoLabo research programme. Each sibling project contributes a layer to what students experience.
+LocoPuente is the convergence point of the LocoLabo research programme. Each sibling project contributes a layer to what the service actually offers.
 
 ```
 LocoPuente
@@ -139,7 +147,10 @@ LocoLabo maps the floor of what local AI can do because most people live there a
 
 LocoPuente takes the floor and builds something on it.
 
-The students who need this most are not the ones with ChatGPT Plus subscriptions. They are the ones who have been quietly making do without. LocoPuente is built for them.
+The people who need this most are not the ones with premium subscriptions. They
+are the ones who have been quietly making do without -- and who are the least
+likely to know that the gap is not about their ability. LocoPuente is built for
+them.
 
 ---
 
@@ -150,10 +161,10 @@ locopuente.org/
 ├── index          Hero, tagline, one-line mission
 ├── /about         The problem, the solution, the philosophy
 ├── /projects      How LocoLabo projects converge here (diagram)
-├── /services      What students get (service table)
+├── /services      What it provides (service table)
 ├── /poc           Proof of concept -- hardware, stack, current status
 ├── /roadmap       PoC to M3 Ultra to Faculty scale
-└── /contact       Michael Borck, SoMM, Curtin
+└── /contact       Michael Borck
 ```
 
 **Design notes for Claude Code:**
@@ -167,4 +178,4 @@ locopuente.org/
 
 ---
 
-*LocoPuente is a LocoLabo initiative, School of Marketing and Management, Curtin University, Perth, Western Australia.*
+*LocoPuente is an independent LocoLabo initiative by Michael Borck. Not affiliated with, or endorsed by, any university or employer.*
