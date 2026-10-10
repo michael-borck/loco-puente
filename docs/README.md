@@ -31,6 +31,8 @@ noise on the website.
 | `vision.md` | **What puente is for**, and the four commitments it makes. Read before changing scope |
 | `host-setup.md` | **Everything outside puente**: prerequisites, secrets, systemd units, crontab, DNS. Start here for a clean install or a move to new hardware |
 | `decision-layer.md` | Routing a request to a capability without generating; the two backends and the measured latency |
+| `services-inventory.md` | **All 28 services**, and which few the opinionated default should be |
+| `demand.md` | Demand-driven residency: observing usage and deciding what stays loaded |
 | `adr/` | Architecture Decision Records — why the non-obvious choices were made, and what was rejected. Superseded records are kept, never deleted |
 | `tutor-admin.md` | The tutor-facing LibreChat account UI and its host-side runner |
 | `service-topology.md` | What runs in vs outside puente; the voice-service overlap |

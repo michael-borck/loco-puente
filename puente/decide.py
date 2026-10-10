@@ -334,19 +334,28 @@ CAPABILITY_QUESTION = Question(
         Option("image", "image, picture, photo, drawing, paint, illustration, render, visual"),
         Option("song", "song, music, lyrics, soundtrack, melody, compose, sing, track"),
         Option("voice", "voice, speech, speak aloud, transcript, narration, text to speech, podcast"),
-        Option("research", "research, search, source, paper, citation, literature, find information"),
+        Option("research", "research, paper, citation, literature, summarise a document, study"),
+        Option("search", "search the web, online search, current news, recent events"),
         Option("other", "anything that does not fit above"),
     ),
 )
 
 #: Capability -> the service that provides it, for the routing hint.
+#:
+#: Every capability the report offers must resolve to a service, or the router
+#: can conclude something Puente has no way to serve. Search was missing here
+#: even though SearXNG is on by default — so a request for "search the web for
+#: X" was routed nowhere. And image-video is a capability the hardware report
+#: offers but the router could not name a service for.
 CAPABILITY_SERVICE = {
     "chat": "ollama",
     "coding": "ollama",
     "image": "comfyui",
-    "song": "ace_step",
+    "image-video": "comfyui",
     "voice": "voicebox",
+    "song": "ace_step",
     "research": "anythingllm",
+    "search": "searxng",
 }
 
 
