@@ -250,9 +250,19 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
     pins: list[tuple[str, str]] = []
     ollama = config.services.ollama
     if ollama.enabled:
-        for inst in ollama.instances:
-            if inst.gpu is not None:
-                pins.append((f"ollama/{inst.name}", str(inst.gpu)))
+        # A pin on a NATIVE ollama is inert. `install_method: native` means the
+        # service has no compose representation, so no `deploy:` block is ever
+        # emitted for it and the pin in puente.yml is never read by anything.
+        # The real pin lives in a systemd drop-in, which this function cannot
+        # see. Validating it anyway is worse than not validating it: it reports
+        # a GPU as accounted for when the running process may be pinned
+        # somewhere else entirely. That is not hypothetical — puente.yml said the
+        # 3090 while 10-classroom.conf pinned the 4060 Ti, and this check
+        # passed both.
+        if ollama.install_method != "native":
+            for inst in ollama.instances:
+                if inst.gpu is not None:
+                    pins.append((f"ollama/{inst.name}", str(inst.gpu)))
     # llama.cpp pins per instance too — one server, one model, one card.
     llama = getattr(config.services, "llama_cpp", None)
     if llama is not None and llama.enabled:
@@ -272,7 +282,8 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
                 "gpu-pins",
                 "pass",
                 "no services pin a specific GPU (they will share all cards)",
-            )
+            ),
+            *_native_pin_checks(config),
         ]
 
     gpus = detect_gpus()
@@ -280,6 +291,7 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
         f"{g.index}={g.name} ({g.vram_gb:.0f}GB){' ' + g.short_uuid() if g.uuid else ''}"
         for g in gpus
     )
+    native_warnings = _native_pin_checks(config)
 
     if not gpus:
         return [
@@ -289,7 +301,8 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
                 f"{len(pins)} service(s) pin a GPU but none was detected: "
                 + ", ".join(f"{n}=gpu:{p}" for n, p in pins),
                 "Check the NVIDIA driver, or clear the `gpu:` pins to let services share.",
-            )
+            ),
+            *native_warnings,
         ]
 
     unresolved = [(n, p) for n, p in pins if resolve_gpu(p, gpus) is None]
@@ -303,7 +316,8 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
                 + f". Present: {inventory}",
                 "Correct the `gpu:` value in puente.yml. `puente gpu` prints the "
                 "UUID to use — prefer it over an index.",
-            )
+            ),
+            *native_warnings,
         ]
 
     # Everything resolved. Distinguish UUID pins from index pins.
@@ -326,9 +340,42 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
                 "re-enumerates, so these can silently land on a different card. "
                 "Replace with the UUID from `puente gpu`.",
             ),
+            *native_warnings,
         ]
 
-    return [Check("gpu-pins", "pass", f"{detail} — all valid. {inventory}")]
+    return [
+        Check("gpu-pins", "pass", f"{detail} — all valid. {inventory}"),
+        *native_warnings,
+    ]
+
+
+def _native_pin_checks(config: PuenteConfig) -> list[Check]:
+    """Warn when a native service carries a `gpu:` pin that nothing will apply.
+
+    A native install has no compose fragment, so `gpu:` on it is inert — the
+    real pin lives in a systemd drop-in, which puente cannot see or validate.
+    The failure this catches is silent and was live here: puente.yml pinned the
+    3090, 10-classroom.conf pinned the 4060 Ti, and the pin check passed both
+    because it only checked that the UUID exists.
+    """
+    ollama = config.services.ollama
+    if not ollama.enabled or ollama.install_method != "native":
+        return []
+    pinned = [i.name for i in ollama.instances if i.gpu is not None]
+    if not pinned:
+        return []
+    return [
+        Check(
+            "gpu-pins-native",
+            "warn",
+            f"ollama/{', '.join(pinned)}: gpu: pin is ignored for a native install",
+            "puente only emits a GPU reservation for containerised services. The "
+            "pin that actually applies is in the systemd drop-in "
+            "(/etc/systemd/system/<svc>.service.d/). Check it with "
+            "`systemctl cat ollama`, then set gpu: null here so there is one "
+            "source of truth.",
+        )
+    ]
 
 
 def check_ports(config: PuenteConfig) -> list[Check]:
@@ -411,10 +458,20 @@ def check_subnet(config: PuenteConfig) -> list[Check]:
 def check_secrets(config: PuenteConfig) -> list[Check]:
     """Every secret a proxy block needs is actually available.
 
-    Checks the environment (per ADR 0002, secrets are resolved at `up` time from
-    the environment, never from a shell profile). An unresolved token does not
-    fail loudly: Caddy emits `{$VAR}`, the route answers 401, and the operator
-    sees "auth is broken" with no obvious cause.
+    Per ADR 0002 secrets are resolved at `up` time from the environment and
+    never read from a shell profile. That has a consequence worth spelling out,
+    because getting it wrong makes this check cry wolf on a working stack:
+
+    **The host environment is not where the value lives afterwards.** `puente up`
+    copies resolved values into `{data_dir}/caddy/.env` and Caddy reads that file
+    at runtime. Anyone who runs `puente doctor` later — from a fresh shell, from
+    cron, in a new terminal — has none of those vars set, so an
+    environment-only check reports every bearer token as "unset → the route will
+    401" while the route is in fact serving authenticated traffic.
+
+    So a var counts as resolved if it is in the environment **or** in the
+    generated `.env`. The Caddyfile itself is no help here: it holds only
+    `{$VAR}` placeholders, never values, which is the whole point of ADR 0002.
     """
     wanted: set[str] = set()
     caddy = config.services.caddy
@@ -434,9 +491,28 @@ def check_secrets(config: PuenteConfig) -> list[Check]:
     if not wanted:
         return [Check("secrets", "pass", "no proxy secrets required")]
 
-    missing = sorted(v for v in wanted if not os.environ.get(v))
+    # What Caddy actually reads. Present only once `puente up caddy` has run.
+    from .services.caddy import _read_env_file
+
+    resolved_env = _read_env_file(config.resolved_data_dir() / "caddy" / ".env")
+
+    def _where(var: str) -> str | None:
+        if os.environ.get(var):
+            return "environment"
+        if resolved_env.get(var):
+            return "caddy .env"
+        return None
+
+    missing = sorted(v for v in wanted if not _where(v))
     if not missing:
-        return [Check("secrets", "pass", f"{len(wanted)} secret(s) resolved")]
+        n_env = sum(1 for v in wanted if _where(v) == "environment")
+        n_file = len(wanted) - n_env
+        where = (
+            "environment"
+            if not n_file
+            else f"{n_env} environment, {n_file} caddy .env"
+        )
+        return [Check("secrets", "pass", f"{len(wanted)} secret(s) resolved ({where})")]
 
     # A `$2...`-prefixed value is a bcrypt hash written inline rather than an env
     # var name. The Caddyfile generator accepts both (see caddy.py), so an inline
@@ -453,8 +529,11 @@ def check_secrets(config: PuenteConfig) -> list[Check]:
                 "secrets",
                 "warn",
                 "unset: " + ", ".join(unset),
-                "Export these before `puente up`, or the corresponding proxy routes "
-                "will answer 401. Do not put them in a shell profile — see ADR 0002.",
+                "Export these before `puente up caddy`, or the corresponding proxy "
+                "routes will answer 401. A var that was set at a previous `up` is "
+                "already in {data_dir}/caddy/.env and is NOT listed here — this is "
+                "only naming vars that have never been resolved anywhere. Do not put "
+                "them in a shell profile; see ADR 0002.",
             )
         )
     if inline:

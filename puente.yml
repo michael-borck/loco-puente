@@ -20,8 +20,18 @@ services:
         - https://lessonloom.borck.education
     instances:
     - name: primary
-      # was gpu: 0 — index is not stable across reordering
-      gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
+      # The pin lives in the systemd drop-in, NOT here, because ollama runs
+      # natively (install_method: native above) and a container-level `gpu:` is
+      # only emitted for the docker path. It used to read
+      #   GPU-15c8ed7d… (the 3090)
+      # while 10-classroom.conf pinned
+      #   GPU-ce79654c… (the 4060 Ti)
+      # — two sources of truth that disagreed, and `puente doctor` reported the
+      # yml one as valid because it only checked that the UUID exists. The
+      # systemd drop-in wins at runtime, deliberately: keeping Ollama off the
+      # 3090 leaves all 24GB free for ComfyUI / SwarmUI / the avatar nodes.
+      # Left null here so there is one source of truth and nothing to drift.
+      gpu: null
       port: 11434
       models:
       # Was llama3.1:8b-q4_k_m, a tag that has never existed locally — the
@@ -570,8 +580,13 @@ services:
       ui:
         swarm: SWARM_BCRYPT
       boxes:
-        michael: $2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6
-        callum: $2a$14$Vf2FfzqnZZPcesi0zVIhMewel/m0VR44VMoFPkEFBrRzY80ZLJ8l6
+        # Was two inline bcrypt hashes, committed to a public repo. They guarded
+        # boxes.borck.dev:8077, and a committed hash cannot be un-leaked — so the
+        # names are now env vars and both hashes were rotated. They were also
+        # BYTE-IDENTICAL, which defeated the per-tutor attribution the comment
+        # below insists on. See deploy/rotate-caddy-password.sh.
+        michael: BOXES_MICHAEL_BCRYPT
+        callum: BOXES_CALLUM_BCRYPT
       # One entry PER TUTOR, never a shared login. tutor_admin forwards the
       # authenticated username into its audit log, so a shared account would
       # make every entry read "tutors" and the log would answer "somebody" when

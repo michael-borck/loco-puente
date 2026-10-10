@@ -194,9 +194,12 @@ def test_no_gpu_pins_is_not_an_error(monkeypatch):
     assert [c.status for c in checks] == ["pass"]
 
 
-def test_gpu_pin_check_includes_ollama_instances(monkeypatch):
+def test_gpu_pin_check_includes_containerised_ollama_instances(monkeypatch):
     """Ollama is configured through `instances`, not the generic service shape —
-    its pins have to be validated too or the biggest workload goes unchecked."""
+    its pins have to be validated too or the biggest workload goes unchecked.
+
+    Only when puente manages the container. See
+    `test_native_ollama_pin_is_not_validated` for the native case."""
     monkeypatch.setattr(
         "puente.gpu.detect_gpus", lambda: [_FakeGPU(0, "RTX 3090", 24.0, GPU_A)]
     )
@@ -205,6 +208,8 @@ def test_gpu_pin_check_includes_ollama_instances(monkeypatch):
             "services": {
                 "ollama": {
                     "enabled": True,
+                    "install_method": "docker",
+                    "managed": True,
                     "instances": [
                         {"name": "primary", "gpu": "GPU-nope", "port": 11434}
                     ],
@@ -215,6 +220,68 @@ def test_gpu_pin_check_includes_ollama_instances(monkeypatch):
     checks = check_gpu_pins(config)
     assert checks[0].status == "fail"
     assert "ollama/primary" in checks[0].detail
+
+
+def test_native_ollama_pin_is_not_validated(monkeypatch):
+    """A pin on a native ollama is inert, so validating it is worse than not.
+
+    The live bug this pins down: puente.yml pinned the 3090 while
+    10-classroom.conf pinned the 4060 Ti. The check passed the yml pin because
+    it only verified the UUID existed — reporting a GPU as accounted for when
+    the running process was pinned somewhere else entirely.
+    """
+    monkeypatch.setattr(
+        "puente.gpu.detect_gpus", lambda: [_FakeGPU(0, "RTX 3090", 24.0, GPU_A)]
+    )
+    config = PuenteConfig.model_validate(
+        {
+            "services": {
+                "ollama": {
+                    "enabled": True,
+                    "install_method": "native",
+                    "instances": [{"name": "primary", "gpu": "GPU-nope"}],
+                }
+            }
+        }
+    )
+    checks = check_gpu_pins(config)
+    by_name = {c.name: c for c in checks}
+    assert by_name["gpu-pins"].status == "pass"
+    assert by_name["gpu-pins-native"].status == "warn"
+    assert "GPU-nope" not in by_name["gpu-pins"].detail
+
+
+def test_native_pin_warning_names_the_systemd_dropin(monkeypatch):
+    """The fix has to be findable from the message, or the warning just nags."""
+    monkeypatch.setattr(
+        "puente.gpu.detect_gpus", lambda: [_FakeGPU(0, "RTX 3090", 24.0, GPU_A)]
+    )
+    config = PuenteConfig.model_validate(
+        {
+            "services": {
+                "ollama": {
+                    "enabled": True,
+                    "install_method": "native",
+                    "instances": [{"name": "primary", "gpu": GPU_A}],
+                }
+            }
+        }
+    )
+    check = {c.name: c for c in check_gpu_pins(config)}["gpu-pins-native"]
+    assert "systemctl cat ollama" in check.fix
+    assert "service.d" in check.fix
+
+
+def test_no_native_warning_when_the_pin_is_null(monkeypatch):
+    """A yml that has already been reconciled must not nag. This is the state
+    the repo's own puente.yml is now in."""
+    monkeypatch.setattr(
+        "puente.gpu.detect_gpus", lambda: [_FakeGPU(0, "RTX 3090", 24.0, GPU_A)]
+    )
+    config = PuenteConfig.model_validate(
+        {"services": {"ollama": {"enabled": True, "install_method": "native"}}}
+    )
+    assert not [c for c in check_gpu_pins(config) if c.name == "gpu-pins-native"]
 
 
 # --------------------------------------------------------------------------
