@@ -322,6 +322,112 @@ class LlamaCppBackend:
 
 
 # --------------------------------------------------------------------------
+# LocalAI backend — delegate to /v1/systemone
+# --------------------------------------------------------------------------
+
+
+class LocalAIBackend:
+    """Ask LocalAI's own Decisions API instead of running a model here.
+
+    LocalAI shipped `/v1/systemone` in October 2026 — the same idea as this
+    module, upstream, in a project with far more of it (ADR0011 predates it;
+    ADR0012 is what moves the default engine). Using it is strictly better than
+    `LlamaCppBackend` where it is available: it is trained for this rather than
+    reading label-token logprobs off a general instruct model, so its
+    probabilities mean something.
+
+    **It is not a replacement for `LexicalBackend`.** This backend needs an
+    engine running. On a fresh install — no models, no VRAM, no network — the
+    lexical path is the only one that answers, which is what makes the stack
+    usable out of the box (docs/vision.md, commitment 2). Keep both.
+
+    Error handling is the same contract as `LlamaCppBackend`: an unreachable
+    engine must never be the thing that breaks a request. Every failure returns
+    confidence 0.0 with an `:error` suffix on the backend name, so the threshold
+    declines and the caller falls back.
+    """
+
+    name = "localai"
+
+    def __init__(
+        self,
+        base_url: str = "http://127.0.0.1:8080",
+        timeout: float = 30.0,
+        #: Optional bearer token, for an engine published behind auth.
+        api_key: str | None = None,
+    ):
+        self.base_url = base_url.rstrip("/")
+        self.timeout = timeout
+        self.api_key = api_key
+
+    def _decline(self, question: Question, suffix: str = "") -> Answer:
+        n = max(len(question.options), 1)
+        return Answer(
+            choice="",
+            probabilities={k: 1.0 / n for k in question.names()},
+            confidence=0.0,
+            backend=f"{self.name}{suffix}",
+        )
+
+    def answer(self, state: str, question: Question) -> Answer:
+        payload = {
+            "prompt": state,
+            "question": question.instructions,
+            "options": [
+                {"name": o.name, "description": o.description}
+                for o in question.options
+            ],
+        }
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        req = urllib.request.Request(
+            f"{self.base_url}/v1/systemone",
+            data=json.dumps(payload).encode(),
+            headers=headers,
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                data = json.load(r)
+        except (urllib.error.URLError, OSError, ValueError):
+            return self._decline(question, ":error")
+
+        # LocalAI returns the winning label and a distribution. Both spellings
+        # are accepted because this is the newest upstream surface and its exact
+        # response shape has not been pinned in this project's tests — an
+        # unexpected shape must degrade to a decline, never to a guess.
+        choice = str(data.get("choice") or data.get("label") or "")
+        raw_probs = data.get("probabilities") or data.get("scores") or {}
+        if not isinstance(raw_probs, dict):
+            raw_probs = {}
+
+        probs: dict[str, float] = {}
+        for opt in question.options:
+            try:
+                probs[opt.name] = float(raw_probs.get(opt.name, 0.0))
+            except (TypeError, ValueError):
+                probs[opt.name] = 0.0
+
+        if choice not in question.names():
+            # No usable label. If it gave a distribution but no winner, take the
+            # argmax rather than throwing away a real answer.
+            total = sum(probs.values())
+            if total <= 0:
+                return self._decline(question)
+            choice = max(probs, key=probs.get)
+
+        confidence = float(data.get("confidence", probs.get(choice, 0.0)))
+        return Answer(
+            choice=choice,
+            probabilities=probs,
+            confidence=confidence,
+            backend=self.name,
+        )
+
+
+# --------------------------------------------------------------------------
 # the capability routing question
 # --------------------------------------------------------------------------
 
@@ -347,6 +453,11 @@ CAPABILITY_QUESTION = Question(
 #: even though SearXNG is on by default — so a request for "search the web for
 #: X" was routed nowhere. And image-video is a capability the hardware report
 #: offers but the router could not name a service for.
+#:
+#: `resolve_capability_service` below re-points the LLM-shaped capabilities at
+#: whichever engine is actually enabled, because the static map below cannot
+#: know that — and a route to a disabled service is the one failure mode this
+#: layer cannot recover from.
 CAPABILITY_SERVICE = {
     "chat": "ollama",
     "coding": "ollama",
@@ -357,6 +468,35 @@ CAPABILITY_SERVICE = {
     "research": "anythingllm",
     "search": "searxng",
 }
+
+#: Capabilities the LLM engines serve directly, so when LocalAI is enabled they
+#: route there instead of to Ollama.
+#:
+#: Deliberately **only text**. LocalAI can also generate images and audio, and
+#: routing those to it would look like a simplification while quietly switching
+#: off Tier 2 work no engine ships: ComfyUI's Wan2.2-S2V, LivePortrait,
+#: SadTalker and Wav2Lip nodes, Voicebox's idle-unload fork (jamiepine#889), and
+#: ACE-Step's own container. Those exist precisely because the engine cannot do
+#: them. Add to this list only when an engine genuinely covers the capability
+#: *and* nothing bespoke is lost by moving.
+ENGINE_CAPABILITIES = ("chat", "coding")
+
+
+def resolve_capability_service(
+    capability: str, localai_enabled: bool = False, overrides: dict[str, str] | None = None
+) -> str | None:
+    """Which service provides `capability`, given which engine is enabled.
+
+    `CAPABILITY_SERVICE` is the static answer; this prefers an enabled engine.
+    Without it, migrating to LocalAI would leave every route pointing at a
+    service the operator had just switched off — a silent misroute, which is
+    worse than a decline.
+    """
+    if overrides and capability in overrides:
+        return overrides[capability]
+    if localai_enabled and capability in ENGINE_CAPABILITIES:
+        return "localai"
+    return CAPABILITY_SERVICE.get(capability)
 
 
 @dataclass
@@ -376,11 +516,18 @@ class Route:
     probabilities: dict[str, float]
     backend: str
     reason: str = ""
+    #: Resolved provider, captured at route time. `service` falls back to the
+    #: static map so a Route built by hand still answers.
+    _service: str | None = None
 
     @property
     def service(self) -> str | None:
         """The service that would satisfy this, if we actually decided."""
-        return CAPABILITY_SERVICE.get(self.capability) if self.decided else None
+        if not self.decided:
+            return None
+        if self._service is not None:
+            return self._service
+        return CAPABILITY_SERVICE.get(self.capability)
 
     def to_dict(self) -> dict:
         return {
@@ -399,6 +546,8 @@ def route(
     backend: DecisionBackend | None = None,
     question: Question = CAPABILITY_QUESTION,
     default: str | None = "chat",
+    localai_enabled: bool = False,
+    service_overrides: dict[str, str] | None = None,
 ) -> Route:
     """Decide which capability a request needs.
 
@@ -441,4 +590,7 @@ def route(
         probabilities=answer.probabilities,
         backend=answer.backend,
         reason=f"confidence {answer.confidence:.2f} >= {question.threshold}",
+        _service=resolve_capability_service(
+            answer.choice, localai_enabled=localai_enabled, overrides=service_overrides
+        ),
     )

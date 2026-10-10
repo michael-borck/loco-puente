@@ -268,6 +268,41 @@ class OllamaConfig(ServiceConfig):
     )
 
 
+class LocalAIConfig(ServiceConfig):
+    """LocalAI — the default engine from ADR0012 onward.
+
+    Off by default *only* until the migration lands: enabling it alongside
+    Ollama puts two inference servers on the same card, and the honest state of
+    play is that one engine should be running. Set `ollama.enabled: false` when
+    enabling this.
+    """
+
+    install_method: Literal["docker", "native", "external"] = "docker"
+    enabled: bool = False
+    #: Host directory holding models. When set, it is bind-mounted at /models and
+    #: reused — so an operator's existing GGUF library is not re-downloaded.
+    #: Leave as the literal string "default" (or None) to use the named volume.
+    models_dir: str | None = None
+    #: Backends to preload at boot. Installed on demand otherwise, which makes a
+    #: cold first request depend on having internet.
+    backends: list[str] = Field(
+        default_factory=lambda: ["llama-cpp", "diffusers", "whisper"]
+    )
+    #: Default context size. Small on purpose: a 128k default on an 8 GB card is
+    #: how a KV cache eats the model.
+    context_size: int = 8192
+    #: Concurrent requests. Raise only where VRAM genuinely allows it.
+    parallel: int = 1
+    #: Layers to offload to GPU. Lower it to leave room for ComfyUI / Voicebox.
+    gpu_layers: int | None = None
+    threads: int | None = None
+    #: Expose CUDA to the container. Off means CPU-only inference.
+    cuda: bool = True
+    debug: bool = False
+    #: Extra `local-ai run` flags, appended verbatim.
+    extra_args: list[str] = Field(default_factory=list)
+
+
 class LlamaCppConfig(ServiceConfig):
     """llama.cpp — GGUF inference with real control over where weights live.
 
@@ -392,6 +427,13 @@ class ComfyUIConfig(ServiceConfig):
 
 class StackConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
+    # The default engine from ADR0012 onward. Disabled while Ollama is still the
+    # proven path — running both puts two inference servers on one card.
+    #
+    # 8080 is LocalAI's own default, kept so the port matches everything written
+    # about it upstream. It collides with the portal's default, but both are
+    # disabled out of the box; see ADR0012.
+    localai: LocalAIConfig = Field(default_factory=lambda: LocalAIConfig(port=8080))
     llama_cpp: LlamaCppConfig = Field(default_factory=LlamaCppConfig)
     open_webui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3000)

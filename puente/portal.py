@@ -32,11 +32,14 @@ class PortalService:
 
 #: Services whose primary surface is an API with no useful web interface.
 #: Ollama serves a JSON root; linking it as though it were an app is misleading.
+#: LocalAI is the exception among the engines — it does have a usable WebUI, so
+#: it gets both an interface link and an API link.
 API_ONLY = {"ollama", "llama_cpp", "speaches", "uptime_kuma", "tutor_admin"}
 
 #: What kind of API each service speaks, for someone deciding if they can use it.
 API_KIND = {
     "ollama": "OpenAI-compatible",
+    "localai": "OpenAI + Anthropic + ElevenLabs",
     "llama_cpp": "OpenAI-compatible",
     "speaches": "OpenAI-compatible",
     "open_webui": "OpenAI-compatible",
@@ -126,7 +129,9 @@ VIEWS = {
     "admin": {
         "label": "Admin",
         "sections": [
-            {"label": "Inference", "services": ["ollama"]},
+            # Ollama first while both are supported; LocalAI is the successor and
+            # appears here only once enabled. See ADR0012.
+            {"label": "Inference", "services": ["ollama", "localai"]},
             {
                 "label": "Backend Services",
                 "services": [
@@ -148,6 +153,22 @@ VIEWS = {
 }
 
 
+def _api_kind_for(svc_name: str, data_dir: str | None) -> str:
+    """API kind for a service, from API_KIND or falling back to the catalog.
+
+    Catalog entries carry their own `api.kind`, so a service added to the catalog
+    needs no edit here — otherwise every Tier 3 entry would have to be listed in
+    two places, and one of them would inevitably be forgotten.
+    """
+    kind = API_KIND.get(svc_name)
+    if kind:
+        return kind
+    from .catalog import load_entries
+
+    entry = load_entries(data_dir).get(svc_name)
+    return entry.api.kind if entry and entry.api else ""
+
+
 def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalService | None:
     """Build a PortalService for a given service name."""
     # Ollama (special case)
@@ -164,6 +185,27 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
             api_url=api,
             api_kind=API_KIND["ollama"],
             url_is_api=True,
+        )
+
+    # LocalAI has both a real WebUI and an API, so it is not an API-only card —
+    # but the API is the reason most people will point a client at it, so it
+    # gets its own link rather than being folded into the interface URL.
+    if svc_name == "localai":
+        if not config.services.localai.enabled:
+            return None
+        port = config.services.localai.port or 8080
+        proxy = config.services.localai.proxy
+        if isinstance(proxy, list):
+            proxy = proxy[0] if proxy else None
+        url = f"https://{proxy.host}" if proxy else f"http://{host}:{port}"
+        return PortalService(
+            name="LocalAI",
+            icon="🧠",
+            description="Local AI engine — text, image, voice, embeddings",
+            url=url,
+            api_url=url,
+            api_kind=_api_kind_for(svc_name, None),
+            url_is_api=False,
         )
 
     # Stack services
@@ -194,7 +236,7 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
     # Same host as the interface, but named as an API so it can be labelled
     # separately. For a proxied service the API is reached through the same
     # hostname — Caddy fronts both.
-    api_kind = API_KIND.get(svc_name, "")
+    api_kind = _api_kind_for(svc_name, None)
     api_url = url if api_kind else None
 
     return PortalService(

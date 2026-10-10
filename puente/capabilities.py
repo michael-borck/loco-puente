@@ -176,17 +176,20 @@ def detect_host() -> HostProfile:
 #: pessimistic. A capability that is wrongly offered costs an operator an evening.
 _CATALOGUE: dict[str, tuple[float, str, str]] = {
     "chat": (6.0, "A 7–8B model at Q4, fully resident in VRAM.",
-             "services:\n  ollama:\n    enabled: true"),
+             "services:\n  localai:\n    enabled: true\n  ollama:\n    enabled: false"),
     "chat-large": (18.0, "A 30B model at Q4. Wants a 24 GB card, or MoE expert offload.",
                   "llama_cpp:\n  instances:\n    - name: chat\n      cpu_moe: 8"),
-    "coding": (6.0, "A 7B code model at Q4. Same footprint as chat.",
-               "services:\n  ollama:\n    enabled: true"),
+"coding": (6.0, "A 7B code model at Q4. Same footprint as chat.",
+                "services:\n  localai:\n    enabled: true\n  ollama:\n    enabled: false"),
     "image": (9.0, "SDXL or FLUX. ComfyUI, ~9 GB.",
               "services:\n  comfyui:\n    enabled: true"),
     "image-video": (22.0, "Wan2.2-S2V needs ~22 GB at fp8. A 24 GB card, alone.",
                     "services:\n  comfyui:\n    enabled: true\n    install_wan_s2v: true"),
     "voice": (6.0, "Voicebox TTS. ~5.6 GB of weights.",
               "services:\n  voicebox:\n    enabled: true"),
+    # LocalAI serves songs too, but routing them there would mean giving up
+# ACE-Step's own container — which exists because it pins a different torch build
+# from ComfyUI's (see AceStepConfig). Tier 2 stays Tier 2; see decide.py.
     "song": (5.0, "ACE-Step 2B. ~4.7 GB — the cheapest capability here.",
              "services:\n  ace_step:\n    enabled: true"),
     "research": (6.0, "AnythingLLM over a chat model.", "services:\n  anythingllm:\n    enabled: true"),
@@ -301,6 +304,12 @@ def suggest_backend(host: HostProfile) -> str:
     working and not — i.e. a small card. Ollama everywhere else, because it is
     easier to operate. The only capability that distinguishes them today is
     `chat-large`, so the test is narrow on purpose.
+
+    LocalAI is not considered here. It is the successor engine (ADR0012) but it
+    wraps llama.cpp and vLLM rather than adding a placement capability of its
+    own, so it inherits their verdicts rather than extending them. Choosing it
+    is an operator's decision — `puente capabilities --backend localai` — not
+    something hardware detection should make on their behalf.
     """
     ollama_can = {c.name for c in assess(host, "ollama") if c.verdict in USABLE}
     llama_can = {c.name for c in assess(host, "llama.cpp") if c.verdict in USABLE}
