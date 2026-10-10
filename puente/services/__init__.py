@@ -13,6 +13,7 @@ from .comfyui import ComfyUIService
 from .excalidraw import ExcalidrawService
 from .fooocus import FooocusService
 from .jupyter import JupyterService
+from .llama_cpp import LlamaCppService
 from .librechat import LibreChatService
 from .musicgen import MusicGenService
 from .nodepad import NodepadService
@@ -54,6 +55,7 @@ ALL_SERVICES: dict[str, type[ServiceBase]] = {
     "fooocus": FooocusService,
     "voicebox": VoiceboxService,
     "tutor_admin": TutorAdminService,
+    "llama_cpp": LlamaCppService,
     "uptime_kuma": UptimeKumaService,
     "portal": PortalService,
     "caddy": CaddyService,

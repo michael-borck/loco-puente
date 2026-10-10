@@ -253,6 +253,12 @@ def check_gpu_pins(config: PuenteConfig) -> list[Check]:
         for inst in ollama.instances:
             if inst.gpu is not None:
                 pins.append((f"ollama/{inst.name}", str(inst.gpu)))
+    # llama.cpp pins per instance too — one server, one model, one card.
+    llama = getattr(config.services, "llama_cpp", None)
+    if llama is not None and llama.enabled:
+        for inst in llama.instances:
+            if inst.gpu is not None:
+                pins.append((f"llama_cpp/{inst.name}", str(inst.gpu)))
     for name, svc_cls in _service_classes().items():
         svc = getattr(config.services, name, None)
         if svc is None or not getattr(svc, "enabled", False):

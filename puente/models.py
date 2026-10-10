@@ -18,6 +18,51 @@ class OllamaInstance(BaseModel):
     models: list[str] = Field(default_factory=lambda: ["llama3.1:8b-q4_k_m"])
 
 
+class LlamaCppInstance(BaseModel):
+    """One `llama-server` process — one model, one port.
+
+    llama-server serves a single GGUF, so "several models" means several
+    instances. That mirrors Ollama's shape deliberately: the two backends are
+    meant to be swappable, and keeping the config shape identical is what makes
+    that cheap.
+    """
+
+    name: str = "primary"
+    # Filename under the models directory, or a bare model name to resolve
+    # against `hf_repo`. Never a path — the container only sees the mount.
+    model: str = ""
+    #: "owner/repo" on the Hugging Face Hub. When set, the file is downloaded
+    #: from `hf_file` on first use. Lets a fresh install run without the
+    #: operator hand-placing a GGUF.
+    hf_repo: str | None = None
+    hf_file: str | None = None
+    gpu: str | int | None = None
+    port: int = 8081
+
+    # -- memory placement, the reason this backend exists ------------------
+    # Layers to keep in VRAM. "all" offloads everything; a lower number leaves
+    # room for the other services sharing the card.
+    n_gpu_layers: int | Literal["all"] = "all"
+    # MoE expert offload: keep the routed experts of the first N layers in
+    # SYSTEM RAM, leaving attention, KV and shared experts on the GPU. This is
+    # the capability llama.cpp has and vLLM/SGLang/Ollama do not, and it is why
+    # a large MoE model can use less VRAM than a small dense one. See the ADR.
+    cpu_moe: int | Literal["all"] | None = None
+
+    ctx: int = 8192
+    parallel: int = 1
+    #: Name the model answers to, so Open WebUI / LibreChat pickers can show
+    #: something meaningful instead of a GGUF filename.
+    alias: str | None = None
+    #: Thinking/reasoning off for this instance. Sends reasoning_effort: none on
+    #: the OpenAI endpoint; for classroom Q&A the thinking pass costs ~5x
+    #: latency for no gain.
+    disable_thinking: bool = False
+    #: Extra llama-server flags, appended verbatim. Escape hatch for the long
+    #: tail (flash attention, KV quantisation, sampling).
+    extra_args: list[str] = Field(default_factory=list)
+
+
 class ProxyConfig(BaseModel):
     """Reverse-proxy exposure for a service. Attach to a service's `proxy:`
     block to have the Caddy service publish it at a public hostname.
@@ -223,6 +268,28 @@ class OllamaConfig(ServiceConfig):
     )
 
 
+class LlamaCppConfig(ServiceConfig):
+    """llama.cpp — GGUF inference with real control over where weights live.
+
+    The alternative to Ollama, and the only one of the common servers that can
+    keep MoE experts in system RAM while attention and KV stay in VRAM. That
+    matters on a card shared with image, voice and song services: a large MoE
+    model can end up using LESS VRAM than a small dense one.
+
+    Off by default while it is being proven; see the ADR.
+    """
+
+    install_method: Literal["docker", "native", "external"] = "docker"
+    # Off by default. Ollama is the proven path; this is the successor, and
+    # enabling both at once would have two servers contending for the same card.
+    enabled: bool = False
+    default_port: int = 8081
+    instances: list[LlamaCppInstance] = Field(default_factory=list)
+    #: Host directory holding the GGUF files. Bind-mounted read-only into each
+    #: container. Defaults to {data_dir}/llama.cpp/models.
+    models_dir: str | None = None
+
+
 class SpeachesConfig(ServiceConfig):
     models: list[str] = Field(
         default_factory=lambda: [
@@ -289,6 +356,7 @@ class ComfyUIConfig(ServiceConfig):
 
 class StackConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
+    llama_cpp: LlamaCppConfig = Field(default_factory=LlamaCppConfig)
     open_webui: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3000)
     )

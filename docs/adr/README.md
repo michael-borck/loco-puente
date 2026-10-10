@@ -41,3 +41,4 @@ reversal being proposed a third time.
 | [0007](0007-tutor-admin-scope.md) | Tutor admin withholds delete, ban and role changes | Accepted |
 | [0008](0008-imagegen-self-heal-layers.md) | Image-gen self-heals in layers: reconcile loop, watchdog, weekly restart | Accepted |
 | [0009](0009-custom-images-published-to-ghcr.md) | Custom images published to GHCR from a pinned commit, amd64-only | Accepted |
+| [0010](0010-llamacpp-as-default-backend.md) | llama.cpp becomes the default LLM backend for MoE expert offload; Ollama retires | Accepted |

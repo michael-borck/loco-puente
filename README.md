@@ -98,6 +98,7 @@ A pick-and-choose menu, all running locally:
 | Service | What it is |
 |---|---|
 | **Ollama** | Local LLM inference |
+| **llama.cpp** | GGUF inference with MoE experts offloaded to system RAM (see ADR0010) |
 | **Open WebUI** | Chat over your models |
 | **SwarmUI / ComfyUI** | Image generation |
 | **Voicebox / Speaches** | Voice-cloning TTS, speech-to-text |
