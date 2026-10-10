@@ -1,0 +1,75 @@
+# Research tools.
+#
+# SearXNG is `implementation: builtin` — the CLI seeds its settings.yml before
+# the container's first read, because SearXNG reads that file exactly once at
+# boot and ignores later changes. That is real lifecycle logic, so the class
+# stays hand-written; only its metadata lives in the catalog.
+#
+# AnythingLLM is builtin for a different reason: `storage_path` adopts an
+# existing install in place, so migrating it must not lose workspaces.
+
+services:
+  - id: searxng
+    name: SearXNG
+    description: Private web search (serves Open WebUI and Vane)
+    image: docker.io/searxng/searxng:2026.10.25-0e0e4b7
+    container_port: 8080
+    default_port: 8888
+    provides: [search]
+    needs_vram_mb: 0
+    interface: {path: /}
+    api: {path: /search, kind: JSON}
+    profiles: [research]
+    implementation: builtin
+    volumes:
+      /etc/searxng: "{data_dir}/searxng"
+    environment:
+      SEARXNG_BASE_URL: "http://localhost:{port}"
+    repo: https://github.com/searxng/searxng
+
+  - id: anythingllm
+    name: AnythingLLM
+    description: RAG chatbots (embeds in Blackboard, per-unit workspaces)
+    image: docker.io/mintplexlabs/anythingllm:master
+    container_port: 3001
+    default_port: 3001
+    provides: [research, chat]
+    needs_vram_mb: 0
+    interface: {path: /}
+    api: {path: /api, kind: REST}
+    profiles: [research]
+    implementation: builtin
+    volumes:
+      /app/server/storage: "{data_dir}/anythingllm"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    repo: https://github.com/Mintplex-Labs/anything-llm
+
+  # Generated, not builtin: this one really is just env and two volumes.
+  - id: open_notebook
+    name: Open Notebook
+    description: Research assistant (PDF ingestion, notes, podcast generation)
+    image: docker.io/lfnovo/open_notebook:v1-latest-single
+    container_port: 8502
+    default_port: 8502
+    provides: [research, notebooks]
+    needs_vram_mb: 0
+    interface: {path: /}
+    api: {path: /api, kind: REST}
+    profiles: [research]
+    volumes:
+      /app/data: "{data_dir}/open-notebook"
+      /mydata: "{data_dir}/open-notebook-db"
+    extra_ports:
+      - "5055:5055"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      SURREAL_URL: ws://localhost:8000/rpc
+      SURREAL_USER: root
+      SURREAL_PASSWORD: root
+      SURREAL_NAMESPACE: open_notebook
+      SURREAL_DATABASE: open_notebook
+      OPEN_NOTEBOOK_ENCRYPTION_KEY: puente-notebook-secret-change-me
+      API_URL: https://notes-api.locopuente.org
+    repo: https://github.com/lfnovo/open-notebook

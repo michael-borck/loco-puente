@@ -1,0 +1,24 @@
+# Nodepad — visual node-based note-taking.
+#
+# Published by puente under its own GHCR namespace (ADR0009), so it has a local
+# build context as well as a prebuilt image. amd64 only — see ServiceBase's
+# `puente_published` note.
+#
+# Ours rather than a third-party image, but still just a pin plus a build
+# context — nothing here needs hand-written logic, so it is generated like any
+# other entry. `puente_published` marks it amd64-only (ADR0009), which
+# `puente doctor` reports rather than letting the pull fail obscurely.
+
+services:
+  - id: nodepad
+    name: Nodepad
+    description: Visual node-based note-taking and knowledge graph
+    image: ghcr.io/michael-borck/puente-nodepad:latest
+    container_port: 3000
+    default_port: 3004
+    provides: [notes]
+    needs_vram_mb: 0
+    interface: {path: /}
+    build_context: ./dockerfiles/nodepad
+    puente_published: true
+    repo: https://github.com/michael-borck/loco-puente

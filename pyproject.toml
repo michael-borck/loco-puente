@@ -44,7 +44,7 @@ puente = "puente.cli:app"
 include = ["puente*"]
 
 [tool.setuptools.package-data]
-puente = ["templates/*", "templates/**/*", "dockerfiles/**/*"]
+puente = ["templates/*", "templates/**/*", "dockerfiles/**/*", "catalog/*.yml", "catalog/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
