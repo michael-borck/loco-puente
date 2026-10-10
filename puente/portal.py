@@ -17,6 +17,42 @@ class PortalService:
     icon: str
     description: str
     url: str
+    #: The API endpoint, when the service exposes one. Distinct from `url`,
+    #: which is the human-facing interface. See docs/vision.md commitment 3 —
+    #: a service can have both, either, or neither, and collapsing them into one
+    #: link is how someone ends up pointing their script at a web GUI.
+    api_url: str | None = None
+    #: The API's shape, for someone deciding whether they can use it.
+    api_kind: str = ""
+    #: True when `url` is itself an API rather than an interface — Ollama has an
+    #: API and no real web UI of its own, so its card must say so rather than
+    #: presenting a JSON endpoint as something to click.
+    url_is_api: bool = False
+
+
+#: Services whose primary surface is an API with no useful web interface.
+#: Ollama serves a JSON root; linking it as though it were an app is misleading.
+API_ONLY = {"ollama", "llama_cpp", "speaches", "uptime_kuma", "tutor_admin"}
+
+#: What kind of API each service speaks, for someone deciding if they can use it.
+API_KIND = {
+    "ollama": "OpenAI-compatible",
+    "llama_cpp": "OpenAI-compatible",
+    "speaches": "OpenAI-compatible",
+    "open_webui": "OpenAI-compatible",
+    "searxng": "JSON",
+    "comfyui": "JSON (prompt/history)",
+    "swarmui": "JSON",
+    "voicebox": "REST",
+    "ace_step": "REST",
+    "anythingllm": "REST",
+    "vane": "JSON",
+    "citesight": "JSON",
+    "deeptutor": "REST",
+    "uptime_kuma": "REST",
+    "stirling_pdf": "REST",
+    "citesight_alt": "JSON",
+}
 
 
 @dataclass
@@ -119,11 +155,15 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
         if not config.services.ollama.enabled:
             return None
         ports = [str(i.port) for i in config.services.ollama.instances]
+        api = f"http://{host}:{config.services.ollama.instances[0].port}"
         return PortalService(
             name="Ollama",
             icon="🧠",
             description=f"LLM inference (ports {', '.join(ports)})",
-            url=f"http://{host}:{config.services.ollama.instances[0].port}",
+            url=api,
+            api_url=api,
+            api_kind=API_KIND["ollama"],
+            url_is_api=True,
         )
 
     # Stack services
@@ -142,15 +182,30 @@ def _build_service(svc_name: str, config: PuenteConfig, host: str) -> PortalServ
     proxy = getattr(svc_config, "proxy", None)
     if isinstance(proxy, list):
         proxy = proxy[0] if proxy else None
+
+    port = svc_config.port or svc_class.default_port
     if proxy is not None:
         url = f"https://{proxy.host}"
     else:
         # No declared proxy block → link to this machine on its own port. Never
         # fall back to a hardcoded hostname: see FOREIGN_PROXY_HOSTS above.
-        port = svc_config.port or svc_class.default_port
         url = f"http://{host}:{port}"
 
-    return PortalService(name=display_name, icon=icon, description=desc, url=url)
+    # Same host as the interface, but named as an API so it can be labelled
+    # separately. For a proxied service the API is reached through the same
+    # hostname — Caddy fronts both.
+    api_kind = API_KIND.get(svc_name, "")
+    api_url = url if api_kind else None
+
+    return PortalService(
+        name=display_name,
+        icon=icon,
+        description=desc,
+        url=url,
+        api_url=api_url,
+        api_kind=api_kind,
+        url_is_api=svc_name in API_ONLY,
+    )
 
 
 def _review_service_names(config: PuenteConfig) -> list[str]:

@@ -136,6 +136,57 @@
       transform: translateY(-3px);
       box-shadow: 0 8px 30px rgba(244, 63, 94, 0.1);
     }
+    /* The clickable part is the interface only; the API line below it is a
+       reference, not a second link to the same place. */
+    .card-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: inherit;
+      width: 100%;
+    }
+    .card:hover .card-link { color: inherit; }
+    /* A service whose primary surface IS its API is marked, so a JSON endpoint
+       is never presented as though it were an app to click. */
+    .card-api { border-style: dashed; }
+    .card-api .card-link { cursor: pointer; }
+
+    .card-api-line {
+      width: 100%;
+      margin-top: 0.75rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .card-api-tag {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      background: var(--accent);
+      color: #fff;
+    }
+    .card-api-kind {
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+    .card-api-url {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      /* Long URLs must not blow out the card grid. */
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      user-select: all;
+    }
     .card-icon { font-size: 2.25rem; }
     .card-name {
       font-family: var(--font-mono);
@@ -205,11 +256,23 @@
       {% endif %}
       <div class="grid">
         {% for svc in section.services %}
-        <a href="{{ svc.url }}" class="card" target="_blank" rel="noopener">
-          <div class="card-icon">{{ svc.icon }}</div>
-          <div class="card-name">{{ svc.name }}</div>
-          <div class="card-desc">{{ svc.description }}</div>
-        </a>
+        <div class="card{% if svc.url_is_api %} card-api{% endif %}">
+          <a href="{{ svc.url }}" class="card-link" target="_blank" rel="noopener">
+            <div class="card-icon">{{ svc.icon }}</div>
+            <div class="card-name">{{ svc.name }}</div>
+            <div class="card-desc">{{ svc.description }}</div>
+          </a>
+          {# The API is a separate surface from the interface and is labelled
+             as such. Collapsing them into one link is how someone ends up
+             pointing their script at a web GUI. See docs/vision.md. #}
+          {% if svc.api_url %}
+          <div class="card-api-line" title="{{ svc.api_url }}">
+            <span class="card-api-tag">API</span>
+            <span class="card-api-kind">{{ svc.api_kind }}</span>
+            <code class="card-api-url">{{ svc.api_url }}</code>
+          </div>
+          {% endif %}
+        </div>
         {% endfor %}
       </div>
     </div>

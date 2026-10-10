@@ -55,13 +55,28 @@ That is also what makes them defensible — not taste, but a measurement.
 This is the architectural commitment that matters most, and it is the one the
 PoC has been drifting from.
 
-Chat, image, voice and song are **services with APIs**. The launcher portal, and
-any WebUI we build, is a *client* of those APIs — not the thing that owns them.
+Chat, image, voice and song are **services with HTTP APIs**. The launcher portal,
+and any WebUI we build, is a *client* of those APIs — not the thing that owns them.
 
 Why: the mission is access, and the thing that creates access is not
 access to a chat box. It is being able to *write your own code* against a real
 AI stack. Someone who has used the portal and then read its API can build
 something of their own. Someone given only a chat UI cannot.
+
+**Every service has two distinct surfaces, and they are not the same thing:**
+
+| Surface | What it is | Examples |
+| --- | --- | --- |
+| **Interface** | The human-facing one — usually a service's own web GUI | Open WebUI, SwarmUI, ComfyUI, the Gradio UIs on Voicebox and ACE-Step |
+| **API** | What your code talks to | OpenAI-compatible on Ollama and llama.cpp; bespoke JSON on ComfyUI and SearXNG |
+
+A service can have both, either, or neither. Open WebUI is an interface over
+Ollama's API. Ollama has an API and almost no interface of its own. Excalidraw
+is an interface with nothing to automate.
+
+The launcher therefore shows **both, labelled separately** — "Open" for the
+interface, "API" for the endpoint — because collapsing them into one link is how
+someone ends up pointing their script at a web GUI.
 
 Consequences: every capability is reachable over HTTP with a documented contract;
 auth is the proxy's job (ADR0001, ADR0002); and the admin surface is a separate
