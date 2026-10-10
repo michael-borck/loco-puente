@@ -96,6 +96,39 @@ stands. Move one before enabling both.
 
 ---
 
+## Design principle, recorded 2026-10-10
+
+**Docker is a means, not the goal. The aim is the easiest possible setup,
+install and maintenance on a server or computer.**
+
+Containers were chosen because they looked like plug-and-play modularity, not
+because Docker is a requirement. This matters because it was nearly treated as
+one: the QVAC evaluation below weighted "no container story" against it, and
+ADR0012 leans on LocalAI shipping an image. If Docker is instrumental, decisions
+must be made on total setup-plus-maintenance cost, per service.
+
+`install_method: docker | native | external` already exists per service, so the
+abstraction is in place. What was missing is the rule for choosing:
+
+| Service type | Winner | Why |
+| --- | --- | --- |
+| Hostile dependency stacks — ComfyUI's pinned torch+cu124, Voicebox, ACE-Step | Docker | Dependency-hell avoidance IS the maintenance win; upgrade = pull a tag |
+| Good native installer, direct GPU — Ollama's `curl \| sh` | Native | No `nvidia-container-toolkit` prerequisite, GPU just works |
+| Single static binaries — Caddy | Native | A binary and a Caddyfile; nothing to containerise |
+| Needs a database sibling — LibreChat + mongo | Docker | Orchestration is the job |
+
+The Docker-specific tax for the target audience is specific and worth naming:
+`nvidia-container-toolkit` is the hardest prerequisite `puente doctor` checks.
+
+**Open implication, deliberately not decided:** the default trio could run
+entirely without Docker — Ollama native, Open WebUI via pip, Caddy as a single
+binary. That may be the true "easiest possible setup" story for someone who has
+never used Docker, and is a candidate for the quick-start path at the revisit.
+A pure-Docker default would foreclose it by inertia; this note is here so the
+choice is made deliberately.
+
+---
+
 ## Decisions waiting on you
 
 Ordered by how much they block other work.
@@ -153,10 +186,13 @@ QVAC is **not** a LocalAI alternative — different shape entirely:
 | UI | Built-in WebUI | None (QV.AC is a separate app) |
 | Multi-model | 60+ backends, OCI gallery | One model per server config |
 
-Puente is a Docker orchestration layer. QVAC's HTTP server is a native Node
-process — a second non-containerised runtime alongside native Ollama, with
-nothing for `puente doctor` to inspect. **Its server also defaults to
-`127.0.0.1:11434`, which collides with the native Ollama this box is keeping.**
+Puente's real aim is ease of setup and maintenance, and Docker is instrumental —
+see the design-principle note above. QVAC still loses the engine slot, but on
+the surviving grounds: one model per server config (vs LocalAI's 60-backend
+gallery), OpenAI-compatible only, no WebUI, a native Node runtime to install on
+a GPU box, and a server defaulting to `127.0.0.1:11434` — Ollama's own port,
+which this box is keeping. "Not containerised" is NOT one of the reasons; do
+not resurrect it as one.
 
 Two things recorded so they are findable later:
 
