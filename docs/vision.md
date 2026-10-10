@@ -87,13 +87,29 @@ Neither is being retired. The choice belongs to whoever installs it.
 
 ## Open questions
 
+- **A resident decision model.** This is the control plane the rest of this
+  document assumes and does not yet have. Not a chatty small model — a
+  *decision* model: a 0.4–4B model fine-tuned to pick from a restricted option
+  set, reading **label-token logits in one forward pass and generating zero
+  tokens**, returning calibrated probabilities over exactly the options supplied.
+  The field has names (`lev`, `SemIf`, `Laya`, `Kev`, `decider`) and a published
+  benchmark against trained classifiers.
+
+  Why it matters here: it is the one model that can be **permanently resident**.
+  Everything else is swapped in and out. A decision model can sit on the card
+  permanently and answer the only question that governs everything else — *which
+  model should be loaded right now?* That turns model residency from a schedule
+  someone maintains into a policy the stack applies.
+
+  It also reframes routing. OpenClaw already routes simple queries to a cheap
+  model and complex ones to a powerful one; a decision model is the cheap half,
+  done properly, at ~0.2 s and no generation loop.
+
 - **Agents.** OpenClaw (MIT, ~250k stars) connects local models to files, shell
   and browsers. Do we integrate, or only ensure our APIs are good enough that an
-  agent can drive them?
-- **System 1 / System 2.** A small fast model for routine turns and a large one
-  on demand, rather than one model doing everything slowly. This is really the
-  same problem as model residency, solved at the routing layer instead of the
-  memory layer. Worth deciding deliberately.
+  agent can drive them? Open question also: which "Hermes" is meant — Nous
+  Research's Hermes fine-tunes, or Hermes Agent.
+
 - **The launcher.** Is the portal a real UI, or a signpost? Committing to a web
   app is a maintenance cost; a good API plus a clear list of endpoints is honest
   and cheap.

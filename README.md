@@ -124,6 +124,7 @@ Each of those services will fall back to compiling from source if the pull fails
 ## Commands
 
 ```
+puente capabilities  What this host can do, and what it cannot
 puente init      Interactive setup — detect hardware, pick services
 puente install   Install native services + pull Docker images
 puente up        Start the stack (or a specific service)

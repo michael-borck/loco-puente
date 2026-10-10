@@ -23,6 +23,19 @@ gate. It covers: Docker Engine and the Compose **v2** plugin, the NVIDIA
 container runtime, `gpu:` pin validity, the pinned bridge subnet, ports 80/443,
 unset proxy secrets, and the optional host tools.
 
+For the question "can this host actually run this?", use:
+
+```sh
+puente capabilities            # verdicts per capability, with reasons
+puente capabilities --json     # for scripting or a provisioning report
+```
+
+This is the read-only answer: which of chat, large-model chat, coding, image,
+video, voice, song and research fit, which need expert offload, and which are
+simply not available — plus the `puente.yml` that enables each. It also reports
+the memory generation, because DDR3 is a real ~1.7x cliff for anything that
+streams experts from RAM and DDR5 is not (ADR0010).
+
 It deliberately **does not** install the NVIDIA driver or the container toolkit.
 Both are reported with the command to run, but the operator runs them — a driver
 upgrade restarts Docker and risks every running service (see §1).

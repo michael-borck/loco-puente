@@ -767,6 +767,31 @@ def portal(
     console.print()
 
 
+@app.command()
+def capabilities(
+    backend: str | None = typer.Option(
+        None, help="Assess against a backend: ollama (default) or llama.cpp"
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Machine-readable output"),
+):
+    """What this host can actually do, and what it cannot.
+
+    Detects hardware and reports a blunt verdict per capability — usable, or not,
+    with the reason. Read-only; nothing is installed or started. This is the
+    question "can I run this?" answered before you find out by watching a
+    container fail.
+    """
+    from puente.capabilities import detect_host, report_for
+
+    report = report_for(detect_host(), backend)
+
+    if json_output:
+        typer.echo(json.dumps(report.to_dict(), indent=2))
+        return
+
+    console.print(report.render())
+
+
 # -- version -------------------------------------------------------------------
 
 
