@@ -207,6 +207,53 @@ Two things recorded so they are findable later:
   `capabilities.py` into an answer from data. Also validation that the
   hardware-assessment idea is aimed at the right thing.
 
+### F. Song generation: offer three models, decided at install (2026-10-10)
+
+Found while checking whether YuE2's ~11-12 GB claim
+(`localmodelwatch.tsuchitsuchi.com/en/model-m-a-p-yue2-en/`) reopened the
+question the stack closed when it chose ACE-Step over YuE 1
+(`docs/ace-step-api.md:6-24`). It does.
+
+YuE 1 was rejected correctly: 24 GB BF16, 0.083x realtime, 36% phoneme error
+rate. **YuE2 fixes most of that** — 3.6B params, ~11 GiB peak measured on a
+4090 (14 GiB max length), ~71 s for a 3.6-min song (~3x realtime), and the best
+open weights available: SongBench 6.73 vs ACE-Step 1.5's 6.01, above Suno v6.
+Its score-first architecture (ABC notation written first, then rendered —
+editable, agent-modifiable, covers via SheetSage2) is a real differentiator.
+
+Caveats, from the same source:
+
+- A 12 GB card "leaves almost no headroom"; official rec is 24 GB. Fits the
+  3090 beside ComfyUI (~20 GB, tight); fits the 4060 Ti only with Ollama's
+  8.4 GB resident model gone; does not fit the 8-12 GB tier at all.
+- **Licence CC BY-NC 4.0 — non-commercial.** Probably fine for the education
+  stack, but must be surfaced at install, not discovered later.
+- ACE-Step still wins lyric clarity (7.46% vs 8.44% PER) and is ~5x faster.
+
+The decision this points to: **offer all three, chosen at install time.** The
+choice layer is legitimately Tier 1 — "24 GB free → XL or YuE2; 8 GB → 2B" is
+`capabilities` + `init`, which no upstream does. Not reinventing.
+
+The serving layer, where reinvention would happen — each model already has a
+path that adds no service class:
+
+| Model | Path | New code |
+| --- | --- | --- |
+| ACE-Step 2B/XL | LocalAI backend (upstream Feb 2026); standalone container today | None — `variant:` knob exists |
+| YuE2 | **ComfyUI node** — Comfy-Org ships official ComfyUI workflows (`YuE2: Text to Music`, `YuE2: Music Cover`) | A flag, following the `install_wan_s2v` pattern exactly |
+
+What WOULD be reinventing: a third standalone song container. Do not.
+
+Two unverified assumptions, check before building: YuE2 on ComfyUI's
+torch 2.6.0+cu124 (the Comfy-Org repackaging implies compatibility; that is
+inference, not evidence), and whether LocalAI has a YuE2 backend (probably not
+yet — it is new and ComfyUI-first).
+
+Evolution this suggests for the catalog: **licence as a first-class field**
+next to `needs_vram_mb`. The install-time question becomes
+"ace-step-2b (5 GB, Apache) / ace-step-xl (9 GB, Apache) / yue2 (12 GB, **NC**)"
+— VRAM and licence tolerance decide, metadata not an engine.
+
 ---
 
 ## Known rough edges
