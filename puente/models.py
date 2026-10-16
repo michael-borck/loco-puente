@@ -497,6 +497,13 @@ class StackConfig(BaseModel):
     nodepad: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=3004, enabled=False)
     )
+    # Catalog entry (office.yml). The field must exist even though the service
+    # class is generated: compose, portal, doctor and the CLI all resolve
+    # services with getattr(config.services, name, None), and a missing field
+    # makes the entry invisible to all of them. test_catalog pins this.
+    presenton: ServiceConfig = Field(
+        default_factory=lambda: ServiceConfig(port=5001, enabled=False)
+    )
     # Graduated from evaluation — the active TTS. Still opt-in by default: it
     # wants a GPU and its first start compiles from source (see VoiceboxService).
     voicebox: VoiceboxConfig = Field(

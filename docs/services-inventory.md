@@ -1,6 +1,6 @@
 # Every service Puente can run
 
-30 registered, 3 on by default. This is the full list and, more usefully, how it
+31 registered, 3 on by default. This is the full list and, more usefully, how it
 divides — because "30 services" is a misleading number, and since
 [ADR0012](adr/0012-localai-as-engine-and-the-catalog.md) most of them are
 *declarations* rather than code.

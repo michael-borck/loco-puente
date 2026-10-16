@@ -54,6 +54,7 @@ API_KIND = {
     "deeptutor": "REST",
     "uptime_kuma": "REST",
     "stirling_pdf": "REST",
+    "presenton": "REST + MCP",
     "citesight_alt": "JSON",
 }
 
@@ -83,6 +84,7 @@ SERVICE_META = {
     "musicgen": ("🎵", "Audio Gen", "MusicGen, AudioGen, Bark, Tortoise, more"),
     "fooocus": ("🪄", "Fooocus", "Alternative image UI — auto-tuned SDXL"),
     "stirling_pdf": ("📄", "PDF Tools", "Merge, split, OCR, convert"),
+    "presenton": ("📽️", "Presenton", "AI slide decks — prompt or document to editable PPTX"),
     "excalidraw": ("✏️", "Whiteboard", "Collaborative diagrams"),
     "searxng": ("🌐", "Web Search", "Private search engine"),
     "citesight": ("📝", "Citation Checker", "Verify references and writing quality"),
@@ -123,7 +125,7 @@ VIEWS = {
         "label": "Student",
         "sections": [
             {"label": "AI", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
-            {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight"]},
+            {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight", "presenton"]},
         ],
     },
     "admin": {
