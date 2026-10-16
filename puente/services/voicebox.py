@@ -94,8 +94,19 @@ class VoiceboxService(ServiceBase):
             # which now retries for the same reason. start_period gives the app
             # room to load its weights before a slow first response counts as a
             # failed healthcheck.
+            # Restart backoff lives in deploy.restart_policy, NOT a top-level
+            # `restart_delay` — that key is not in the compose spec, and docker
+            # compose 2.35 REJECTS THE WHOLE FILE over it. It sat undetected in
+            # the fragment for weeks because the on-disk compose file predated
+            # it; the first regeneration (2026-10-10) baked it in and every
+            # compose command failed validation — including the boot unit,
+            # which would have taken the whole stack down at the next reboot.
+            # Found because `puente up searxng` refuses to start anything when
+            # the file cannot parse.
+            #
+            # Merged with the GPU reservation below rather than overwriting it:
+            # both live under `deploy`.
             "restart": "unless-stopped",
-            "restart_delay": "30s",
             "healthcheck": {
                 "test": ["CMD-SHELL", "curl -sf http://localhost:17493/health || exit 1"],
                 "interval": "30s",
@@ -119,9 +130,14 @@ class VoiceboxService(ServiceBase):
             service["image"] = image
         service["build"] = {"context": self._build_context(config)}
 
-        deploy = self.gpu_reservation(config.gpu)
-        if deploy:
-            service["deploy"] = deploy
+        # The backoff that replaced the invalid `restart_delay` key — set
+        # unconditionally, NOT only when a GPU pin exists. The first version of
+        # this fix nested it under `if deploy:` and the backoff silently
+        # vanished on unpinned configs; the backoff is the point of this block
+        # and has to survive a missing `gpu:`.
+        deploy = self.gpu_reservation(config.gpu) or {}
+        deploy["restart_policy"] = {"condition": "any", "delay": "30s"}
+        service["deploy"] = deploy
 
         return {"voicebox": service}
 

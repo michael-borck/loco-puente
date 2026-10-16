@@ -489,19 +489,27 @@ def test_voicebox_has_a_healthcheck_with_a_start_period():
 
 
 def test_voicebox_restart_is_backed_off():
-    """`restart_delay` spaces the retries.
+    """Restart retries must be spaced out.
 
     Voicebox and ollama share the 16GB card, and at boot both load at once.
     Observed 2026-10-10: voicebox exited on cudaErrorDevicesUnavailable and
     plain `unless-stopped` restarted it immediately, so the log showed a
     shutdown and a health in the same minute — indistinguishable from nothing
     having happened.
+
+    The backoff lives in `deploy.restart_policy.delay`. It originally sat in a
+    top-level `restart_delay` key, which is NOT in the compose spec — docker
+    compose rejected the whole generated file over it, so every compose
+    command (including the boot unit) would have failed. The compose-validator
+    test in test_generators.py now catches that class of bug; this one pins the
+    policy semantics on the valid key.
     """
     from puente.compose import generate_compose
 
     vb = generate_compose(_only(voicebox={"enabled": True}))["services"]["voicebox"]
     assert vb["restart"] == "unless-stopped"
-    assert int(str(vb["restart_delay"]).rstrip("s")) >= 15, "retries must back off"
+    delay = vb["deploy"]["restart_policy"]["delay"]
+    assert int(str(delay).rstrip("s")) >= 15, "retries must back off"
 
 
 # --------------------------------------------------------------------------

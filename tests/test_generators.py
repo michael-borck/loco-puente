@@ -61,6 +61,45 @@ def test_repo_puente_yml_parses():
     assert config.services is not None
 
 
+def test_generated_compose_is_valid_for_real_docker(tmp_path):
+    """The generated file must parse under the box's actual docker compose.
+
+    `restart_delay` sat in the voicebox fragment for weeks emitting an invalid
+    key. Nothing caught it because python dicts don't validate: the fragment
+    tests assert on structure, and the on-disk compose file predated the key,
+    so no `docker compose` command ever saw it. The first regeneration baked it
+    into the live file — and EVERY compose command then failed validation,
+    including the boot unit, which would have taken the whole stack down at
+    the next reboot. Found only because a scoped `puente up` refused to start.
+
+    This test is that refusal, run before it matters. Skipped where docker is
+    absent (CI containers, odd laptops) — a skipped check degrades to exactly
+    the situation that produced the bug, but a false pass would be worse.
+    """
+    import shutil
+    import subprocess
+
+    if shutil.which("docker") is None:
+        pytest.skip("docker not available")
+    config = PuenteConfig.model_validate(
+        yaml.safe_load((REPO_ROOT / "puente.yml").read_text())
+    )
+    compose_file = tmp_path / "docker-compose.yml"
+    compose_file.write_text(
+        yaml.dump(generate_compose(config), default_flow_style=False, sort_keys=False)
+    )
+    result = subprocess.run(
+        ["docker", "compose", "-f", str(compose_file), "config", "--quiet"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, (
+        f"generated docker-compose.yml fails `docker compose config`: "
+        f"{result.stderr.strip()}"
+    )
+
+
 def test_repo_puente_yml_generates_both_artifacts():
     raw = yaml.safe_load((REPO_ROOT / "puente.yml").read_text())
     config = PuenteConfig.model_validate(raw or {})
