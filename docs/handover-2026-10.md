@@ -318,6 +318,73 @@ is attack surface until the publishing policy lands. At the revisit: pin a
 version tag (n8n publishes real versions — no `latest` problem), write the
 entry, add the config field, done.
 
+### H. Harness strategy — the 80/20 chat (2026-10-17)
+
+The operator's stated grand vision: **one chat harness that does the 80%** —
+chat, images, songs, code, presentations in one conversation — with dedicated
+UIs (ComfyUI, SwarmUI, the editor) reserved for the power 20%. This is not a
+new direction; it is vision.md commitment 3 ("capabilities are APIs, the UI is
+a client") finally named as the product surface. The harness is a *client*,
+swappable by design — which is exactly why this decision can be made without
+touching the stack.
+
+Current incumbent: **Open WebUI.** Working today against Ollama, SearXNG
+(engine seeded 2026-10-17), and the SwarmUI/ComfyUI image engine. The one
+missing piece: **Open WebUI + Presenton via MCP** — Presenton ships `/mcp`,
+Open WebUI is a documented MCP client; wire an API key and chat gains
+"make me a deck". ~30 min at the revisit; fallback is a small Open WebUI Tool
+over the REST API. Caveats: deck outlines want `gemma4:12b` over the 3.4 GB
+model, and generation is a "working on it…" turn, not instant.
+
+Candidate: **Odysseus AI** (PewDiePie's workspace; the independent guide is
+odysseusai.dev, repo odysseus-dev/odysseus, ~86k stars, AGPL-3.0). It is the
+80/20 vision as one product: chat, agents (shell/files/web/memory behind
+approval gates), deep research on bundled SearXNG, document editor, memory,
+email/calendar, PWA. Honest cons: **early maturity, no tagged releases** (it
+cannot be pinned — fights ADR0009 and the catalog's reproducibility rule),
+celebrity-maintenance risk, and its "Cookbook" (hardware scan, model fit
+scoring, llama.cpp/vLLM/SGLang serving) is **building into Puente's
+capabilities-and-engine layer** — the QVAC warning shot again.
+
+Verdict, not yet acted on: **run Odysseus as a side-by-side experiment at the
+revisit** — one compose file, CPU-only container, still served by Ollama, so
+the cost is disk and an hour. Keep Open WebUI as production harness for the
+chatbot. Decide on experience, not vibes.
+
+### The uniqueness question, answered honestly (2026-10-17)
+
+The operator asked: "Is Puente even relevant? I have trouble seeing the
+uniqueness." Recorded here because the doubt keeps recurring and deserves a
+fixed answer.
+
+**The doubt is correct for an expert operator.** Michael can hand-wire
+Ollama + Open WebUI + Tailscale in an afternoon; for HIM the glue feels like
+overhead. But the mission (vision.md) is the person who cannot. For that
+person, the glue is the product — and this session alone harvested the failure
+surface it prevents: a searxng container zombie-mounting a test directory, a
+compose key that would have killed the boot unit, a GPU pin reported valid
+while being inert, a search engine silently 403-ing, a settings file the
+container owned. None of those are harness problems. All of them are the
+reason a non-expert's afternoon of hand-wiring becomes a dead end.
+
+What is genuinely Puente's, in priority order:
+
+1. **Hardware-fit assessment** — what THIS box can do, before install.
+   (Shrinking: Odysseus's Cookbook and QVAC's weightless registry both
+   encroach. Watch both.)
+2. **Hardware-aware orchestration of the whole stack** — GPU pins, VRAM
+   budgets across ComfyUI + Voicebox + ACE-Step + LLM on one small card,
+   auth boundaries, secrets policy, pinning, boot order. No harness does
+   this; compose files do not decide it.
+3. **Maintenance tooling** — doctor, catalog, status, snapshots, rotation.
+
+What is NOT Puente's, by design: the harness, the engine, the apps. All
+swappable clients. If Odysseus wins the harness slot, Puente wires Odysseus
+the way it wired Open WebUI — and that is the architecture succeeding, not
+failing. The thing that would make Puente genuinely irrelevant is upstream
+harnesses doing hardware-aware orchestration of full stacks. Odysseus's
+Cookbook is the first serious warning shot; check it at the revisit.
+
 ---
 
 ## Known rough edges
