@@ -163,7 +163,7 @@ services:
     review: false
     proxy: null
   vane:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 3005
     gpu: null
@@ -441,6 +441,15 @@ services:
     managed: true
     environment: {}
     review: true
+    proxy: null
+  presenton:
+    enabled: false
+    install_method: docker
+    port: 5001
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
     proxy: null
   voicebox:
     enabled: true

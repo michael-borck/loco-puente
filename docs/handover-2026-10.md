@@ -1,13 +1,13 @@
 # State on 2026-10-10, and what to pick up in two weeks
 
-**Written at the end of the 2026-10-10 session. Read this first when you come back.**
+**Written at the end of the 2026-10-10 session; updated 2026-10-17. Read this first when you come back.**
 
 This is a handover, not a runbook. It answers three questions: what is running
 right now, what is staged but unverified, and what should be decided before
 anything else is built.
 
-The two-week plan: ship the chatbot, do not restructure the stack, then revisit
-the engine migration with the chatbot working.
+The plan: ship the chatbot over the next week or two, do not restructure the
+stack, then revisit the engine migration with the chatbot working.
 
 ---
 
@@ -22,6 +22,7 @@ Nothing about the engine migration should touch them.
 | AnythingLLM | docker, managed by puente | `storage_path` points at `~/.puente/anythingllm` |
 | Caddy | docker | TLS + per-service auth for every hostname below |
 | SearXNG | docker, enabled 2026-10-17 | JSON API + web UI on :8888. The old container was a zombie mounting a fake-home test dir — replaced. Engines google/bing/wikipedia force-enabled; Open WebUI's web search works again |
+| Vane | docker, enabled 2026-10-17 | `search.locopuente.org` — cited AI search, gated by `swarm`/ui basic auth. Was published-but-dead for weeks; now running with prior config intact |
 
 Anything else enabled in `puente.yml` is idle capacity, not load-bearing.
 
@@ -127,6 +128,45 @@ binary. That may be the true "easiest possible setup" story for someone who has
 never used Docker, and is a candidate for the quick-start path at the revisit.
 A pure-Docker default would foreclose it by inertia; this note is here so the
 choice is made deliberately.
+
+---
+
+## Publishing policy, recorded 2026-10-17
+
+**Personal install = private by default. Institution = hybrid. The `proxy:`
+block is the policy switch.**
+
+The trigger was counting the stack's browser doors: eleven hostnames share one
+basic-auth credential (`swarm`/ui group), all on the public internet. That is
+the weakest part of the stack's posture, and for a single-user box it buys
+nothing — the week's evidence is that public exposure is what *broke* things
+(the SearXNG VPS lost its engines to bot traffic; scanners hammer every open
+door).
+
+| | Personal | Small institution |
+| --- | --- | --- |
+| Who reaches it | The operator's own devices | Students, staff, anonymous visitors |
+| Model | **Tailnet-only** — nothing public | **Hybrid** — public only where required |
+| Auth | WireGuard device keys; no passwords, no prompts | App accounts + Caddy gates on public doors |
+| Admin surfaces (glances, jupyter, uptime) | Tailnet | Tailnet — not student-reachable |
+| Chatbot on a webpage | n/a | **Must stay public** — that is its job |
+
+- **Tailscale is the personal answer, and it is a single static binary** — by
+  the design principle above, native wins. No port forwarding, no DNS, no cert
+  renewals, no scanner noise. Inside the tailnet, MagicDNS names replace the
+  hostname circus and the basic-auth gates become redundant.
+- **Not Tailscale vs Caddy — a shrink of the public surface.** The institution
+  case keeps Caddy for the few genuinely-public things (chatbot embed, student
+  chat with real accounts) and moves operator surfaces behind the tailnet.
+- **Additive, not a rewrite.** Chatbot fortnight changes nothing:
+  `chat.eduserver.au` stays public regardless. Install Tailscale, migrate the
+  admin doors over time, shrink the public set deliberately.
+- Tailscale Funnel exists for exposing one service without router changes —
+  fine for a personal NAT-bound box; institutions are better on plain Caddy.
+- Longer-term seam worth knowing: the shared `swarm` credential across 11 doors
+  is the boxes-group pattern again. More groups + per-door `basic_group:` is
+  the fix when someone needs one door without the rest. On a tailnet the
+  question mostly dissolves.
 
 ---
 
@@ -255,6 +295,29 @@ next to `needs_vram_mb`. The install-time question becomes
 "ace-step-2b (5 GB, Apache) / ace-step-xl (9 GB, Apache) / yue2 (12 GB, **NC**)"
 — VRAM and licence tolerance decide, metadata not an engine.
 
+### G. n8n — evaluated 2026-10-17: fits, wire at the revisit
+
+The ask: "do we or should we add n8n?" Verdict: **yes, as an opt-in catalog
+entry (Tier 3), off by default — and it needs no deep integration.**
+
+n8n is node-based workflow automation: cron, webhooks, hundreds of API
+connectors, and AI-agent nodes that speak **Ollama and any OpenAI-compatible
+endpoint natively** — the same engine story as Presenton. It is the natural
+automation layer for a stack that just committed to API-first: n8n drives the
+stack's existing APIs rather than the stack growing workflow internals.
+
+| Aspect | Verdict |
+| --- | --- |
+| Mechanically | Docker image, CPU-only (`needs_vram_mb: 0`), port 5678, volume for `~/.n8n` — a textbook catalog entry, ~15 min by the Presenton pattern |
+| Licence | **Sustainable Use License — NOT OSI open source.** Free to self-host and use internally (personal or small institution: fine); embedding it into a paid offering is not. Surface it exactly like YuE2's NC — licence metadata belongs at install time |
+| Overlap | None real. Adjacent to the OpenClaw open question in vision.md ("do we integrate agents, or keep the APIs good enough to be driven?") — n8n answers that question by being a *client*. LocalAI's built-in agents do not overlap it: n8n is glue and schedule, not inference |
+| Caution | n8n webhooks are an ingress. Whatever the publishing policy says (see above) applies to it doubly — tailnet-only for personal; gated behind Caddy for an institution |
+
+Why not wired today: chatbot fortnight, nothing needs it, and every new surface
+is attack surface until the publishing policy lands. At the revisit: pin a
+version tag (n8n publishes real versions — no `latest` problem), write the
+entry, add the config field, done.
+
 ---
 
 ## Known rough edges
@@ -268,7 +331,7 @@ next to `needs_vram_mb`. The install-time question becomes
 | The bcrypt hashes from `ec0681b` remain in git history. Rotated 2026-10-10, so this is historical rather than a live exposure | git history |
 | `michael` is in both the `boxes` and `tutors` caddy groups. Rotating one does not rotate the other | `deploy/rotate-caddy-password.sh` |
 | `search.borck.dev` is a separate VPS (31.97.67.189), up but serving **0 results** — engines block datacenter IPs. The local SearXNG is the working instance. Retire the hostname or fix the VPS; do not point anything at it meanwhile | VPS, not this repo |
-| Vane (`search.locopuente.org`) is published but not running: `enabled: false`, no container. The hostname answers 401 (basic auth, `swarm`/ui group) and would 502 with correct creds. Decide: enable it or drop the hostname | `puente.yml`, Caddyfile |
+| Vane (`search.locopuente.org`) — resolved 2026-10-17: now enabled and running behind the `swarm`/ui gate. Remaining question is the credential pattern itself: 11 doors share one basic-auth password, and the operator had forgotten it (reset available via `deploy/rotate-caddy-password.sh swarm`). The publishing-policy note above is the real answer | `puente.yml`, Caddyfile |
 | SearXNG's settings.yml gets rewritten by the container user (uid 977), which is why puente's seed silently lost to it before. If reseeding, chown to the host user first (done 2026-10-17) | `~/.puente/searxng/settings.yml` |
 | `voicebox.py` emitted a top-level `restart_delay` — not in the compose spec. Docker compose rejected the ENTIRE generated file, so every compose command including the boot unit would have failed at the next reboot. Fixed 2026-10-17; `test_generated_compose_is_valid_for_real_docker` now runs real `docker compose config` against the generated file so this class of bug cannot ship silently again | `puente/services/voicebox.py`, `tests/test_generators.py` |
 
