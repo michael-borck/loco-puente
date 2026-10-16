@@ -351,6 +351,52 @@ revisit** — one compose file, CPU-only container, still served by Ollama, so
 the cost is disk and an hour. Keep Open WebUI as production harness for the
 chatbot. Decide on experience, not vibes.
 
+### I. The institutional path — closing the gap for students (2026-10-17)
+
+The mission, made concrete: students who cannot afford a $20/month
+subscription get parity — "good enough, not frontier" — via a box someone
+donates, then an institution hosts. Asked whether PoC-then-cloud is dreaming:
+**no, it is the standard adoption curve, but the economics must be pitched
+honestly.**
+
+The scale ladder, with the trap named:
+
+| Stage | What serves it | Cost shape |
+| --- | --- | --- |
+| Demo / PoC | The existing box | $0, donated hardware |
+| One class (~40) | One box + **lab windows** (already built, ADR0005) | $0 + operator time |
+| One school (500–2,000 active) | 2–4 GPUs on-prem or cloud (A10/L4 class, ~$700–1,400/mo each on Azure) | Real money, plausibly under subscriptions |
+| 60,000 students | A fleet or the institution's HPC/cloud tenant | Queueing + tiered access, never one box |
+
+**Do not pitch "60k students on Azure".** The institution's baseline is not
+$20/head — Copilot/Gemini are already campus-wide, and the real comparison
+includes students who simply go without. The three cards that actually work:
+
+1. **Equity** — widening participation: the student who cannot pay gets
+   parity. Institutions already speak this language.
+2. **Data sovereignty** — student work never leaves campus; no training on
+   submissions, no retention surprises. This IS the zero-trust answer, and it
+   is the strongest card held.
+3. **Pedagogical control** — models frozen per semester (reproducible
+   assessment), no mid-term behaviour changes, and the local-vs-frontier
+   side-by-side in LibreChat is a teaching feature no subscription offers.
+
+The "full suite" claim is credible because it already runs: chat, code,
+image, video (Wan2.2, 24 GB tier), music, presentations, RAG, voice, plus the
+office tools. The demo is not a mock-up; it is this box.
+
+**The #1 technical gap for adoption is OIDC/SAML single sign-on** against the
+institution's identity provider (Azure AD at Curtin). Open WebUI and LibreChat
+support OIDC; verify AnythingLLM. Everything else in the zero-trust ask maps
+onto the publishing policy (Decision above): SSO-gated reverse proxy, admin
+surfaces off the student network, public only the chatbot.
+
+Business-case skeleton, for drafting at the revisit: equity framing
+(vision.md in institutional language) → privacy/sovereignty → cost table
+(above) vs $20/head AND vs go-without → the side-by-side pedagogy → scale
+ladder with the lab-window mechanism → risks (support burden, GPU procurement,
+model churn, assessment integrity) → ask: one class, one semester, one box.
+
 ### The uniqueness question, answered honestly (2026-10-17)
 
 The operator asked: "Is Puente even relevant? I have trouble seeing the
