@@ -88,6 +88,7 @@ DISPLAY_NAMES = {
     "anythingllm": "AnythingLLM",
     "open_notebook": "Open Notebook AI",
     "stirling_pdf": "Stirling PDF",
+    "presenton": "Presenton",
     "excalidraw": "Excalidraw",
     "open_terminal": "Open Terminal",
     "citesight": "CiteSight",
@@ -318,6 +319,17 @@ def install():
         if not settings_file.exists():
             console.print("[cyan]Creating SearXNG config (JSON format enabled)...[/cyan]")
             searxng_dir.mkdir(parents=True, exist_ok=True)
+            # The engines block is not decoration. Measured 2026-10-17 on the
+            # PoC box: with upstream defaults only, a general query returned
+            # ZERO results — aol/brave/duckduckgo/startpage/karmasearch were
+            # all CAPTCHA'd, rate-limited or suspended from this IP, and those
+            # are the engines the default set picks. google/bing/wikipedia
+            # answered fine when forced via ?engines=. Open WebUI queries with
+            # format=json and no engines param, so it hits exactly the dead
+            # default set — "web search failed" with nothing visibly wrong.
+            # Force-enabling the three reliable ones keeps the default query
+            # path alive; the captchas on the others clear within the hour and
+            # they rejoin on their own.
             settings_file.write_text(
                 "use_default_settings: true\n"
                 "\n"
@@ -329,6 +341,14 @@ def install():
                 "server:\n"
                 "  secret_key: puente-searxng-secret\n"
                 "  limiter: false\n"
+                "\n"
+                "engines:\n"
+                "  - name: google\n"
+                "    disabled: false\n"
+                "  - name: bing\n"
+                "    disabled: false\n"
+                "  - name: wikipedia\n"
+                "    disabled: false\n"
             )
             console.print("[green]SearXNG config written[/green]")
 

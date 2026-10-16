@@ -1,4 +1,8 @@
 data_dir: ~/.puente
+network:
+  name: null
+  subnet: null
+  gateway: null
 services:
   ollama:
     enabled: true
@@ -11,43 +15,62 @@ services:
     proxy:
       host: ollama.locollm.org
       auth: bearer
-      token_env: [OLLAMA_TOKEN, OLLAMA_TOKEN_2, OLLAMA_TOKEN_3, OLLAMA_TOKEN_4, OLLAMA_TOKEN_5]
+      token_env:
+      - OLLAMA_TOKEN
+      - OLLAMA_TOKEN_2
+      - OLLAMA_TOKEN_3
+      - OLLAMA_TOKEN_4
+      - OLLAMA_TOKEN_5
       basic_group: null
+      forward_user_header: null
       port: 11434
       upstream: null
+      offline_page: null
       cors_origins:
-        - https://michael-borck.github.io
-        - https://lessonloom.borck.education
+      - https://michael-borck.github.io
+      - https://lessonloom.borck.education
     instances:
     - name: primary
-      # The pin lives in the systemd drop-in, NOT here, because ollama runs
-      # natively (install_method: native above) and a container-level `gpu:` is
-      # only emitted for the docker path. It used to read
-      #   GPU-15c8ed7d… (the 3090)
-      # while 10-classroom.conf pinned
-      #   GPU-ce79654c… (the 4060 Ti)
-      # — two sources of truth that disagreed, and `puente doctor` reported the
-      # yml one as valid because it only checked that the UUID exists. The
-      # systemd drop-in wins at runtime, deliberately: keeping Ollama off the
-      # 3090 leaves all 24GB free for ComfyUI / SwarmUI / the avatar nodes.
-      # Left null here so there is one source of truth and nothing to drift.
       gpu: null
       port: 11434
       models:
-      # Was llama3.1:8b-q4_k_m, a tag that has never existed locally — the
-      # pulled tag is llama3.1:8b-instruct-q4_K_M, and llama3.1:latest is the
-      # same blob (id 46e0c10c039e), so this entry resolved to nothing.
       - llama3.1:latest
-      # Gemma 4, measured 2026-07-24 on the 3090 at the stock 32k context:
-      #   gemma4:latest  3.4GB resident   (9.6GB on disk)
-      #   gemma4:12b     8.4GB resident   (7.6GB on disk)
-      # Newer than llama3.1 and cheaper per answer — see the picker note below
-      # for why only the 12b earns a slot in the classroom list.
       - gemma4:latest
       - gemma4:12b
+  localai:
+    enabled: false
+    install_method: docker
+    port: 8080
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+    proxy: null
+    models_dir: null
+    backends:
+    - llama-cpp
+    - diffusers
+    - whisper
+    context_size: 8192
+    parallel: 1
+    gpu_layers: null
+    threads: null
+    cuda: true
+    debug: false
+    extra_args: []
+  llama_cpp:
+    enabled: false
+    install_method: docker
+    port: null
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+    proxy: null
+    default_port: 8081
+    instances: []
+    models_dir: null
   open_webui:
-    # Intentionally parked 2026-09-05: superseded by LibreChat for classroom
-    # chat; container removed in the host cleanup. Re-enable to bring it back.
     enabled: false
     install_method: docker
     port: 3000
@@ -62,47 +85,54 @@ services:
     enabled: true
     install_method: docker
     port: 8000
-    # was gpu: 0 — index is not stable across reordering
     gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment:
-      # v0.9 expects the /v1 suffix on chat_completion_base_url (voice-chat
-      # audio summarisation hits it; Ollama ignores the API key).
       CHAT_COMPLETION_BASE_URL: http://192.168.20.120:11434/v1
-      # Previously set to a real-looking key, which was committed to a PUBLIC
-      # repo. It pointed at a local Ollama endpoint that ignores it, so it was
-      # doing nothing — but a value that looks like a credential belongs in the
-      # environment, not in a committed file. See docs/host-setup.md §3.
-      CHAT_COMPLETION_API_KEY: ""
+      CHAT_COMPLETION_API_KEY: ''
     review: false
     proxy:
-    # Two doors to the same Speaches backend, same pattern as swarmui/image
-    # and voice/voicebox: the basic-auth hostname fronts the built-in Gradio
-    # playground (browser door, shared "ui" group); the bearer hostname is
-    # for programmatic API access (curl, OpenAI SDKs). Neither alone covers
-    # :8000. Speaches v0.9 also has its own API_KEY option, left unset on
-    # purpose: Open WebUI reaches it over the trusted compose network and
-    # would need the key mirrored into its AUDIO_*_API_KEY envs.
     - host: speech.locopuente.org
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 8000
       upstream: null
+      offline_page: null
+      cors_origins: null
     - host: speaches.locopuente.org
       auth: bearer
       token_env: SPEACHES_TOKEN
       basic_group: null
+      forward_user_header: null
       port: 8000
       upstream: null
+      offline_page: null
+      cors_origins: null
     models:
     - Systran/faster-whisper-small
     - speaches-ai/Kokoro-82M-v1.0-ONNX
+  ace_step:
+    enabled: false
+    install_method: docker
+    port: 8002
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+    proxy: null
+    variant: 2b
+    resident: false
+    keep_alive: 300
+    cpu_offload: true
+    lm_model: acestep-5Hz-lm-1.7B
+    lm_backend: pt
+    build_ref: null
   comfyui:
     enabled: true
     install_method: docker
     port: 8188
-    # was gpu: 0 — index is not stable across reordering
     gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
@@ -112,8 +142,11 @@ services:
       auth: bearer
       token_env: COMFYUI_TOKEN
       basic_group: null
+      forward_user_header: null
       port: 8188
       upstream: null
+      offline_page: null
+      cors_origins: null
     install_manager: true
     install_sadtalker: true
     install_wav2lip: true
@@ -121,7 +154,7 @@ services:
     liveportrait_animal: true
     install_wan_s2v: true
   searxng:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 8888
     gpu: null
@@ -142,8 +175,11 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 3005
       upstream: null
+      offline_page: null
+      cors_origins: null
   anythingllm:
     enabled: true
     install_method: docker
@@ -157,8 +193,11 @@ services:
       auth: none
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 3001
       upstream: null
+      offline_page: null
+      cors_origins: null
     storage_path: /home/michael/.puente/anythingllm
     jwt_secret: d5a9ce6c-bd59-413b-b85d-22730bb91767
   librechat:
@@ -167,31 +206,6 @@ services:
     port: 3080
     gpu: null
     managed: true
-    # Signup rate limiters, effectively disabled on purpose.
-    #
-    # LibreChat rate-limits registration BY CLIENT IP (removePorts(req.ip), with
-    # TRUST_PROXY=1 so it sees the real client through puente-caddy, not the
-    # proxy). A whole lab NATs to ONE campus IP, so the entire class shares a
-    # single bucket. At the stock REGISTER_MAX=5/60min this cost a 40-student
-    # class most of its session on 2026-07-22: 4 accounts at 08:38:49-08:39:20,
-    # then nothing until the window rolled over and 4 more got in at
-    # 09:35:17-09:36:02. 8 of 40 registered; the rest saw
-    # "Too many accounts created, please try again after 60 minutes".
-    #
-    # Set absurdly high rather than "generously" high — the limit must never be
-    # the thing that fails in front of a class, and a second cohort on the same
-    # IP must not inherit a half-drained bucket. Do NOT use 0 to mean unlimited:
-    # in express-rate-limit 0 blocks EVERY request.
-    #
-    # Abuse risk is near zero without it: registration is already gated by
-    # allowed_registration_domains (Curtin only) plus mandatory email
-    # verification, and chat.locopuente.org is only up during the lab window
-    # (deploy/chat-window.sh). Those gates, not the IP limiter, are the control.
-    #
-    # VERIFY_EMAIL_* covers the resend-verification endpoint (stock 2 per 2 min,
-    # also per-IP): a few mistyped addresses in one room would otherwise lock
-    # everyone out of resends. Each 429 also calls logViolation, which feeds the
-    # violation/ban layer, so a tight limit can escalate past its own window.
     environment:
       REGISTER_MAX: '10000'
       REGISTER_WINDOW: '60'
@@ -203,140 +217,38 @@ services:
       auth: none
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 3080
       upstream: null
-      # LibreChat is stopped outside lab hours by deploy/chat-window.sh, so a
-      # bare 502 would be the normal out-of-hours experience. Serve the lab
-      # timetable instead.
       offline_page: chat-closed.html
+      cors_origins: null
     mongo_uri: null
     jwt_secret: bc7b375cf786ec343a9853fc95e7bc01a9ffec7b0b28664f7e4b88ab833b1145
     jwt_refresh_secret: 924cd338fd5618c23b3a7a9dc7a1cfe715936c86beaf8eb072c10234835dfecb
     creds_key: 312c3ed097b353814db93a4881bbaa4a4a7bd067ea2609b8d8135aacb7f3a356
     creds_iv: 6ec53bf663221014099fbb678cf203d9
     ollama_base_url: null
-    # Picker list, in picker order. ONE local model on purpose: gemma4:12b.
-    # This side of LibreChat exists to give students a felt sense of a local
-    # model's pros/cons *against* the frontier models below — not to be a daily
-    # driver for their AI work. A single local option keeps that comparison
-    # clean and, more importantly, leaves the shared 24GB card free: other
-    # services (comfyui, swarmui, voicebox, avatar nodes) load their own weights
-    # on demand, and holding two chat models resident starved them. With one
-    # ~8GB chat model the operator has room to manage VRAM across everything.
-    #
-    # gemma4:12b is text+image (capabilities: vision, audio, tools, thinking),
-    # verified reading an image over the /v1 endpoint — so it covers both the
-    # text and image-attachment activities that previously needed qwen3.5:9b +
-    # qwen2.5vl:7b-16k. Those two remain in `ollama list` for any module that
-    # wants a dedicated vision model back; add them here to restore that.
-    # (OLLAMA_MAX_LOADED_MODELS=2 in deploy/ollama-classroom/10-classroom.conf
-    # still caps residency at two — one slot is now spare.)
-    #
-    # The frontier side is anthropic_models below — API-side, so no VRAM.
     models:
     - gemma4:12b
-    # gemma4's thinking is ON by default and ~5x'd latency for no gain on
-    # classroom Q&A (same word problem, warm, think=true vs false):
-    #   qwen3.5:9b  1755 tok / 19.8s  ->  293 tok / 4.2s
-    #   gemma4:12b   525 tok /  9.5s  ->  153 tok / 3.5s
-    # Both answered correctly either way. disable_thinking makes LibreChat send
-    # reasoning_effort:none on every request (see services/librechat.py for why
-    # it's that field and not Ollama's think:false on this /v1 endpoint).
-    disable_thinking: true
-    # Adds a second picker entry "Ollama (thinking)" serving the same gemma4:12b
-    # with thinking left ON, so students can compare the same model both ways.
-    # Same loaded weights => no extra VRAM. Not the default experience (the
-    # plain "Ollama" endpoint is thinking-off); this is a teaching extra.
-    thinking_comparison: true
-    # Not in the picker on purpose — titling is a background call, so it should
-    # use the cheapest model on the box, not one students would choose.
-    #
-    # This is load-bearing, not a preference (fixed in 2ba8e62, 2026-07-20):
-    # LibreChat's default titleModel is 'current_model', which fires titling as
-    # a SECOND CONCURRENT inference against the model already serving the live
-    # chat. On a contended GPU that second request aborts ("This operation was
-    # aborted") and chats silently stay untitled. A separate small model sidesteps
-    # the contention entirely. Do NOT point this back at the chat model.
-    #
-    # It costs a VRAM slot, which is why OLLAMA_MAX_LOADED_MODELS=2 must stay set
-    # in deploy/ollama-classroom/10-classroom.conf even though only one model is
-    # in the picker. At slot count 1 this 1GB titler would EVICT the pinned
-    # gemma4:12b on every new chat. See that file for the full argument.
     title_model: qwen3.5:0.8b
+    num_ctx: null
+    disable_thinking: true
+    thinking_comparison: true
     anthropic_key_env: ANTHROPIC_API_KEY
     anthropic_models:
     - claude-sonnet-5
     - claude-haiku-4-5
-    # The real postgrad domain is postgrad.curtin.edu.au. `postgraduate.` was a
-    # guess and matches nothing: on 2026-07-27 every postgrad registration was
-    # rejected ([registerUser] [Registration not allowed]) and not one account in
-    # the 71-user database has ever carried that suffix. The long spelling is
-    # kept only in case Curtin ever issues it; it costs nothing and matching is
-    # exact-suffix, not substring.
-    #
-    # A rejected domain surfaces in the UI as "You have tried to sign up too many
-    # times" — the SAME string as the rate limiter. Do not read that message as
-    # rate limiting; check the container log for the real reason first.
     allowed_registration_domains:
     - curtin.edu.au
     - student.curtin.edu.au
     - postgrad.curtin.edu.au
     - postgraduate.curtin.edu.au
-    # Verification email is REQUIRED, not optional: without it a student who
-    # mistypes their address gets a working account on the wrong email, then
-    # registers again next lab when the right address says "user not found" —
-    # duplicate accounts and lost history. It also gates self-service password
-    # reset, which tutors cannot do on the operator's behalf.
-    #
-    # EMAIL_PASSWORD is resolved from RESEND_API_KEY in the host environment and
-    # written to a .env file at `puente up` — NOT emitted as a ${VAR} compose
-    # placeholder. See _write_env_file in services/librechat.py for why.
     email_host: smtp.resend.com
     email_port: 587
     email_username: resend
     email_password_env: RESEND_API_KEY
     email_from: librechat@onboarding.locoensayo.org
     email_from_name: Libre Chat
-  # Tutor-facing account admin for LibreChat. Tutors have no shell on this box,
-  # and LibreChat's own admin API is read-only (list/search only), so without
-  # this every stuck student has to come through the operator.
-  #
-  # Scope is deliberate: resend, force-verify, create and invite — all additive
-  # or reversible. Delete, ban and role changes stay on deploy/librechat-users.sh,
-  # because delete is irreversible and granting ADMIN is privilege escalation.
-  #
-  # It authenticates nothing itself. Caddy does (auth: basic, one account per
-  # tutor) and forwards the username in X-Tutor-User for the audit log. The
-  # container therefore binds to 127.0.0.1 — publishing this port on the LAN
-  # would expose unauthenticated account administration.
-  #
-  # NOTE: `create` and `invite` need deploy/tutor-admin-runner.sh running on the
-  # host. The web app has no Docker socket by design, so those two verbs are
-  # spooled to that runner; without it they time out and report so.
-  tutor_admin:
-    enabled: true
-    install_method: docker
-    port: 8091
-    gpu: null
-    managed: true
-    environment: {}
-    review: false
-    allowed_domains:
-    - curtin.edu.au
-    - student.curtin.edu.au
-    - postgrad.curtin.edu.au
-    proxy:
-    - host: tutors.locopuente.org
-      auth: basic
-      basic_group: tutors
-      forward_user_header: X-Tutor-User
-      # Reach it by CONTAINER NAME over the compose network, not via
-      # upstream_host. The container deliberately publishes only on
-      # 127.0.0.1, so the LAN address in upstream_host has nothing
-      # listening on it and Caddy would get a 502. Going over the shared
-      # network is also what keeps the port off the LAN — this app does
-      # its own authentication nowhere, so Caddy must be the only path in.
-      upstream: tutor-admin
   open_notebook:
     enabled: false
     install_method: docker
@@ -350,8 +262,11 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 8502
       upstream: null
+      offline_page: null
+      cors_origins: null
   stirling_pdf:
     enabled: false
     install_method: docker
@@ -365,8 +280,11 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 8089
       upstream: null
+      offline_page: null
+      cors_origins: null
   excalidraw:
     enabled: false
     install_method: docker
@@ -380,8 +298,11 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 3333
       upstream: null
+      offline_page: null
+      cors_origins: null
   open_terminal:
     enabled: false
     install_method: docker
@@ -404,8 +325,11 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 3010
       upstream: null
+      offline_page: null
+      cors_origins: null
   jupyter:
     enabled: false
     install_method: docker
@@ -428,7 +352,6 @@ services:
     enabled: false
     install_method: docker
     port: 7860
-    # was gpu: 0 — index is not stable across reordering
     gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
@@ -438,38 +361,64 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 7860
       upstream: null
+      offline_page: null
+      cors_origins: null
   swarmui:
     enabled: true
     install_method: docker
     port: 7801
-    # was gpu: 0 — index is not stable across reordering
     gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
     review: true
     proxy:
-    # Two doors to the same SwarmUI backend: the bearer hostname is for
-    # programmatic API access (curl/scripts); the basic-auth hostname is the
-    # browser-friendly web UI. Both must stay gated — neither alone covers :7801.
     - host: swarmui.locopuente.org
       auth: bearer
       token_env: SWARMUI_TOKEN
       basic_group: null
+      forward_user_header: null
       port: 7801
       upstream: null
+      offline_page: null
+      cors_origins: null
     - host: image.locopuente.org
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 7801
       upstream: null
+      offline_page: null
+      cors_origins: null
+  tutor_admin:
+    enabled: true
+    install_method: docker
+    port: 8091
+    gpu: null
+    managed: true
+    environment: {}
+    review: false
+    proxy:
+    - host: tutors.locopuente.org
+      auth: basic
+      token_env: null
+      basic_group: tutors
+      forward_user_header: X-Tutor-User
+      port: null
+      upstream: tutor-admin
+      offline_page: null
+      cors_origins: null
+    allowed_domains:
+    - curtin.edu.au
+    - student.curtin.edu.au
+    - postgrad.curtin.edu.au
   fooocus:
     enabled: false
     install_method: docker
     port: 7865
-    # was gpu: 0 — index is not stable across reordering
     gpu: GPU-15c8ed7d-e0dd-a4d8-530d-a46c78f3720f
     managed: true
     environment: {}
@@ -479,8 +428,11 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 7865
       upstream: null
+      offline_page: null
+      cors_origins: null
   nodepad:
     enabled: false
     install_method: docker
@@ -494,40 +446,35 @@ services:
     enabled: true
     install_method: docker
     port: 17493
-    # was gpu: 1 — index is not stable across reordering
     gpu: GPU-ce79654c-917a-e928-ad48-aca7c8014f47
     managed: true
     environment: {}
     review: false
     proxy:
-    # Same pattern as swarmui/image: bearer hostname for programmatic API
-    # access, basic-auth hostname for the browser UI. Same backend :17493.
     - host: voice.locopuente.org
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 17493
       upstream: null
+      offline_page: null
+      cors_origins: null
     - host: voicebox.locopuente.org
       auth: bearer
       token_env: VOICE_TOKEN
       basic_group: null
+      forward_user_header: null
       port: 17493
       upstream: null
-    # Pinned to the commit, not the branch: `build-images.yml` builds the
-    # published image from this exact SHA, so a pull and a local source build
-    # produce the same thing. The branch head is 4137a969 (jamiepine/voicebox#889,
-    # "Add opt-in idle model unloading to free VRAM" — open upstream).
-    #
-    # The image is linux/amd64. Set `image: null` to force a source build (needed
-    # on arm64, or to pick up a newer voicebox commit).
-    image: ghcr.io/michael-borck/puente-voicebox:latest
+      offline_page: null
+      cors_origins: null
     build_ref: michael-borck/voicebox@4137a969bf110930ab563a74391517360a804554
+    image: ghcr.io/michael-borck/puente-voicebox:latest
   chatterbox:
     enabled: false
     install_method: docker
     port: 8004
-    # was gpu: 1 — index is not stable across reordering
     gpu: GPU-ce79654c-917a-e928-ad48-aca7c8014f47
     managed: true
     environment: {}
@@ -539,6 +486,15 @@ services:
     enabled: true
     install_method: docker
     port: 61208
+    gpu: null
+    managed: true
+    environment: {}
+    review: true
+    proxy: null
+  uptime_kuma:
+    enabled: false
+    install_method: docker
+    port: 3002
     gpu: null
     managed: true
     environment: {}
@@ -557,14 +513,20 @@ services:
       auth: none
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 8090
       upstream: null
+      offline_page: null
+      cors_origins: null
     - host: closingthegap.eduserver.au
       auth: none
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 8090
       upstream: null
+      offline_page: null
+      cors_origins: null
     host: 192.168.20.120
   caddy:
     enabled: true
@@ -580,19 +542,8 @@ services:
       ui:
         swarm: SWARM_BCRYPT
       boxes:
-        # Was two inline bcrypt hashes, committed to a public repo. They guarded
-        # boxes.borck.dev:8077, and a committed hash cannot be un-leaked — so the
-        # names are now env vars and both hashes were rotated. They were also
-        # BYTE-IDENTICAL, which defeated the per-tutor attribution the comment
-        # below insists on. See deploy/rotate-caddy-password.sh.
         michael: BOXES_MICHAEL_BCRYPT
         callum: BOXES_CALLUM_BCRYPT
-      # One entry PER TUTOR, never a shared login. tutor_admin forwards the
-      # authenticated username into its audit log, so a shared account would
-      # make every entry read "tutors" and the log would answer "somebody" when
-      # asked who force-verified an account. Hashes come from env vars (set in
-      # ~/.puente/caddy.env) rather than inline, so revoking one person is an
-      # env change and a Caddy reload, not a config edit.
       tutors:
         michael: TUTOR_MICHAEL_BCRYPT
         sisi: TUTOR_SISI_BCRYPT
@@ -603,34 +554,44 @@ services:
       auth: basic
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 7860
       upstream: null
+      offline_page: null
+      cors_origins: null
     - host: boxes.borck.dev
       auth: basic
       token_env: null
       basic_group: boxes
+      forward_user_header: null
       port: 8077
       upstream: null
+      offline_page: null
+      cors_origins: null
     - host: workready-api.eduserver.au
       auth: bearer
       token_env: WORKREADY_TOKEN
       basic_group: null
+      forward_user_header: null
       port: 8001
       upstream: null
-    # Uptime Kuma, run outside puente (hand-launched container). Its own login
-    # is the auth layer, so Caddy fronts it bare. Host port is 3002 because
-    # Kuma's default 3001 is taken by AnythingLLM.
+      offline_page: null
+      cors_origins: null
     - host: status.locopuente.org
       auth: none
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 3002
       upstream: null
-    # Plex on the Unraid host (192.168.20.3), unmanaged by puente. Its own
-    # account auth is the auth layer, so Caddy fronts it bare.
+      offline_page: null
+      cors_origins: null
     - host: plex.borck.au
       auth: none
       token_env: null
       basic_group: null
+      forward_user_header: null
       port: 32400
       upstream: 192.168.20.3
+      offline_page: null
+      cors_origins: null

@@ -21,6 +21,7 @@ Nothing about the engine migration should touch them.
 | Ollama | systemd, native | Pinned to the **4060 Ti** by `/etc/systemd/system/ollama.service.d/10-classroom.conf`, deliberately not the 3090. `OLLAMA_KEEP_ALIVE=3h`, `OLLAMA_MAX_LOADED_MODELS=2` — classroom tuning, deliberately prevents thrashing |
 | AnythingLLM | docker, managed by puente | `storage_path` points at `~/.puente/anythingllm` |
 | Caddy | docker | TLS + per-service auth for every hostname below |
+| SearXNG | docker, enabled 2026-10-17 | JSON API + web UI on :8888. The old container was a zombie mounting a fake-home test dir — replaced. Engines google/bing/wikipedia force-enabled; Open WebUI's web search works again |
 
 Anything else enabled in `puente.yml` is idle capacity, not load-bearing.
 
@@ -266,6 +267,10 @@ next to `needs_vram_mb`. The install-time question becomes
 | `residency_plan` is pure policy; no backend adapter turns `keep`/`load`/`release` into HTTP calls | `puente/demand.py` |
 | The bcrypt hashes from `ec0681b` remain in git history. Rotated 2026-10-10, so this is historical rather than a live exposure | git history |
 | `michael` is in both the `boxes` and `tutors` caddy groups. Rotating one does not rotate the other | `deploy/rotate-caddy-password.sh` |
+| `search.borck.dev` is a separate VPS (31.97.67.189), up but serving **0 results** — engines block datacenter IPs. The local SearXNG is the working instance. Retire the hostname or fix the VPS; do not point anything at it meanwhile | VPS, not this repo |
+| Vane (`search.locopuente.org`) is published but not running: `enabled: false`, no container. The hostname answers 401 (basic auth, `swarm`/ui group) and would 502 with correct creds. Decide: enable it or drop the hostname | `puente.yml`, Caddyfile |
+| SearXNG's settings.yml gets rewritten by the container user (uid 977), which is why puente's seed silently lost to it before. If reseeding, chown to the host user first (done 2026-10-17) | `~/.puente/searxng/settings.yml` |
+| `voicebox.py` emitted a top-level `restart_delay` — not in the compose spec. Docker compose rejected the ENTIRE generated file, so every compose command including the boot unit would have failed at the next reboot. Fixed 2026-10-17; `test_generated_compose_is_valid_for_real_docker` now runs real `docker compose config` against the generated file so this class of bug cannot ship silently again | `puente/services/voicebox.py`, `tests/test_generators.py` |
 
 ---
 
