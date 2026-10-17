@@ -397,6 +397,62 @@ Business-case skeleton, for drafting at the revisit: equity framing
 ladder with the lab-window mechanism → risks (support burden, GPU procurement,
 model churn, assessment integrity) → ask: one class, one semester, one box.
 
+### J. UI shape — chat by default, a power-user tab for the rest (2026-10-17)
+
+Yes, the operator's instinct is right, and the portal already contains most of
+it — it renders views from config (`VIEWS` in portal.py: student/admin), it
+already shows interface and API doors separately, and it regenerates from
+puente.yml. What is missing is intent. Recorded shape, nothing implemented:
+
+- **Default view = the harness.** Landing shows one dominant "Start here"
+  action pointing at whichever harness won Decision H — chat with images,
+  search, documents, decks behind it. This is the 80%.
+- **Second view = "Power user"** — the existing app grid (ComfyUI, SwarmUI,
+  Jupyter, ACE-Step, Voicebox…), each card still showing its separate
+  interface and API doors. This is the 20%, and it is where the dedicated UIs
+  live unchanged.
+- The portal stays a **router, never an app**: it points at surfaces, it does
+  not embed them. If Odysseus wins Decision H, the default link changes in
+  config and nothing else moves.
+- Implementation when it happens: a rename/restructure of `VIEWS` (the
+  "student/admin" split becomes "chat/power"), a `default_view` config knob,
+  and first-card prominence for the harness link. Small, template-level work.
+
+### K. Stack gaps — what is missing, what to refuse (2026-10-17)
+
+Honest gap analysis against the mission, ordered by how much they block the
+next rung. With the vision.md rule applied up front: this is a list to work
+from, not a feature pile — several plausible additions are refused below.
+
+1. **Whole-stack backup/restore.** Only AnythingLLM has a snapshot script.
+   LibreChat's Mongo, the vector stores, and every stateful volume have
+   nothing. For a classroom, losing a semester of AnythingLLM workspaces is
+   the worst case; for an institution it is disqualifying. A `puente backup`
+   walking the stateful services (the pattern in
+   `deploy/snapshot-anythingllm.sh` generalised) is the single most valuable
+   missing tool.
+2. **OIDC/SSO** — already the #1 adoption gate (Decision I); restated here so
+   the gap list is complete.
+3. **Data analysis / chat-with-a-spreadsheet.** The commonest student academic
+   need after writing help, and the stack's weakest story. The harness's code
+   interpreter (LibreChat has one; Open WebUI's needs a sandbox) or a Jupyter
+   linkage is the answer — decide alongside the harness experiment, do not
+   build a fourth interface for it.
+4. **An update procedure.** Images are pinned deliberately, but there is no
+   `puente upgrade` and no documented path from "new pinned tags exist" to
+   "stack updated safely" (pull → regenerate → recreate → verify → rollback).
+   Fine for one box; institutional rung requires it.
+5. **Fair-share metering.** One GPU, 40 students: queueing exists (Ollama),
+   per-user fairness does not. Real only at the institutional rung — a
+   LiteLLM-style proxy or the harness's admin stats. Defer explicitly;
+   building it now is feature accumulation.
+
+Refused, with the reason recorded so they stay refused: a custom agent
+framework (upstream harnesses + n8n cover it — Decision H/G), a mobile app
+(the harnesses ship PWAs), video conferencing, social features, and any
+fourth "chat but slightly different" interface. The stack's job is surfaces
+and glue, and every one of these is a surface someone else already ships.
+
 ### The uniqueness question, answered honestly (2026-10-17)
 
 The operator asked: "Is Puente even relevant? I have trouble seeing the
