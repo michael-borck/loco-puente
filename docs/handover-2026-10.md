@@ -434,10 +434,24 @@ from, not a feature pile — several plausible additions are refused below.
 2. **OIDC/SSO** — already the #1 adoption gate (Decision I); restated here so
    the gap list is complete.
 3. **Data analysis / chat-with-a-spreadsheet.** The commonest student academic
-   need after writing help, and the stack's weakest story. The harness's code
-   interpreter (LibreChat has one; Open WebUI's needs a sandbox) or a Jupyter
-   linkage is the answer — decide alongside the harness experiment, do not
-   build a fourth interface for it.
+   need after writing help, and the stack's weakest story — but it is an
+   enablement task, not a missing project. Open WebUI ships a built-in code
+   interpreter (Pyodide in-browser by default, or a Jupyter endpoint for
+   larger data — and the stack already runs Jupyter); LibreChat has a Code
+   Interpreter API option. Standalone OSS if the built-in proves insufficient:
+   **PandasAI** (23.9k stars, MIT except `ee/`, CSV/SQL/parquet, Docker
+   sandbox, LiteLLM → Ollama-compatible; natural shape is a harness Tool
+   wrapper) and Open Interpreter (~50k stars, AGPL-3.0 — fine unless offered
+   as a hosted service). The constraint is the model, not the tool: test with
+   `gemma4:12b`. Do not build a fourth interface for this.
+3b. **Opinionated means one (maybe two) per capability** — confirmed as the
+   rule, per vision.md commitment 2. The picks: LocalAI-then-Ollama for the
+   engine (llama.cpp justified by ADR0010), Open WebUI harness pending
+   Decision H, Voicebox/Speaches for TTS/STT, ACE-Step for music, Presenton
+   for decks, SearXNG (+Vane as the AI layer). The four superseded services —
+   Chatterbox, Fooocus, SwarmUI, MusicGen — are the concrete pruning task:
+   deprecate or move to the catalog as legacy. Blocked only by Decisions A
+   and B.
 4. **An update procedure.** Images are pinned deliberately, but there is no
    `puente upgrade` and no documented path from "new pinned tags exist" to
    "stack updated safely" (pull → regenerate → recreate → verify → rollback).
