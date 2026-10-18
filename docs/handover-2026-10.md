@@ -504,6 +504,54 @@ framework (upstream harnesses + n8n cover it — Decision H/G), a mobile app
 fourth "chat but slightly different" interface. The stack's job is surfaces
 and glue, and every one of these is a surface someone else already ships.
 
+### L. Focus: institutional-first; personal belongs to the harness (2026-10-18)
+
+Two questions resolved each other. "Do we need a scheduler?" and "should I
+just focus on small institutions and leave personal to Odysseus?"
+
+**The scheduler: yes as a concept, no as a build now — and split the layers.**
+What the operator described (models swapping underneath, a visible queue, an
+honest time tax, the request eventually processed) is demand.py plus ADR0011
+missing only actuation. The layers belong to different projects:
+
+- Queue UX ("3rd in queue, ~2 min") — the HARNESS. Building it here would be
+  building a harness, which is exactly what Decision H ruled out.
+- Arbitration (who gets VRAM, when to swap) — infra, potentially Puente's,
+  and only worth existing under real contention.
+- Incidental queueing already exists: ComfyUI queues its own jobs; Ollama
+  swaps its own models. Personal (one user) rarely contends — this box solves
+  it with GPU pinning.
+
+So arbitration becomes an INSTITUTIONAL feature: 40 students on one card is
+where contention is the problem and fair-share queueing with honest wait
+times earns its existence. It doubles as Decision K's fair-share metering
+gap. Do not build it for the personal shape.
+
+Check during the Odysseus test: its Cookbook does "hardware-aware
+recommendations, downloads, and serving" — if it already handles model swap
+management well, Puente should not build a scheduler at all. That is the
+kill-condition check from the uniqueness answer, applied to this feature.
+
+**The focus decision: institutional-first.** Personal problems are solved
+upstream and the gap only narrows — Odysseus shipping email/calendar/docs
+integration is personal-workspace territory Puente must never build (the
+feature-accumulation trap by definition). Institutional problems are NOT
+solved upstream and cannot be: OIDC against the university IdP, lab windows,
+fairness on one card, snapshots, pinned updates, per-unit deployment, data
+sovereignty. Every genuinely unique piece of Puente is load-bearing only
+there.
+
+The reframe that keeps the mission intact: personal stays a SUPPORTED
+DEPLOYMENT SHAPE — the demo box, the PoC, the student's actual experience via
+the harness — with zero new personal-only features. The mission runs THROUGH
+institutions (Decision I: one class, one semester, one box).
+
+Practical consequence for the next phase: the unit pilot is the project. Its
+parts, in order: OIDC forward-auth at Caddy, LocalAI+vLLM backend for
+concurrency (ADR0010's deferred trigger has fired — a unit is ~40
+simultaneous students), fair-share queueing, whole-stack snapshot/restore.
+Each is an institutional feature; none serves only personal use.
+
 ### The uniqueness question, answered honestly (2026-10-17)
 
 The operator asked: "Is Puente even relevant? I have trouble seeing the
