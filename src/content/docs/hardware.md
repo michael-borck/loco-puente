@@ -6,7 +6,7 @@ title: Hardware Selection
 
 This guide covers how to choose hardware for running local AI inference. It focuses on durable frameworks — the math that governs memory requirements, the architectural tradeoffs, and the principles that hold regardless of which model generation you are deploying.
 
-For current model-to-VRAM benchmark results on specific hardware, run [LocoBench](https://github.com/michael-borck/loco-bench).
+For current model-to-VRAM benchmark results on specific hardware, run [LocoBanco](https://github.com/michael-borck/loco-banco).
 
 ---
 
@@ -133,7 +133,7 @@ This dynamic is accelerating: aggressive quantisation techniques and emerging ar
 - Do I need to run inference 24/7? (affects cooling, power, form factor)
 - Is this a single-user workstation or a shared server? (affects RAM, network, OS choice)
 
-Run LocoBench on candidate hardware before committing. Theoretical VRAM capacity and real-world throughput (tokens/sec) diverge significantly across architectures and model formats.
+Run LocoBanco on candidate hardware before committing. Theoretical VRAM capacity and real-world throughput (tokens/sec) diverge significantly across architectures and model formats.
 
 ---
 

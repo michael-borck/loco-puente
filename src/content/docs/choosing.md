@@ -70,7 +70,7 @@ You own the hardware, the data never leaves your network.
 | 24 GB+ (RTX 3090/4090) | 70B+ at Q4, video workflows | Full stack, no meaningful compromise |
 | 2× 24 GB | 70B+ at Q5/Q8, multi-GPU split | Effectively on-par with frontier API |
 
-**Run LocoBench** on your hardware to get actual throughput numbers (tokens/sec) rather than relying on this table. Model performance varies significantly by architecture, quantisation method, and generation.
+**Run LocoBanco** on your hardware to get actual throughput numbers (tokens/sec) rather than relying on this table. Model performance varies significantly by architecture, quantisation method, and generation.
 
 **Note on older GPUs:** NVIDIA CUDA Compute Capability 5.x (Maxwell architecture — GTX 900 series and equivalents) is officially in maintenance mode. PyTorch and related frameworks are progressively dropping support for Compute < 6.0/7.0. If you are on a Compute 5.x card, your current software stack will work until it does not — plan for a hardware refresh or cloud fallback rather than assuming indefinite support.
 
@@ -110,7 +110,7 @@ The right model depends on your task, your VRAM, and your tolerance for latency.
 | Multimodal (image + text) | LLaVA, Qwen2-VL, Gemma 3 |
 | Image generation | SD 1.5 (lowest VRAM), SDXL, FLUX.1 |
 
-**For precise model-to-VRAM-tier recommendations, run LocoBench.** It benchmarks candidate models against your actual hardware and surfaces the optimal quality/speed tradeoff for your specific setup. This table dates; LocoBench results do not.
+**For precise model-to-VRAM-tier recommendations, run LocoBanco.** It benchmarks candidate models against your actual hardware and surfaces the optimal quality/speed tradeoff for your specific setup. This table dates; LocoBanco results do not.
 
 **Quantisation:** Q4_K_M is a reliable default — good quality, roughly half the VRAM of full precision. Q5_K_M and Q8 give higher quality if your VRAM allows. Q2/Q3 quantisations are useful on very constrained hardware but quality degrades noticeably at that level.
 
@@ -135,7 +135,7 @@ Running locally now is not just about the current capability. It is practice for
 ```
 Do you have a GPU with 8 GB+ VRAM?
 ├── Yes → Start with the minimal stack (Open WebUI + ComfyUI + Open Terminal)
-│         Run LocoBench to find your optimal model tier
+│         Run LocoBanco to find your optimal model tier
 │         Add services as you need them
 └── No  → Consider a cloud VPS (RunPod spot is cheapest)
           Or run CPU-only with smaller quantised models (7B Q4 is usable)
@@ -168,11 +168,11 @@ Cloud AI is operational expenditure: recurring per-seat costs (typically $200+/m
 |----------|---------------|
 | Sensitive data, compliance requirements | Full local deployment — no cloud APIs for regulated data |
 | Mixed workloads, some public data | Hybrid: local for sensitive/high-volume, cloud for complex reasoning |
-| Evaluation / pilot phase | Start with the minimal stack (Open WebUI + Ollama), run LocoBench on available hardware, assess before committing to hardware procurement |
+| Evaluation / pilot phase | Start with the minimal stack (Open WebUI + Ollama), run LocoBanco on available hardware, assess before committing to hardware procurement |
 
 **Implementation sequence:**
 1. Audit data sensitivity — determine what can and cannot leave institutional infrastructure
-2. Run LocoBench on available hardware to establish capability baseline
+2. Run LocoBanco on available hardware to establish capability baseline
 3. Deploy the minimal stack; validate workflows before expanding
 4. Procure hardware based on actual measured throughput requirements, not theoretical specs
 
@@ -190,5 +190,5 @@ What it is: a self-hosted environment that lets you experiment, build intuition,
 
 ---
 
-*For hardware benchmarks specific to your machine, see [LocoBench](https://github.com/michael-borck/loco-bench).*
+*For hardware benchmarks specific to your machine, see [LocoBanco](https://github.com/michael-borck/loco-banco).*
 *For deployment configuration, see the [project README](https://github.com/michael-borck/loco-puente/blob/main/README.md).*

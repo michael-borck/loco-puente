@@ -44,7 +44,7 @@ export default defineConfig({
           label: 'LocoLab Projects',
           items: [
             { label: 'LocoLab', link: 'https://locolabo.org' },
-            { label: 'LocoBench', link: 'https://locobench.org' },
+            { label: 'LocoBanco', link: 'https://locobanco.org' },
             { label: 'LocoLLM', link: 'https://locollm.org' },
             { label: 'LocoConvoy', link: 'https://lococonvoy.org' },
             { label: 'LocoAgente', link: 'https://locoagente.org' },

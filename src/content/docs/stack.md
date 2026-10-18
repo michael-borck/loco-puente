@@ -134,4 +134,4 @@ All services bind to localhost by default. For LAN access, bind to the workstati
 
 ## Broader Ecosystem
 
-Puente's Ollama and Speaches endpoints also serve the wider LocoLabo app ecosystem -- the Keep Asking research chat tool, TalkBuddy, StuddyBuddy, Career Compass, and the LocoEnsayo rehearsal chatbots. Those are documented in their own project docs. They are not part of the minimal PoC demonstration scope; they are downstream consumers of the same backend.
+Puente's Ollama and Speaches endpoints also serve the wider LocoLabo app ecosystem -- the [Keep Asking](https://keep-asking.locolabo.org) research chat tool, TalkBuddy, StuddyBuddy, Career Compass, and the LocoEnsayo rehearsal chatbots. Those are documented in their own project docs. They are not part of the minimal PoC demonstration scope; they are downstream consumers of the same backend.

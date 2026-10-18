@@ -10,7 +10,7 @@ LocoPuente is the convergence point for the entire LocoLabo research programme. 
 
 | Layer | Projects | What They Contribute |
 |---|---|---|
-| **Infrastructure** | [LocoBench](https://locobench.org) + [LocoConvoy](https://lococonvoy.org) | Hardware selection, capacity planning, multi-GPU scaling |
+| **Infrastructure** | [LocoBanco](https://locobanco.org) + [LocoConvoy](https://lococonvoy.org) | Hardware selection, capacity planning, multi-GPU scaling |
 | **Intelligence** | [LocoLLM](https://locollm.org) + [LocoAgente](https://locoagente.org) | Routed specialist models, agentic tools, scaffolded reasoning |
 | **Experience** | [LocoEnsayo](https://locoensayo.org) | AI-populated rehearsal environments, simulation scenarios |
 
@@ -18,9 +18,9 @@ LocoPuente is the convergence point for the entire LocoLabo research programme. 
 
 ## How Each Project Feeds LocoPuente
 
-### LocoBench feeds the infrastructure decisions
+### LocoBanco feeds the infrastructure decisions
 
-LocoBench maps the floor of local LLM inference across every consumer GPU VRAM tier. That research answers the question every deployment starts with: what is the minimum viable hardware for a production service? LocoPuente PoC deployments are essentially LocoBench findings applied to a real environment, validating benchmarks under genuine production load.
+LocoBanco maps the floor of local LLM inference across every consumer GPU VRAM tier. That research answers the question every deployment starts with: what is the minimum viable hardware for a production service? LocoPuente PoC deployments are essentially LocoBanco findings applied to a real environment, validating benchmarks under genuine production load.
 
 ### LocoConvoy handles concurrent load
 

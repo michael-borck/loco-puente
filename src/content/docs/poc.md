@@ -98,7 +98,7 @@ All services expose OpenAI-compatible APIs. All run without internet access. All
 
 ## What Is Deliberately Out of Scope
 
-The minimal PoC is the four front ends above. The broader LocoLabo ecosystem -- the Keep Asking research chat tool, AnythingLLM unit RAG chatbots, Perplexica, Stirling PDF, Excalidraw, CiteSight, LocoEnsayo rehearsal chatbots, and the TalkBuddy / StuddyBuddy / Career Compass desktop clients -- also runs against Puente's Ollama and Speaches endpoints where relevant. Those are documented in their own project docs. Keeping the PoC itself narrow is the point of "closing the gap": prove the core on one card, then expand.
+The minimal PoC is the four front ends above. The broader LocoLabo ecosystem -- the [Keep Asking](https://keep-asking.locolabo.org) research chat tool, AnythingLLM unit RAG chatbots, Perplexica, Stirling PDF, Excalidraw, CiteSight, LocoEnsayo rehearsal chatbots, and the TalkBuddy / StuddyBuddy / Career Compass desktop clients -- also runs against Puente's Ollama and Speaches endpoints where relevant. Those are documented in their own project docs. Keeping the PoC itself narrow is the point of "closing the gap": prove the core on one card, then expand.
 
 ---
 
