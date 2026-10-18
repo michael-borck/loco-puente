@@ -1,13 +1,16 @@
 # State on 2026-10-10, and what to pick up in two weeks
 
-**Written at the end of the 2026-10-10 session; updated 2026-10-17. Read this first when you come back.**
+**Written at the end of the 2026-10-10 session; updated 2026-10-17/18. Read this first when you come back.**
 
 This is a handover, not a runbook. It answers three questions: what is running
 right now, what is staged but unverified, and what should be decided before
 anything else is built.
 
-The plan: ship the chatbot over the next week or two, do not restructure the
-stack, then revisit the engine migration with the chatbot working.
+**Frozen through end of semester (~2026-10-25).** The stack is deliberately
+untouched for exam period. The next working session starts the **unit pilot**
+(Decision L): OIDC forward-auth, LocalAI+vLLM for concurrency, fair-share
+queueing, whole-stack snapshot/restore. Decision H's Odysseus test doubles as
+recon — check whether its Cookbook already handles model swap management.
 
 ---
 
