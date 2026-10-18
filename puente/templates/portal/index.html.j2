@@ -116,6 +116,16 @@
       gap: 1.25rem;
       width: 100%;
     }
+    /* The dominant section of the default view (Decision J): the harness is
+       the 80% surface and gets room to say so. One column, larger cards,
+       centred — a front door, not a grid entry. */
+    .grid-hero {
+      grid-template-columns: minmax(0, 340px);
+      justify-content: center;
+    }
+    .grid-hero .card { padding: 2.25rem 1.75rem; }
+    .grid-hero .card-icon { font-size: 3rem; }
+    .grid-hero .card-name { font-size: 1.15rem; }
 
     .card {
       background: var(--bg-card);
@@ -243,18 +253,18 @@
 
   <div class="filters">
     {% for view in views %}
-    <button class="filter-btn{% if loop.first %} active{% endif %}" data-view="{{ view.id }}">{{ view.label }}</button>
+    <button class="filter-btn{% if view.id == default_id %} active{% endif %}" data-view="{{ view.id }}">{{ view.label }}</button>
     {% endfor %}
   </div>
 
   <div class="content">
     {% for view in views %}
     {% for section in view.sections %}
-    <div class="section{% if view.id == views[0].id %} visible{% endif %}" data-view="{{ view.id }}">
+    <div class="section{% if view.id == default_id %} visible{% endif %}" data-view="{{ view.id }}">
       {% if section.label %}
       <div class="section-label">{{ section.label }}</div>
       {% endif %}
-      <div class="grid">
+      <div class="grid{% if section.primary %} grid-hero{% endif %}">
         {% for svc in section.services %}
         <div class="card{% if svc.url_is_api %} card-api{% endif %}">
           <a href="{{ svc.url }}" class="card-link" target="_blank" rel="noopener">

@@ -399,10 +399,23 @@ model churn, assessment integrity) → ask: one class, one semester, one box.
 
 ### J. UI shape — chat by default, a power-user tab for the rest (2026-10-17)
 
-Yes, the operator's instinct is right, and the portal already contains most of
-it — it renders views from config (`VIEWS` in portal.py: student/admin), it
-already shows interface and API doors separately, and it regenerates from
-puente.yml. What is missing is intent. Recorded shape, nothing implemented:
+**Done 2026-10-17** (this item shipped; the notes below are the original
+design rationale, kept for context). The portal now has two views — Chat and
+Power User — split by behaviour rather than role. The Chat view is the
+default: a dominant "Start Here" section listing the enabled harnesses
+(hero-sized cards), since that is the 80%. The Power User view holds the full
+app grid in behaviour groups (Search & Research, Create, Voice, Inference,
+Code & Notes, Documents, Infrastructure, Under Evaluation), each card still
+showing its separate interface and API doors. `PortalConfig.default_view`
+picks the landing surface ("chat" | "power"), with a fallback to the first
+view that actually renders — a config whose only enabled services are
+power-view apps must not land on a blank page. A view with no enabled
+services does not render at all. The portal remains a router: it links to
+surfaces, it does not embed them, so if Odysseus wins Decision H the change
+is one yml enable plus a regeneration. Regenerated live at
+`~/.puente/portal/` and served by the portal container.
+
+Original rationale:
 
 - **Default view = the harness.** Landing shows one dominant "Start here"
   action pointing at whichever harness won Decision H — chat with images,

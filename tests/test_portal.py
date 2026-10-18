@@ -173,5 +173,91 @@ def test_each_service_renders_its_own_card():
     assert len(names) == len(list(_card(cfg))), "duplicate cards for one service"
 
 
+# --------------------------------------------------------------------------
+# Decision J: chat view leads, power view holds the grid, default is chosen
+# --------------------------------------------------------------------------
+
+
+def test_chat_view_is_the_default_surface():
+    """Decision J: the portal leads with the harness — the 80% — and the app
+    grid is the second surface, named by behaviour rather than by role."""
+    from puente.portal import VIEWS
+
+    assert list(VIEWS) == ["chat", "power"]
+    assert VIEWS["chat"]["label"] == "Chat"
+    assert VIEWS["power"]["label"] == "Power User"
+
+
+def test_chat_view_section_is_marked_primary():
+    """The Start Here section renders dominant. The template sizes it; this
+    pins that the flag survives the build for the section that carries it.
+
+    searxng is enabled so the power view has something to render — a view with
+    no enabled services is skipped entirely, which is its own correct
+    behaviour and tested via the fallback case below."""
+    cfg = _config(librechat={"enabled": True}, searxng={"enabled": True})
+    chat = next(v for v in build_views(cfg, "10.0.0.5") if v.id == "chat")
+    assert chat.sections[0].label == "Start Here"
+    assert chat.sections[0].primary is True
+    power = next(v for v in build_views(cfg, "10.0.0.5") if v.id == "power")
+    assert all(not s.primary for s in power.sections)
+
+
+def test_chat_view_holds_only_harnesses():
+    """Search, decks, notebooks and the rest are power-view surfaces: the 80%
+    gets them THROUGH the harness, not as separate first-page cards."""
+    cfg = _config(librechat={"enabled": True}, vane={"enabled": True},
+                  presenton={"enabled": True})
+    chat = next(v for v in build_views(cfg, "10.0.0.5") if v.id == "chat")
+    chat_names = {s.name for s in chat.sections[0].services}
+    assert chat_names == {"LibreChat"}
+    power = next(v for v in build_views(cfg, "10.0.0.5") if v.id == "power")
+    power_names = {svc.name for sec in power.sections for svc in sec.services}
+    assert "AI Search" in power_names
+    assert "Presenton" in power_names
+
+
+def test_disabled_harness_leaves_no_hole_in_the_default_view():
+    """Open WebUI is disabled on this deployment; the chat view must render
+    with whichever harnesses ARE enabled, not with an empty Start Here.
+
+    AnythingLLM is schema-default-off — it appears only when the operator has
+    enabled it, as this deployment's puente.yml has."""
+    cfg = _config(librechat={"enabled": True})
+    chat = next(v for v in build_views(cfg, "10.0.0.5") if v.id == "chat")
+    names = {s.name for s in chat.sections[0].services}
+    assert names == {"LibreChat"}
+
+
+def test_default_view_knob_switches_the_landing_surface():
+    """PortalConfig.default_view decides what is visible on load; the wrong
+    knob value falls back to the first view that renders, never to a blank
+    page."""
+    cfg = _config(librechat={"enabled": True}, searxng={"enabled": True})
+    html = generate_portal(cfg, "10.0.0.5")
+    # chat is the default: its section is the visible one on load.
+    assert 'data-view="chat"' in html
+    visible_chat = 'class="section visible" data-view="chat"'
+    visible_power = 'class="section visible" data-view="power"'
+    assert visible_chat in html and visible_power not in html
+
+    cfg_power = PuenteConfig.model_validate(
+        {"services": {"librechat": {"enabled": True},
+                      "searxng": {"enabled": True},
+                      "portal": {"default_view": "power"}}}
+    )
+    html = generate_portal(cfg_power, "10.0.0.5")
+    assert visible_power in html and visible_chat not in html
+
+
+def test_default_view_falls_back_when_the_view_is_empty():
+    """A config whose only enabled services are power-view apps must not land
+    on a default view with nothing visible."""
+    cfg = _config(searxng={"enabled": True})
+    html = generate_portal(cfg, "10.0.0.5")
+    assert 'class="section visible" data-view="power"' in html
+    assert 'class="section visible" data-view="chat"' not in html
+
+
 if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__, "-q"])

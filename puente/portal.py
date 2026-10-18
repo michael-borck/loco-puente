@@ -63,6 +63,10 @@ API_KIND = {
 class PortalSection:
     label: str
     services: list[PortalService]
+    #: True for a section that should render dominant — the "Start Here"
+    #: harness cards of the default view (Decision J: the portal leads with
+    #: the 80% surface, and the grid gives it room).
+    primary: bool = False
 
 
 @dataclass
@@ -119,36 +123,44 @@ FOREIGN_PROXY_HOSTS = {
     "voice.locopuente.org",
 }
 
-# View definitions
+# View definitions.
+#
+# Two views, split by BEHAVIOUR not by role (Decision J): the chat view is the
+# 80% — whichever harness won Decision H, leading — and the power view is the
+# full app grid for people who want the individual surfaces. The portal is a
+# router, never an app: it links to surfaces, it does not embed them.
+#
+# A view only renders if at least one of its services is enabled, so a fresh
+# install with the harness off shows just the power grid — and the harness
+# candidates below silently vanish until one is enabled.
 VIEWS = {
-    "student": {
-        "label": "Student",
+    "chat": {
+        "label": "Chat",
         "sections": [
-            {"label": "AI", "services": ["open_webui", "vane", "open_notebook", "deeptutor"]},
-            {"label": "Tools", "services": ["stirling_pdf", "excalidraw", "citesight", "presenton"]},
+            # The harness candidates, in preference order. Decision H keeps
+            # Open WebUI as incumbent until the Odysseus experiment decides;
+            # LibreChat and AnythingLLM remain listed while Decisions H/B are
+            # open rather than pretending a choice was made.
+            {
+                "label": "Start Here",
+                "services": ["open_webui", "librechat", "anythingllm"],
+                "primary": True,
+            },
         ],
     },
-    "admin": {
-        "label": "Admin",
+    "power": {
+        "label": "Power User",
         "sections": [
-            # Ollama first while both are supported; LocalAI is the successor and
-            # appears here only once enabled. See ADR0012.
-            {"label": "Inference", "services": ["ollama", "localai"]},
-            {
-                "label": "Backend Services",
-                "services": [
-                    "speaches",
-                    "voicebox",
-                    "comfyui",
-                    "anythingllm",
-                    "open_terminal",
-                ],
-            },
-            {"label": "Power Tools", "services": ["searxng", "jupyter"]},
-            # The "Under Evaluation" section auto-collects any enabled service
-            # whose config has `review: true`. The list is filled at build time
-            # by `build_views` so adding/removing review services requires no
-            # changes here.
+            {"label": "Search & Research", "services": ["vane", "searxng", "open_notebook", "deeptutor", "citesight"]},
+            {"label": "Create", "services": ["comfyui", "swarmui", "fooocus", "presenton", "ace_step", "musicgen"]},
+            {"label": "Voice", "services": ["voicebox", "speaches", "chatterbox"]},
+            {"label": "Inference", "services": ["ollama", "localai", "llama_cpp"]},
+            {"label": "Code & Notes", "services": ["jupyter", "open_terminal", "nodepad"]},
+            {"label": "Documents", "services": ["stirling_pdf", "excalidraw"]},
+            {"label": "Infrastructure", "services": ["glances", "uptime_kuma", "tutor_admin", "caddy"]},
+            # Auto-collects any enabled service whose config has `review: true`.
+            # Filled at build time so adding/removing review services requires
+            # no changes here.
             {"label": "Under Evaluation", "services": "__review__"},
         ],
     },
@@ -281,7 +293,13 @@ def build_views(config: PuenteConfig, host: str) -> list[PortalView]:
                 if svc:
                     svcs.append(svc)
             if svcs:
-                sections.append(PortalSection(label=section_def["label"], services=svcs))
+                sections.append(
+                    PortalSection(
+                        label=section_def["label"],
+                        services=svcs,
+                        primary=section_def.get("primary", False),
+                    )
+                )
         if sections:
             views.append(PortalView(id=view_id, label=view_def["label"], sections=sections))
     return views
@@ -291,6 +309,15 @@ def generate_portal(config: PuenteConfig, host: str = "localhost") -> str:
     """Render the portal HTML."""
     views = build_views(config, host)
 
+    # The view shown on load. Configurable (PortalConfig.default_view) because
+    # Decision J's whole point is that the default surface is the harness; if
+    # the configured view has no enabled services, fall back to the first that
+    # renders rather than a landing page with no visible content.
+    configured = config.services.portal.default_view
+    default_id = configured if any(v.id == configured for v in views) else (
+        views[0].id if views else ""
+    )
+
     templates_dir = Path(__file__).parent / "templates" / "portal"
     env = Environment(loader=FileSystemLoader(str(templates_dir)))
     template = env.get_template("index.html.j2")
@@ -299,6 +326,7 @@ def generate_portal(config: PuenteConfig, host: str = "localhost") -> str:
         title="Closing the Gap",
         subtitle="Local AI. All data stays on this machine.",
         views=views,
+        default_id=default_id,
     )
 
 

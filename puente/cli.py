@@ -864,7 +864,7 @@ def portal(
 
     portal_dir = write_portal(config, host)
     console.print(f"[green]Portal generated:[/green] {portal_dir}/index.html")
-    console.print(f"  Views: PoC (default) | Student | Backend")
+    console.print(f"  Views: Chat (default) | Power User")
 
     if serve:
         # Persist portal config so compose generation picks it up on every

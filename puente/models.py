@@ -372,6 +372,10 @@ class SpeachesConfig(ServiceConfig):
 
 class PortalConfig(ServiceConfig):
     host: str = "localhost"  # hostname/IP used in generated service URLs
+    #: Which portal view is shown on load: "chat" (the harness — the 80%) or
+    #: "power" (the full app grid). Decision J. Falls back to the first view
+    #: that renders if the configured one has no enabled services.
+    default_view: Literal["chat", "power"] = "chat"
 
 
 class TutorAdminConfig(ServiceConfig):
