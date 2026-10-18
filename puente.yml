@@ -71,7 +71,7 @@ services:
     instances: []
     models_dir: null
   open_webui:
-    enabled: false
+    enabled: true
     install_method: docker
     port: 3000
     gpu: null
@@ -517,6 +517,18 @@ services:
     managed: true
     environment: {}
     review: false
+    # Decision J: the landing surface. chat = the harness (the 80%).
+    default_view: chat
+    # Cards for services Puente does not manage. Odysseus is the Decision H
+    # experiment: standalone compose at ~/odysseus, published :latest image
+    # (pin an X.Y.Z[-dev].<sha> immutable tag only if adopted), auth on,
+    # admin password from `docker compose logs odysseus` on first boot.
+    extra_cards:
+    - name: Odysseus
+      url: http://192.168.20.120:7000
+      description: AI workspace — harness experiment (chat, agents, research)
+      icon: 🏹
+      view: chat
     proxy:
     - host: go.locopuente.org
       auth: none
@@ -537,6 +549,7 @@ services:
       offline_page: null
       cors_origins: null
     host: 192.168.20.120
+    default_view: chat
   caddy:
     enabled: true
     install_method: docker

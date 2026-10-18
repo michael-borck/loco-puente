@@ -351,6 +351,30 @@ revisit** — one compose file, CPU-only container, still served by Ollama, so
 the cost is disk and an hour. Keep Open WebUI as production harness for the
 chatbot. Decide on experience, not vibes.
 
+**UPDATE 2026-10-17 — experiment installed.** Corrections and state:
+
+- **The "unpinnable" caveat is outdated.** Odysseus now publishes immutable
+  tags (`X.Y.Z[-dev].<sha>`, e.g. `1.0.2-dev.f7cbc88`). No `main`-HEAD tags
+  exist yet; the newest immutable was two months old at install time, so the
+  experiment runs `:latest` deliberately — freshness for evaluation. If
+  adopted: pin the newest immutable and accept the lag, or nudge upstream to
+  tag main builds.
+- Installed standalone at `~/odysseus` (clone of `main`), NOT in puente.yml —
+  it is not adopted. `main`'s compose is build-from-source, so a
+  `docker-compose.override.yml` adds the published image pull-first with the
+  source build as fallback (ADR0009's pattern). Port 7000, bound to the LAN,
+  auth on; first admin password came from `docker compose logs odysseus`.
+  Its ntfy sidecar wanted 8091 — tutor-admin's port — moved to 8092 in the
+  override. Ollama reachable in-container at
+  `http://host.docker.internal:11434/v1` via the compose's own host-gateway.
+- **Open WebUI is now enabled** (was running as an orphan since the September
+  park). The Chat view on the portal lists Open WebUI, LibreChat and
+  AnythingLLM together until Decisions H/B pick winners.
+- **Portal `extra_cards`** added for exactly this case: operator-declared
+  cards for services Puente does not manage. A card forces its view to render
+  and lands in an "External" section. Odysseus has the first card (🏹, Chat
+  view, `http://192.168.20.120:7000`).
+
 ### I. The institutional path — closing the gap for students (2026-10-17)
 
 The mission, made concrete: students who cannot afford a $20/month

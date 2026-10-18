@@ -302,6 +302,34 @@ def build_views(config: PuenteConfig, host: str) -> list[PortalView]:
                 )
         if sections:
             views.append(PortalView(id=view_id, label=view_def["label"], sections=sections))
+
+    # Operator-declared cards (PortalConfig.extra_cards) for services Puente
+    # does not manage — experiments, hand-run containers, other boxes. A card
+    # FORCES its view to render: the operator added it deliberately, so an
+    # otherwise-empty view must still appear rather than swallow the card.
+    extras = getattr(config.services.portal, "extra_cards", None) or []
+    by_view: dict[str, list[PortalService]] = {}
+    for card in extras:
+        by_view.setdefault(card.view, []).append(
+            PortalService(
+                name=card.name,
+                icon=card.icon,
+                description=card.description,
+                url=card.url,
+                api_url=card.api_url,
+                api_kind=card.api_kind,
+            )
+        )
+    for view_id, cards in by_view.items():
+        view = next((v for v in views if v.id == view_id), None)
+        if view is None:
+            view = PortalView(id=view_id, label=VIEWS[view_id]["label"], sections=[])
+            views.append(view)
+            views.sort(key=lambda v: list(VIEWS).index(v.id))
+        view.sections.append(
+            PortalSection(label="External", services=cards, primary=False)
+        )
+
     return views
 
 

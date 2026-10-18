@@ -259,5 +259,65 @@ def test_default_view_falls_back_when_the_view_is_empty():
     assert 'class="section visible" data-view="chat"' not in html
 
 
+# --------------------------------------------------------------------------
+# extra cards: services Puente does not manage (Decision H's Odysseus, etc.)
+# --------------------------------------------------------------------------
+
+
+def _with_extra_card(**card) -> PuenteConfig:
+    return PuenteConfig.model_validate(
+        {"services": {"portal": {"extra_cards": [card]}}}
+    )
+
+
+def test_extra_card_renders_in_its_requested_view():
+    """The Odysseus case: an experiment Puente does not manage, visible in the
+    Chat view. The portal is a router; routers link to things they don't
+    operate."""
+    cfg = _with_extra_card(
+        name="Odysseus",
+        url="http://192.168.20.120:7000",
+        description="harness experiment",
+        icon="🏹",
+        view="chat",
+    )
+    chat = next(v for v in build_views(cfg, "10.0.0.5") if v.id == "chat")
+    section = chat.sections[-1]
+    assert section.label == "External"
+    assert section.services[0].name == "Odysseus"
+    assert section.services[0].url == "http://192.168.20.120:7000"
+    assert section.primary is False
+
+
+def test_extra_card_forces_its_view_to_render():
+    """An operator who added a card to a view asked for that view. An
+    otherwise-empty chat view must appear rather than swallow the card — the
+    silent-disappear behaviour would make the card unfindable. With the card
+    present alongside enabled harnesses, External lands AFTER Start Here."""
+    cfg = _with_extra_card(name="X", url="http://x:1", view="chat")
+    views = build_views(cfg, "10.0.0.5")
+    chat = next(v for v in views if v.id == "chat")
+    external = chat.sections[-1]
+    assert external.label == "External"
+    assert external.services[0].name == "X"
+    assert external.primary is False
+
+
+def test_extra_card_renders_in_generated_html():
+    cfg = _config(librechat={"enabled": True})
+    cfg = PuenteConfig.model_validate(
+        {"services": {
+            "librechat": {"enabled": True},
+            "portal": {"extra_cards": [
+                {"name": "Odysseus", "url": "http://192.168.20.120:7000",
+                 "icon": "🏹", "description": "harness experiment", "view": "chat"},
+            ]},
+        }}
+    )
+    html = generate_portal(cfg, "10.0.0.5")
+    assert "Odysseus" in html
+    assert "http://192.168.20.120:7000" in html
+
+
 if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__, "-q"])

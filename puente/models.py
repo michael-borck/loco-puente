@@ -370,12 +370,34 @@ class SpeachesConfig(ServiceConfig):
     )
 
 
+class ExtraCard(BaseModel):
+    """A portal card for a service Puente does not manage.
+
+    Experiments, hand-run containers, services on other boxes — anything that
+    should appear in the portal without becoming a puente service. The portal
+    is a router (Decision J); routers link to things they don't operate.
+    """
+
+    name: str
+    url: str  # full URL — these are not templated, they are literal
+    description: str = ""
+    icon: str = "🧩"
+    #: Which portal view hosts the card.
+    view: Literal["chat", "power"] = "power"
+    api_url: str | None = None
+    api_kind: str = ""
+
+
 class PortalConfig(ServiceConfig):
     host: str = "localhost"  # hostname/IP used in generated service URLs
     #: Which portal view is shown on load: "chat" (the harness — the 80%) or
     #: "power" (the full app grid). Decision J. Falls back to the first view
     #: that renders if the configured one has no enabled services.
     default_view: Literal["chat", "power"] = "chat"
+    #: Cards for services Puente does not manage (experiments, external boxes).
+    #: A card FORCES its view to render even when no managed service in that
+    #: view is enabled — an operator who added the card asked for it.
+    extra_cards: list[ExtraCard] = Field(default_factory=list)
 
 
 class TutorAdminConfig(ServiceConfig):
