@@ -81,9 +81,11 @@ load_resend_key() {
 
 # Preload the classroom model.
 #
-# The picker now offers ONE local model, gemma4:12b (~8GB), served both with
-# thinking off ("Ollama") and on ("Ollama (thinking)") — same loaded weights, so
-# warming it once covers both. It fits the 3090 alone, so the old two-GPU load
+# The picker offers ONE local model — whichever puente.yml pins (warm_models
+# reads it from there). Thinking is forced off on it (reasoning_effort: none —
+# see disable_thinking in puente.yml). qwen3.5:9b as of 2026-10-27 for the
+# exec-ed lab, swapped in for gemma4:12b (text+vision+audio in one model);
+# deploy/course-mode.sh on|off makes that swap. It fits the 3090 alone, so the old two-GPU load
 # ORDER no longer matters: there is no second resident model to split or evict.
 # (History: the previous pair, qwen2.5vl:7b-16k + qwen3.5:9b, only co-fit by
 # loading the vision model first to force a split onto the 2060S — see the git
@@ -95,7 +97,18 @@ load_resend_key() {
 # already thinking-free here.
 warm_models() {
   local ollama="${OLLAMA_URL:-http://localhost:11434}"
-  for m in gemma4:12b; do
+  # Warm whatever the LibreChat picker actually offers — the first entry of
+  # services.librechat.models in puente.yml — so the preload can never drift
+  # from what is served when course-mode swaps the model. puente's own venv
+  # has pyyaml; if either is missing, warming is skipped with a warning (the
+  # model still loads on first student use, just slowly).
+  local m models
+  models="$("$PUENTE_HOME/.venv/bin/python" -c 'import sys,yaml; print("\n".join(yaml.safe_load(open(sys.argv[1]))["services"]["librechat"]["models"] or []))' "$REPO/puente.yml" 2>/dev/null)" || models=""
+  if [ -z "$models" ]; then
+    log "  WARN no models pinned in puente.yml (or venv missing) — nothing to warm"
+    return 0
+  fi
+  for m in $models; do
     if curl -sf --max-time 300 "$ollama/api/generate" \
          -d "{\"model\":\"$m\",\"prompt\":\"hi\",\"stream\":false,\"keep_alive\":\"6h\"}" \
          -o /dev/null 2>/dev/null; then

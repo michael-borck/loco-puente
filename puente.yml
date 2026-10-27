@@ -229,20 +229,15 @@ services:
     creds_iv: 6ec53bf663221014099fbb678cf203d9
     ollama_base_url: null
     models:
-    - gemma4:12b
+    - qwen3.5:9b
     title_model: qwen3.5:0.8b
     num_ctx: null
     disable_thinking: true
-    thinking_comparison: true
+    thinking_comparison: false
     anthropic_key_env: ANTHROPIC_API_KEY
     anthropic_models:
     - claude-sonnet-5
-    - claude-haiku-4-5
-    allowed_registration_domains:
-    - curtin.edu.au
-    - student.curtin.edu.au
-    - postgrad.curtin.edu.au
-    - postgraduate.curtin.edu.au
+    allowed_registration_domains: []
     email_host: smtp.resend.com
     email_port: 587
     email_username: resend
