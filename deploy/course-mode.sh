@@ -48,7 +48,7 @@ LOG="$PUENTE_DATA_DIR/course-mode.log"
 CHAT_WINDOW="$REPO/deploy/chat-window.sh"
 
 # ---- THE KNOBS — review these before every course day --------------------
-COURSE_MODEL="qwen3.5:9b"      # picker model on course day
+COURSE_MODEL="llama3.1:latest" # picker model on course day; llama-arch so the 4-slot drop-in actually engages (qwen3.5 caps at 1 sequence — see 20-course-day.conf)
 STEADY_MODEL="gemma4:12b"      # everyday picker model
 # Course day = any email may register. Steady state = Curtin only.
 STEADY_DOMAINS=(curtin.edu.au student.curtin.edu.au postgrad.curtin.edu.au postgraduate.curtin.edu.au)

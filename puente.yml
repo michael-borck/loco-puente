@@ -229,7 +229,7 @@ services:
     creds_iv: 6ec53bf663221014099fbb678cf203d9
     ollama_base_url: null
     models:
-    - qwen3.5:9b
+    - llama3.1:latest
     title_model: qwen3.5:0.8b
     num_ctx: null
     disable_thinking: true
