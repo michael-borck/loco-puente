@@ -13,7 +13,7 @@ date: "14 September 2026"
 
 # Executive summary and decision requested
 
-**We propose using existing project funds to purchase one Apple Mac Studio M5 Ultra with 512GB of memory and 2TB of storage for WorkReady teaching and research.** The computer will host the local AI service for an 8–12-week pilot involving approximately **1,500 students**. We will introduce access in stages, with a design target of **150 active users at once**, subject to load testing.
+**We propose using existing project funds to purchase one Apple Mac Studio M5 Ultra with 512GB of memory and 2TB of storage for WorkReady teaching and research.** The computer will host the local AI service for an 8-12-week pilot involving approximately **1,500 students**. We will introduce access in stages, with a design target of **150 active users at once**, subject to load testing.
 
 WorkReady gives students repeated practice with job applications, interviews, workplace conversations, and feedback. The proposed service provides this access through an ordinary web browser, without a personal AI subscription. Local hosting gives the University control over model selection and student-data handling. The 512GB configuration provides capacity for larger models and several models kept ready together, with research scheduled around teaching. This broader use is the justification for the additional memory; the text-based pilot alone may fit within 256GB.
 
@@ -37,7 +37,7 @@ AI supplies the simulated conversations and personalised feedback. Students can 
 
 ## Equitable access to practice and feedback
 
-The University computer will perform the AI processing, allowing students to participate through a supported web browser on ordinary student or campus devices. Required practice and feedback will be included in the teaching service, rather than depending on a student's ability to purchase premium tools.
+The University computer will perform the AI processing. Students then participate through a supported web browser on ordinary student or campus devices. Required practice and feedback will be included in the teaching service, so students do not need to buy premium tools.
 
 Repeated practice gives students time to prepare answers and rehearse before live activities. The pilot will examine whether students use this opportunity and whether it improves their work, including for those who need more preparation time.
 
@@ -49,7 +49,7 @@ This strengthens the case for a University-funded teaching service. A suitably f
 
 The application has already been built and checked in a development setting. It includes six fictional employers, a job board, a student workspace, and the conversation and feedback features. The next step is to establish how well it works with a teaching cohort and how many students it can serve comfortably.
 
-The next investment would move WorkReady from development into a supported teaching trial. Without dedicated or approved shared AI capacity, access would need to remain limited or depend on a separately funded external service. Deferring the purchase preserves funds, but also defers evidence about learning benefits and real teaching demand. The reason to proceed is readiness to evaluate the application, rather than the release of a new computer alone.
+The next investment would move WorkReady from development into a supported teaching trial. Without dedicated or approved shared AI capacity, access would need to remain limited or depend on a separately funded external service. Deferring the purchase preserves funds, but also defers evidence about learning benefits and real teaching demand. The reason to proceed is readiness to evaluate the application. The release of a new computer on its own would not justify the purchase.
 
 The School reports prior experience with local AI through Blackboard chatbots and programming assignments. This experience provides a starting point for operating the service; WorkReady still needs its own teaching and performance evaluation. Project evidence is listed in the technical appendix.
 
@@ -134,7 +134,7 @@ These targets define the proposed student experience. The academic and technical
 
 Australian pricing was researched on **14 September 2026**. Apple lists starting prices of **A$9,499 retail** and **A$8,809 through its public Education Store**, including GST. These prices are for the entry model. **The requested 512GB version needs a written quote**, and Curtin's purchasing arrangements may produce a different price. [Apple Australian pricing](https://www.apple.com/au/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/)
 
-The equipment package will be priced through University purchasing. The current evidence does not establish the 512GB purchase price, so we retain that cost as a quoted variable. The operating estimate below gives the project leader a basis for assessing the commitment now, rather than deferring every cost until procurement.
+The equipment package will be priced through University purchasing. The current evidence does not establish the 512GB purchase price, so we retain that cost as a quoted variable. The operating estimate below lets the project leader assess the commitment now, before procurement settles every cost.
 
 We propose meeting the purchase cost from existing project funds. The decision is whether this is a worthwhile use of that budget relative to other project priorities and suitable AI services. Availability of project funds does not establish unrestricted spending authority; the project leader will confirm eligible expenditure and the applicable purchasing delegation before an order is placed.
 
@@ -170,11 +170,11 @@ The electricity estimate assumes continuous operation at an average 200W. A 100W
 
 ## Staff allocation and resource-cost comparison
 
-We propose **10 staff-days for setup and evaluation preparation**, followed by **up to four hours per week during the 8–12-week pilot** for administration and routine teaching support. This represents 75 setup hours and a further 32–48 support hours at the full allowance. The project leader will confirm whether existing staff allocations can accommodate this work or whether additional paid hours or backfill are required. Staff time has an opportunity cost even when it creates no additional project expenditure.
+We propose **10 staff-days for setup and evaluation preparation**, followed by **up to four hours per week during the 8-12-week pilot** for administration and routine teaching support. This represents 75 setup hours and a further 32-48 support hours at the full allowance. The project leader will confirm whether existing staff allocations can accommodate this work or whether additional paid hours or backfill are required. Staff time has an opportunity cost even when it creates no additional project expenditure.
 
-For comparison purposes, we value staff time at an indicative fully loaded rate of **A$85 per hour**, using a 7.5-hour working day. This is not a confirmed Curtin salary or charge-out rate. At that rate, setup effort is worth A$6,375 and pilot support A$2,720–A$4,080. Adding pro-rated non-staff costs gives a total pilot resource cost of approximately **A$9,500 to A$11,000**, excluding equipment. This is distinct from the pilot's cash requirement.
+For comparison purposes, we value staff time at an indicative fully loaded rate of **A$85 per hour**, using a 7.5-hour working day. This is not a confirmed Curtin salary or charge-out rate. At that rate, setup effort is worth A$6,375 and pilot support A$2,720-A$4,080. Adding pro-rated non-staff costs gives a total pilot resource cost of approximately **A$9,500 to A$11,000**, excluding equipment. This is distinct from the pilot's cash requirement.
 
-The conservative annual comparison scenario retains four support hours each week for all 52 weeks, valued at **A$17,680 per year**. With non-staff costs, this gives approximately **A$20,000 annually in total resource use**. It is a scenario for comparison, rather than an established ongoing staffing requirement. The pilot will record actual effort and distinguish teaching-period support from quieter-period maintenance. Every additional average support hour per week over a full year adds A$4,420 at the assumed rate. Substantial feature development, formal research studies and teaching delivery beyond routine support require separate staff allocations.
+The conservative annual comparison scenario retains four support hours each week for all 52 weeks, valued at **A$17,680 per year**. With non-staff costs, this gives approximately **A$20,000 annually in total resource use**. The scenario is for comparison; it does not establish an ongoing staffing requirement. The pilot will record actual effort and distinguish teaching-period support from quieter-period maintenance. Every additional average support hour per week over a full year adds A$4,420 at the assumed rate. Substantial feature development, formal research studies and teaching delivery beyond routine support require separate staff allocations.
 
 These figures express the economic cost of resources used. Existing salaried staff, University hosting or centrally paid electricity may reduce the additional cash charged to the project, but still consume institutional resources. The final budget will show project cash expenditure and in-kind contributions separately. Non-staff allowances are treated as gross costs with no GST recovery assumed; Finance will align the quote and operating charges before the final comparison.
 
@@ -204,7 +204,7 @@ Local ownership is preferred for the combination of direct control, large-model 
 | An external AI service charged by usage | Low or uncertain demand, with suitable feedback quality and approved data handling | Compare all conversation, document, and automated-character charges |
 | The proposed local computer | Sustained use, direct equipment control, and a substantiated need for large-model capacity | Preferred if the procurement comparison supports these requirements |
 
-The pilot will record staff effort and model usage so that the final comparison reflects equivalent teaching quality and access hours. Our preference for ownership rests on repeated use and institutional control. The project leader will see any additional cost of that choice explicitly, rather than treating research potential or unmeasured capacity as a financial saving.
+The pilot will record staff effort and model usage so that the final comparison reflects equivalent teaching quality and access hours. Our preference for ownership rests on repeated use and institutional control. The project leader will see any additional cost of that choice explicitly. Research potential and unmeasured capacity are not counted as financial savings.
 
 # 6. Research value during quieter teaching periods
 
@@ -255,16 +255,16 @@ The pilot will record waiting times, interrupted activities and development work
 
 # 8. Pilot timetable and next decision
 
-The **8–12-week evaluation starts after the first computer has arrived and the service has been set up and checked**. Purchasing, planning, and preparation can begin while waiting for delivery.
+The **8-12-week evaluation starts after the first computer has arrived and the service has been set up and checked**. Purchasing, planning, and preparation can begin while waiting for delivery.
 
 | Stage | What happens |
 |---|---|
 | Before delivery | Confirm costs, staff support, University IT arrangements, and how success will be measured |
 | Setup | Install and check the AI service, protect student records, and test backup and recovery arrangements |
-| Weeks 1–2 | Staff and a small student group complete the full simulation and check feedback, ease of use, and accessibility |
-| Weeks 3–6 | Expand towards 150 students at once if tests pass; introduce the wider group in stages |
-| Weeks 7–10 | Measure learning, waiting times, costs, support effort, research use, and recovery after an interruption; test larger groups if practical |
-| Weeks 11–12, if needed | Address significant issues and recommend whether to continue or expand |
+| Weeks 1-2 | Staff and a small student group complete the full simulation and check feedback, ease of use, and accessibility |
+| Weeks 3-6 | Expand towards 150 students at once if tests pass; introduce the wider group in stages |
+| Weeks 7-10 | Measure learning, waiting times, costs, support effort, research use, and recovery after an interruption; test larger groups if practical |
+| Weeks 11-12, if needed | Address significant issues and recommend whether to continue or expand |
 
 The academic lead will report changes in student work and professional skills against common criteria before and after the activity. The technical lead will report response times, demonstrated capacity, interruptions and support effort. The project leader will receive these results alongside actual operating costs, research use and a recommendation on continuation.
 
@@ -307,7 +307,7 @@ The staged approach limits the initial commitment while preserving the local, Un
 
 # Technical appendix for IT and purchasing reviewers
 
-The business decision is described above. The following details support equipment selection, testing, costing, and service preparation.
+The following details support equipment selection, testing, costing, and service preparation.
 
 ## A. Hardware specification and model memory
 
@@ -319,7 +319,7 @@ The business decision is described above. The following details support equipmen
 | Network | Wired connection using built-in 10Gb Ethernet | Connection to the institutional application service; available switch capacity to be confirmed |
 | Operation | Dedicated AI service, remotely administered | Preserve compute for teaching and approved AI development |
 
-Apple lists **1.2TB/s memory bandwidth** for M5 Ultra. This and its large unified memory make it a credible local inference candidate, but neither specification establishes WorkReady throughput. Runtime support and application performance must be tested on the delivered systems. [Apple Australian technical specifications](https://www.apple.com/au/mac-studio/specs/)
+Apple lists **1.2TB/s memory bandwidth** for M5 Ultra. This and its large unified memory make it a credible local inference candidate, but neither specification establishes WorkReady throughput. The team must test runtime support and application performance on the delivered systems. [Apple Australian technical specifications](https://www.apple.com/au/mac-studio/specs/)
 
 For illustration, 70 billion parameters at four bits require about **35GB for raw weights**, while 400 billion parameters at eight bits require about **400GB**. These are arithmetic lower bounds, excluding model-format overhead, working memory, conversation caches, and the operating system. They illustrate why a larger memory pool expands model choice; they do not demonstrate that either model would meet teaching response-time targets.
 
@@ -361,7 +361,7 @@ Proposed acceptance targets, to be agreed before testing:
 | Interruption with the initial single AI system | Preserve student progress, show a clear service message, and demonstrate restart and recovery within a recovery time agreed with the teaching team before launch |
 | Interruption after a second AI system is added | New AI requests routed to the surviving system within 60 seconds; resulting capacity and failed in-flight requests reported |
 
-The current Ollama conversation adapter waits for a complete response (`stream: False`). Therefore, a fast first token is not yet a student-visible success measure. Streaming could improve perceived responsiveness, but the initial acceptance test must measure the complete reply the student actually receives. [Current conversation adapter](../../workready/workready-api/workready_api/interview.py)
+The current Ollama conversation adapter waits for a complete response (`stream: False`). Therefore, a fast first token is not yet a student-visible success measure. Streaming could improve perceived responsiveness, but the initial acceptance test must measure the complete reply the student receives. [Current conversation adapter](../../workready/workready-api/workready_api/interview.py)
 
 Test at 25, 75, and 150 active users, followed by 300 and 500 if targets pass. Document the activity mix, prompt/context sizes, output limits, selected model, runtime version, and serving settings. Include synchronised interview starts, task-submission bursts, automated lunchroom calls, long histories, and one-system operation. A static-page load test alone cannot validate the AI service.
 
@@ -392,7 +392,7 @@ Commissioning must cover:
 
 The release process will test model changes against a fixed evaluation set covering persona consistency, relevant feedback, unsupported claims, professional behaviour and attempts to override simulation instructions. Lecturers retain responsibility for assessment decisions.
 
-Teaching priority must include memory reservations and model availability, not just spare processor time. On the first computer, schedule research outside required teaching availability. With two computers, research jobs using the reserve machine must be interruptible within the recovery target, or scheduled in a period with explicitly reduced teaching/maintenance cover. Gateway, application host, database, power, and network dependencies need recovery arrangements as well as the AI machines.
+Teaching priority must include memory reservations and model availability alongside spare processor time. On the first computer, schedule research outside required teaching availability. With two computers, research jobs using the reserve machine must be interruptible within the recovery target, or scheduled in a period with explicitly reduced teaching/maintenance cover. Gateway, application host, database, power, and network dependencies need recovery arrangements as well as the AI machines.
 
 ## D. Pricing evidence and costing assumptions
 
@@ -417,7 +417,7 @@ Compare alternatives over the same three-year period:
 
 The initial single-computer power allowance is **A$526 per year**, calculated as 0.2kW × 8,760 hours × A$0.30/kWh. A future pair with the same average draw per computer would cost approximately A$1,051 per year before cooling or other infrastructure charges. Commissioning will measure actual consumption.
 
-The conservative full resource-cost scenario in section 5 values 75 setup hours at A$85, giving A$6,375, and 208 annual support hours at A$85, giving A$17,680. Annual non-staff allowances total A$2,325.60, or A$6,976.80 over three years. Including the year-round staffing scenario and setup effort gives A$66,391.80 over three years before equipment, rounded to A$66,400. Dividing by 4,500 participants gives A$14.75 per student before equipment. The pilot estimate pro-rates recurring costs over 8–12 weeks and adds setup, giving A$9,452.78 to A$10,991.68 before equipment at the full support allowance. These are resource-cost estimates, not confirmed project cash charges. Ongoing staffing will be based on recorded pilot effort.
+The conservative full resource-cost scenario in section 5 values 75 setup hours at A$85, giving A$6,375, and 208 annual support hours at A$85, giving A$17,680. Annual non-staff allowances total A$2,325.60, or A$6,976.80 over three years. Including the year-round staffing scenario and setup effort gives A$66,391.80 over three years before equipment, rounded to A$66,400. Dividing by 4,500 participants gives A$14.75 per student before equipment. The pilot estimate pro-rates recurring costs over 8-12 weeks and adds setup, giving A$9,452.78 to A$10,991.68 before equipment at the full support allowance. These are resource-cost estimates, not confirmed project cash charges. Ongoing staffing will be based on recorded pilot effort.
 
 ## E. Cloud rental references and break-even calculations
 
@@ -441,7 +441,7 @@ A generic cloud server advertised with 512GB of system RAM is not necessarily a 
 
 ### Simple financial model
 
-Use a consistent basis excluding recoverable GST; Finance must confirm local GST recovery and the treatment of overseas charges. Enter the actual quote when available rather than assuming a purchase price.
+Use a consistent basis excluding recoverable GST; Finance must confirm local GST recovery and the treatment of overseas charges. Enter the actual quote when available; do not assume a purchase price.
 
 - **C:** complete quoted local equipment cost.
 - **D:** local setup cost minus rental setup cost.
@@ -493,7 +493,7 @@ Control of installed software is different from control of the hosting infrastru
 
 For a rental quote, document processing and backup locations; privileged/support access and audit records; subprocessors; encryption and key control; permitted use of student data; retention and verified deletion; incident response; and exit/export arrangements. Review whether provider management software captures content. A host's claim that data stays on its machine does not establish that the University has exclusive physical or administrative control.
 
-For on-campus operation, confirm the same record-handling controls within University systems, protect model endpoints, manage administrator privileges, and restrict unapproved outbound AI traffic. The proposal seeks direct control over the deployed model and student-data handling, with accountable University operation rather than an absolute claim that no risk remains.
+For on-campus operation, confirm the same record-handling controls within University systems, protect model endpoints, manage administrator privileges, and restrict unapproved outbound AI traffic. The proposal seeks direct control over the deployed model and student-data handling, with accountable University operation. It does not claim that no risk remains.
 
 ## G. Project evidence and operational limits
 

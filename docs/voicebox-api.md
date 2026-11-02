@@ -1,29 +1,29 @@
 # Voicebox Voice-Clone & TTS API
 
 How to clone a voice and generate speech with it via Voicebox's HTTP API. Voicebox
-is **the TTS service for this box** — an external tool needing TTS should target it.
+is **the TTS service for this box**. An external tool needing TTS should target it.
 
 > **Verified** 2026-07-07 against a live Voicebox (`puente up voicebox`, port
 > 17493): all documented endpoints exist in its OpenAPI spec, and creating a
 > cloned-voice profile via `POST /profiles` works. Voicebox exposes interactive
-> FastAPI docs at `/docs` (and the raw schema at `/openapi.json`) — the
+> FastAPI docs at `/docs` (and the raw schema at `/openapi.json`), the
 > authoritative reference if the API evolves.
 
 ---
 
 ## What Voicebox is (and how it relates to Chatterbox)
 
-Voicebox is a self-hosted **voice studio** with a FastAPI backend. Importantly,
-it is **multi-backend** — its `engine` parameter selects the TTS model:
+Voicebox is a self-hosted **voice studio** with a FastAPI backend. It is
+**multi-backend**: its `engine` parameter selects the TTS model:
 `qwen`, `qwen_custom_voice`, `luxtts`, `chatterbox`, `chatterbox_turbo`,
 `tada`, `kokoro`. So Voicebox can even drive Chatterbox internally.
 
-It is **not** a thin UI over the standalone Chatterbox server — it's an
+It is **not** a thin UI over the standalone Chatterbox server; it's an
 independent stack. As a provider it offers a clean "profile + generate" model.
 
 **Endpoint:** `http://<box>:17493` (default port). Add an nginx-proxy-manager
 host (e.g. `voice.locopuente.org`) for public/TLS access, like the other
-services. FastAPI exposes interactive docs at `/docs` — use it to confirm
+services. FastAPI exposes interactive docs at `/docs`; use it to confirm
 schemas live.
 
 ---
@@ -47,7 +47,7 @@ Content-Type: application/json
   "voice_type": "cloned"
 }
 ```
-→ returns a `VoiceProfileResponse` with an `id` (the `profile_id`).
+Returns a `VoiceProfileResponse` with an `id` (the `profile_id`).
 
 Languages: `zh en ja ko de fr ru pt es it he ar da el fi hi ms nl no pl sv sw tr`.
 
@@ -63,7 +63,7 @@ file=@reference.wav
 reference_text=The exact words spoken in the reference clip.
 ```
 Accepted audio: `.wav .mp3 .m4a .ogg .flac .aac .webm .opus`.
-→ returns a `ProfileSampleResponse`. Add multiple samples for a better clone.
+Returns a `ProfileSampleResponse`. Add multiple samples for a better clone.
 
 ### 3. Generate speech with the cloned voice
 
@@ -80,7 +80,7 @@ Content-Type: application/json
   "normalize": true
 }
 ```
-→ returns a `GenerationResponse` with an `id` and (when finished) `audio_path`,
+Returns a `GenerationResponse` with an `id` and (when finished) `audio_path`,
 `duration`, `status`.
 
 `engine` options: `qwen` (default) | `qwen_custom_voice` | `luxtts` |
@@ -121,7 +121,7 @@ while get(f"{B}/generate/{gen['id']}/status")["status"] == "generating":
 audio = get_bytes(f"{B}/audio/{gen['id']}")
 ```
 
-Reuse the `profile_id` across many generations — cloning (steps 1–2) is one-time
+Reuse the `profile_id` across many generations: cloning (steps 1 and 2) is one-time
 per voice; step 3 is per utterance.
 
 ---
@@ -129,11 +129,11 @@ per voice; step 3 is per utterance.
 ## What happened to Chatterbox?
 
 **Retired** (2026-07-09). Voicebox bundles a `chatterbox-tts` engine, so running a
-separate Chatterbox container was pure redundancy — and it was holding a GPU.
+separate Chatterbox container was pure redundancy, and it was holding a GPU.
 
-- **Voicebox (:17493)** — the active TTS. Named profiles, multiple engines
+- **Voicebox (:17493)**: the active TTS. Named profiles, multiple engines
   (including `chatterbox`), effects, personality rewriting. Runs on GPU 1.
-- **Chatterbox (was :8004)** — `enabled: false`. **Nothing listens on that port.**
+- **Chatterbox (was :8004)**: `enabled: false`. **Nothing listens on that port.**
 
 So there is no provider choice to make any more: target Voicebox. If you specifically
 want Chatterbox's model, select it as an *engine* within Voicebox rather than running

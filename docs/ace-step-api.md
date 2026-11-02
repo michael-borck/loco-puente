@@ -1,6 +1,6 @@
-# ACE-Step — song generation that fits beside everything else
+# ACE-Step: song generation that fits beside everything else
 
-**lyrics → a full song with vocals**, in under 10 seconds on an RTX 3090, using
+**Lyrics to a full song with vocals**, in under 10 seconds on an RTX 3090, using
 under 5 GB of VRAM.
 
 ## Why not YuE
@@ -11,7 +11,7 @@ its GPU.
 | | YuE | **ACE-Step 1.5** |
 | --- | --- | --- |
 | VRAM | 24 GB, BF16 required | **~4.7 GB** (2B variant) |
-| Speed (RTF, RTX 4090) | 0.083× — *slower than realtime* | **15.63×** — 2–8 s per track |
+| Speed (RTF, RTX 4090) | 0.083×, *slower than realtime* | **15.63×**, 2 to 8 s per track |
 | Parameters | 7B | 3.5B |
 | Licence | Apache-2.0 | Apache-2.0 |
 
@@ -21,14 +21,14 @@ nothing for ComfyUI, Voicebox or the LLM. ACE-Step's 2B model fits in what a
 shared card has spare.
 
 A song generator that has to be switched off to use anything else is not a
-service. That is the whole criterion.
+service.
 
 The XL variant (4B DiT, ~9 GB, needs ≥12 GB free with offload) is available for
 hosts with room. On this box it does not.
 
 ## Why it is its own service, not a ComfyUI node
 
-Not for tidiness — a version conflict:
+The reason is a version conflict:
 
 ```
 ACE-Step 1.5 pins   torch 2.10.0+cu128   (pyproject.toml, linux x86_64)
@@ -59,7 +59,7 @@ without changing anything in this service.
 
 `resident: false` disables the 5Hz language model entirely
 (`ACESTEP_INIT_LLM=false`). With it off you lose thinking mode, CoT captioning
-and sample generation — and gain the VRAM back. On a card shared with ComfyUI
+and sample generation, and gain the VRAM back. On a card shared with ComfyUI
 that is the right default; it is why the LM follows `resident` rather than
 defaulting on.
 
@@ -69,7 +69,7 @@ Upstream names the 2B family `acestep-v15-turbo` and the 4B family
 `acestep-v15-xl-turbo`. There is no `acestep-v15-2b-turbo`. The service maps
 puente's `variant` through a dict rather than interpolating it into a string,
 because a config name that does not exist starts cleanly and then fails on the
-first generation request — with nothing to indicate the name was the problem.
+first generation request, with nothing to indicate the name was the problem.
 `tests/test_ace_step.py` pins both against the names in upstream's README.
 
 ## VRAM
@@ -86,8 +86,8 @@ Adding it without doing both is how the 2026-10-10 boot race happens again.
 
 ## Not yet run
 
-Landed and unit-tested; **not** yet built or run on this host — the first build
-compiles the image from upstream's git context (torch + CUDA, expect 10–20 min)
+Landed and unit-tested; **not** yet built or run on this host. The first build
+compiles the image from upstream's git context (torch + CUDA, expect 10 to 20 min)
 and downloads checkpoints. Verified so far: every environment variable comes
 from upstream's `.env.example`, both config-path names exist upstream, and the
 compose fragment generates cleanly.

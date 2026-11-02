@@ -1,4 +1,4 @@
-# `docs/` — operator runbooks
+# docs/: operator runbooks
 
 **These files are not published anywhere.** They are read in the repo (and cited from
 source comments in `puente/services/*.py`). Nothing builds or serves this directory.
@@ -7,14 +7,14 @@ There are three separate web surfaces in this project, and they are easy to conf
 
 | Surface | Source | What it is |
 |---|---|---|
-| **locopuente.org** (GitHub Pages) | `src/` — Astro | `src/pages/index.astro` is the marketing landing page and owns `/`. `src/content/docs/*.md` become the public docs (`/services`, `/stack`, `/choosing`, `/hardware`, …) via Starlight. Deployed by `.github/workflows/deploy-pages.yml`. |
+| **locopuente.org** (GitHub Pages) | `src/`, Astro | `src/pages/index.astro` is the marketing landing page and owns `/`. `src/content/docs/*.md` become the public docs (`/services`, `/stack`, `/choosing`, `/hardware`, …) via Starlight. Deployed by `.github/workflows/deploy-pages.yml`. |
 | **`puente portal`** | `puente/templates/portal/index.html.j2` | The on-box service dashboard. Rendered by `puente/portal.py`; built dynamically from enabled services in `puente.yml`. |
 | **`docs/`** (here) | — | Operator runbooks. Read as plain markdown in the repo. |
 
 There is **no `puente serve` or `puente docs` subcommand.** The CLI commands are
 `capabilities, init, install, up, down, enable, disable, status, doctor, gpu,
 connect, portal, catalog, version`. `enable` also takes `@<profile>` to install
-a whole group — see the catalog.
+a whole group. See the catalog.
 
 ## Don't duplicate the public docs here
 
@@ -35,11 +35,11 @@ noise on the website.
 | `decision-layer.md` | Routing a request to a capability without generating; the two backends and the measured latency |
 | `services-inventory.md` | **All 31 services**, the three tiers, and which few the opinionated default should be |
 | `demand.md` | Demand-driven residency: observing usage and deciding what stays loaded |
-| `adr/` | Architecture Decision Records — why the non-obvious choices were made, and what was rejected. Superseded records are kept, never deleted |
+| `adr/` | Architecture Decision Records: why the non-obvious choices were made, and what was rejected. Superseded records are kept, never deleted |
 | `tutor-admin.md` | The tutor-facing LibreChat account UI and its host-side runner |
 | `service-topology.md` | What runs in vs outside puente; the voice-service overlap |
-| `caddy-migration.md` | The nginx-proxy-manager → Caddy cutover |
-| `gpu-swap-3090.md` | The 2060 Super → 3090 swap, and its verification |
+| `caddy-migration.md` | The nginx-proxy-manager to Caddy cutover |
+| `gpu-swap-3090.md` | The 2060 Super to 3090 swap, and its verification |
 | `image-generation-setup.md` | ComfyUI + SwarmUI integration |
 | `sadtalker-api.md`, `wav2lip-api.md`, `liveportrait-api.md` | Talking-head / lip-sync ComfyUI nodes |
 | `voicebox-api.md` | The **active** TTS service (port 17493) |

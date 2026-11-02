@@ -6,7 +6,7 @@
 
 Puente can run its own reverse proxy (Caddy) as an optional service, the same
 way it runs every other container. When enabled, Caddy fronts every service
-that declares a `proxy:` block — terminating TLS (automatic Let's Encrypt) and
+that declares a `proxy:` block, terminating TLS (automatic Let's Encrypt) and
 enforcing a per-service auth policy. When disabled, you bring your own proxy
 (nginx-proxy-manager, Traefik, …) and puente stays out of the way.
 
@@ -18,7 +18,7 @@ silent reversion when the NPM UI regenerated configs).
 
 - **Source of truth is `puente.yml`.** Each service already declares its
   `port`; add a `proxy:` block to publish it. The Caddyfile is *generated* from
-  this — there is no second file to keep in sync.
+  this, so there is no second file to keep in sync.
 - **Secrets stay out of the repo.** `proxy.token_env` (bearer) and the
   basic-auth `users` map name *environment variables*; the generated Caddyfile
   emits `{$VAR}` placeholders and puente materializes `caddy/.env` from the
@@ -53,8 +53,8 @@ Auth policy (matches the stack convention):
 
 That is what makes rotation possible without a flag-day cutover: add the new
 env var, hand the new key out, then drop the old name once nobody is using it.
-Every name in the list must have a value in the environment at `puente up` —
-an unset one resolves to an empty placeholder that quietly matches nothing.
+Every name in the list must have a value in the environment at `puente up`.
+An unset one resolves to an empty placeholder that matches nothing.
 
 ### The `caddy:` service config
 
@@ -91,14 +91,14 @@ openssl rand -hex 32
 ## Cutover from nginx-proxy-manager
 
 Only one process can bind `:80` / `:443`. On this box that cutover is **already
-done** — Caddy owns them. The steps below are for a box where NPM still does:
+done**; Caddy owns them. The steps below are for a box where NPM still does:
 
-1. **Prep DNS** — every `proxy.host` must resolve to this host's public IP.
+1. **Prep DNS**: every `proxy.host` must resolve to this host's public IP.
    (Caddy needs `:80` reachable for the HTTP-01 challenge.)
-2. **Set secrets** — export the token / bcrypt env vars (see above).
-3. **Stop NPM** — `cd ~/docker && docker compose stop` (or remove its
+2. **Set secrets**: export the token / bcrypt env vars (see above).
+3. **Stop NPM**: `cd ~/docker && docker compose stop` (or remove its
    `:80/:443` bindings). Keep its data around until Caddy is proven.
-4. **Enable + start Caddy** — set `caddy.enabled: true` in `puente.yml`, then
+4. **Enable + start Caddy**: set `caddy.enabled: true` in `puente.yml`, then
    `puente up caddy`. Caddy will request certs on first request per host.
 5. **Verify** each host:
    ```sh
@@ -115,7 +115,7 @@ done** — Caddy owns them. The steps below are for a box where NPM still does:
 
 ## Hosts NOT managed by puente
 
-Puente is an AI-platform orchestrator — it only fronts the AI services it runs.
+Puente is an AI-platform orchestrator. It only fronts the AI services it runs.
 Personal / unrelated infrastructure (e.g. Plex, `books.serveur.au`,
 `boxes.borck.dev`) is deliberately out of scope: those hosts aren't in
 `puente.yml`, so they never appear in the generated Caddyfile. Keep them on
@@ -126,7 +126,7 @@ all 23 original hosts, used to bootstrap this migration. It was removed once
 puente-caddy was serving live traffic: its only content not in the generated
 config was two hosts dropped on purpose (`plex.serveur.au`, `books.serveur.au`)
 and one retired service (`chatterbox.locoensayo.org`), and it had drifted far
-enough to be actively misleading — its `ollama` block still named a
+enough to be actively misleading: its `ollama` block still named a
 `127.0.0.1:11434` placeholder long after the real backend moved. Recover it
 from git if ever needed: `git show ec0681b:proxy/Caddyfile`.
 

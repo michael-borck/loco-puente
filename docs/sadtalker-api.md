@@ -1,6 +1,6 @@
 # SadTalker Talking-Head API (via ComfyUI)
 
-How to generate talking-head videos (photo + audio → lip-synced MP4) by calling
+How to generate talking-head videos (photo and audio to a lip-synced MP4) by calling
 the SadTalker node through ComfyUI's HTTP API. This is the contract for a remote
 tool (e.g. the slide-stream avatar provider) driving the box.
 
@@ -12,12 +12,12 @@ tool (e.g. the slide-stream avatar provider) driving the box.
 ## Endpoint
 
 **Base URL:** `https://comfyui.locopuente.org` (ComfyUI native API, port 8188
-behind nginx-proxy-manager → `192.168.20.120:8188`).
+behind nginx-proxy-manager at `192.168.20.120:8188`).
 
 SadTalker runs as a ComfyUI custom node, so there is no dedicated
-"SadTalker endpoint" — you POST a **workflow graph** to ComfyUI's `/prompt`.
+"SadTalker endpoint". You POST a **workflow graph** to ComfyUI's `/prompt`.
 
-> ⚠️ **No auth.** ComfyUI's API is currently unauthenticated — anyone who
+> **No auth.** ComfyUI's API is currently unauthenticated. Anyone who
 > reaches the host can run any workflow. Add HTTP basic-auth / an access rule in
 > nginx-proxy-manager before relying on this publicly.
 
@@ -25,16 +25,16 @@ SadTalker runs as a ComfyUI custom node, so there is no dedicated
 
 ## The 3-step flow
 
-1. **Submit** — `POST /prompt` with `{"prompt": <workflow>}` → returns
+1. **Submit**: `POST /prompt` with `{"prompt": <workflow>}`. This returns
    `{"prompt_id": "..."}`.
-2. **Poll** — `GET /history/{prompt_id}` until the entry appears with
+2. **Poll**: `GET /history/{prompt_id}` until the entry appears with
    `status.status_str == "success"`.
-3. **Read the result** — the output MP4 path is in the response under the
+3. **Read the result**: the output MP4 path is in the response under the
    ShowVideo node's `show_video_path`.
 
 Inputs (the face image and the audio) must exist in ComfyUI's `input/` directory
 before you reference them by filename. Upload via `POST /upload/image`
-(multipart) — it accepts audio files too despite the name — or place them on the
+(multipart), which accepts audio files too despite the name, or place them on the
 shared volume `~/.puente/comfyui-basedir/input/`.
 
 ---
@@ -84,14 +84,14 @@ Fetch that file from the shared output volume
 |-------|--------|-------|
 | `image` | filename in `input/` | **Must be a real front-facing face.** If no face is detected SadTalker raises "can not detect the landmark from source image". |
 | `audio` | filename in `input/` | Output video length = audio length. |
-| `poseStyle` | `0`–`45` | Head-pose style seed. |
+| `poseStyle` | `0` to `45` | Head-pose style seed. |
 | `faceModelResolution` | `"256"` / `"512"` | 256 faster, 512 sharper. |
-| `preprocess` | `crop` / `resize` / `full` / `extcrop` / `extfull` | **Use `full`** for robustness — `crop` is stricter and fails on many images. |
+| `preprocess` | `crop` / `resize` / `full` / `extcrop` / `extfull` | **Use `full`** for robustness; `crop` is stricter and fails on many images. |
 | `stillMode` | `true` / `false` | `true` = minimal head motion. **Recommended** for the corner-circle avatar use case (much less jank). |
 | `gfpganAsFaceEnhancer` | `true` / `false` | Face upscaling/enhancement. |
 | `useRefVideo` + `refVideo` + `refInfo` | bool / VIDEOSTRING / `pose\|blink\|pose+blink\|all` | Drive pose/blink from a reference video instead of synthesizing. |
 
-Outputs: `video_path` (index 0), `show_video_path` (index 1) — both STRING paths.
+Outputs: `video_path` (index 0), `show_video_path` (index 1), both STRING paths.
 
 ---
 
@@ -118,4 +118,4 @@ while True:
 ```
 
 SadTalker took ~30s for a few-second clip when GPU 0 was an 8 GB 2060 Super. Longer
-audio → longer. GPU 0 is now a 24 GB RTX 3090; this figure has not been re-measured.
+audio means a longer clip. GPU 0 is now a 24 GB RTX 3090; this figure has not been re-measured.

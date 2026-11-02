@@ -16,7 +16,7 @@ export default defineConfig({
       },
       social: [
         { icon: 'external', label: 'Home', href: 'https://locopuente.org' },
-        { icon: 'external', label: 'LocoLab', href: 'https://locolabo.org' },
+        { icon: 'external', label: 'LocoLabo', href: 'https://locolabo.org' },
       ],
       customCss: ['./src/styles/custom.css'],
       sidebar: [
@@ -41,9 +41,9 @@ export default defineConfig({
           ],
         },
         {
-          label: 'LocoLab Projects',
+          label: 'LocoLabo Projects',
           items: [
-            { label: 'LocoLab', link: 'https://locolabo.org' },
+            { label: 'LocoLabo', link: 'https://locolabo.org' },
             { label: 'LocoBanco', link: 'https://locobanco.org' },
             { label: 'LocoLLM', link: 'https://locollm.org' },
             { label: 'LocoConvoy', link: 'https://lococonvoy.org' },

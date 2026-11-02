@@ -1,6 +1,6 @@
 # Wav2Lip Video Lip-Sync API (via ComfyUI)
 
-How to re-sync a talking-head **video** to new **audio** (video → lip-synced
+How to re-sync a talking-head **video** to new **audio** (video to a lip-synced
 MP4) by calling the Wav2Lip node through ComfyUI's HTTP API. This is the
 video-driven counterpart to [SadTalker](sadtalker-api.md) (which is photo-driven).
 
@@ -13,13 +13,13 @@ video-driven counterpart to [SadTalker](sadtalker-api.md) (which is photo-driven
 ## Why Wav2Lip (and not LatentSync/MuseTalk)
 
 > **Reconsider this.** The choice below was forced by an 8 GB budget. GPU 0 is now a
-> **24 GB RTX 3090**, so LatentSync's ~20 GB requirement is no longer disqualifying —
-> it is the quality leader and is worth evaluating. Wav2Lip's hardening for 8 GB can
+> **24 GB RTX 3090**, so LatentSync's ~20 GB requirement is no longer disqualifying.
+> It is the quality leader and is worth evaluating. Wav2Lip's hardening for 8 GB can
 > likewise be relaxed. See `gpu-swap-3090.md`.
 
 The original reasoning, when the ceiling was **8 GB VRAM**:
 
-- **LatentSync 1.6** is the quality leader but is spec'd for ~20 GB VRAM — it
+- **LatentSync 1.6** is the quality leader but is spec'd for ~20 GB VRAM: it
   would not fit the 2060 Super. (Now viable on the 3090.)
 - **MuseTalk** has a painful pinned-2024 install and degrades facial features.
 - **Wav2Lip** is light (~2 GB at inference), installs cleanly, and runs on 8 GB.
@@ -32,8 +32,8 @@ The original reasoning, when the ceiling was **8 GB VRAM**:
 ## Endpoint
 
 **Base URL:** `https://comfyui.locopuente.org` (ComfyUI native API, port 8188).
-Same workflow-graph API as SadTalker: `POST /prompt` → poll `GET /history/{id}`
-→ read the output path. (⚠️ still unauthenticated — add auth before public use.)
+Same workflow-graph API as SadTalker: `POST /prompt`, poll `GET /history/{id}`,
+then read the output path. (Still unauthenticated; add auth before public use.)
 
 ---
 
@@ -41,20 +41,20 @@ Same workflow-graph API as SadTalker: `POST /prompt` → poll `GET /history/{id}
 
 Installed by the comfyui `post_start` hook when `install_wav2lip: true`:
 
-- **`Wav2Lip`** — the sync engine. Inputs: `images` (IMAGE batch = video frames),
+- **`Wav2Lip`**: the sync engine. Inputs: `images` (IMAGE batch = video frames),
   `mode` (`sequential` / `repetitive`), `face_detect_batch` (INT), `audio`
   (AUDIO). Outputs: `images` (synced frames), `audio`.
-- **`VHS_LoadVideo`** — video file → IMAGE frames + audio (VideoHelperSuite).
-- **`VHS_VideoCombine`** — frames + audio → MP4. Supports `pingpong` (boomerang
-  loop) — useful to hide the seam when looping a short clip under longer audio.
+- **`VHS_LoadVideo`**: video file to IMAGE frames + audio (VideoHelperSuite).
+- **`VHS_VideoCombine`**: frames + audio to MP4. Supports `pingpong` (boomerang
+  loop), useful to hide the seam when looping a short clip under longer audio.
 
 Wav2Lip works on **frames**, so a real video flow needs VHS to load/encode.
 
 ---
 
-## Workflow JSON (API format) — full video → video
+## Workflow JSON (API format): full video to video
 
-The **verified** graph: load reference video → Wav2Lip with new audio → encode MP4.
+The **verified** graph: load reference video, run Wav2Lip with new audio, encode MP4.
 
 ```json
 {
@@ -90,16 +90,16 @@ output volume (`~/.puente/comfyui-basedir/output/`), or via
 ## Notes
 
 - **Input files** (reference video, audio) must be in ComfyUI's `input/` dir
-  before referencing them — upload via `POST /upload/image` (multipart, accepts
+  before referencing them. Upload via `POST /upload/image` (multipart, accepts
   video/audio too) or place on the shared volume `~/.puente/comfyui-basedir/input/`.
 - **Output length = audio length.** If the reference video is shorter than the
-  audio, `mode: "repetitive"` loops the source frames to cover it. For a
-  seamless loop, set `pingpong: true` on VHS_VideoCombine (boomerang).
-- **Reference video** should be a real face roughly facing camera. ~10–15s of
+  audio, `mode: "repetitive"` loops the source frames to cover it. For a loop
+  with no visible seam, set `pingpong: true` on VHS_VideoCombine (boomerang).
+- **Reference video** should be a real face roughly facing camera. ~10 to 15s of
   slight natural idle motion looks best; a 1s clip looped many times shows a
   visible repeat.
 - **Static image instead of video:** feed a single image as `images` (via
-  LoadImage) — Wav2Lip will animate the mouth on a held frame (stiffer, but works).
+  LoadImage). Wav2Lip will animate the mouth on a held frame (stiffer, but works).
 - **Speed:** ~real-time-ish on the 2060 for short clips; face detection is the
   main cost (tune `face_detect_batch`).
 

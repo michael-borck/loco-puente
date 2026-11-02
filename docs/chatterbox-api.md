@@ -1,9 +1,9 @@
-# Chatterbox TTS — RETIRED (historical reference)
+# Chatterbox TTS: RETIRED (historical reference)
 
-> **⚠ RETIRED as of 2026-07-09. Do not follow this document to stand up a service.**
+> **RETIRED as of 2026-07-09. Do not follow this document to stand up a service.**
 >
 > Chatterbox is `enabled: false` in `puente.yml`. **Nothing listens on `:8004`.**
-> Voicebox is the active TTS — it bundles a `chatterbox-tts` engine, which made
+> Voicebox is the active TTS. It bundles a `chatterbox-tts` engine, which made
 > a separate Chatterbox container redundant. See **`voicebox-api.md`** (port
 > **17493**) and `service-topology.md`.
 >
@@ -11,7 +11,7 @@
 > instructive, and `puente/services/chatterbox.py` still references this file.
 
 Historical operational notes from when Chatterbox ran as `puente-chatterbox`
-(GPU 1, port 8004), verified 2026-07-07 — superseded two days later.
+(GPU 1, port 8004), verified 2026-07-07, superseded two days later.
 
 ---
 
@@ -21,25 +21,25 @@ Chatterbox's Dockerfile bases on **`nvidia/cuda:12.8.1-runtime-ubuntu22.04`**.
 The **host NVIDIA driver/kernel must be new enough for CUDA 12.8** or the
 container won't see the GPU. On the PoC box this required updating the host
 driver + kernel first. The build itself is straightforward but **LONG** (large
-ML deps) — cached layers make rebuilds fast, but a cold build takes a while.
+ML deps). Cached layers make rebuilds fast, but a cold build takes a while.
 
 ---
 
-## GPU pinning — portable by design
+## GPU pinning: portable by design
 
 The service requests a GPU based on `config.gpu` in `puente.yml`:
 
-- **`gpu: GPU-<uuid>`** (this box: the 4060 Ti) → pins to that physical card,
+- **`gpu: GPU-<uuid>`** (this box: the 4060 Ti) pins to that physical card,
   keeping Chatterbox off the image-gen GPU. An integer index also works while it
-  matches current hardware, but prefer the UUID — see
+  matches current hardware, but prefer the UUID; see
   [gpu-swap-3090](gpu-swap-3090.md). Inside the container the card shows as
   "GPU 0" whatever its host index: that is normal Docker renumbering, not a
   misassignment (verify via `nvidia-smi -L` if unsure).
-- **`gpu: null`** → requests `count: 1` (any one GPU), so a **single-GPU box
+- **`gpu: null`** requests `count: 1` (any one GPU), so a **single-GPU box
   still starts** instead of hard-erroring on a missing device id.
 
-⚠️ Pinning a `device_ids` entry that isn't present on the host is a HARD ERROR —
-no fallback to GPU 0 or CPU. That is why `gpu: null` maps to `count: 1` here,
+Pinning a `device_ids` entry that isn't present on the host is a HARD ERROR,
+with no fallback to GPU 0 or CPU. That is why `gpu: null` maps to `count: 1` here,
 and why `puente doctor` validates pins against real hardware.
 
 ---
@@ -67,10 +67,10 @@ so an existing voice library is preserved and shared.
 
 OpenAI-compatible + native endpoints (FastAPI docs at `/docs`):
 
-- `POST /v1/audio/speech` — OpenAI-style. **`voice` must be the full filename**
+- `POST /v1/audio/speech`: OpenAI-style. **`voice` must be the full filename**
   (e.g. `Alice.wav`, not `Alice`).
-- `GET /v1/audio/voices` — list available voices.
-- `POST /tts` — native endpoint.
+- `GET /v1/audio/voices`: list available voices.
+- `POST /tts`: native endpoint.
 - `GET /get_predefined_voices`, `POST /upload_predefined_voice`.
 
 ```bash

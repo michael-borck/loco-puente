@@ -15,13 +15,13 @@ A decision earns an ADR if it meets at least one of:
   should not have to be paid for twice.
 
 What does *not* belong: routine implementation choices, anything the code already
-states plainly, and one-off bug fixes — those live in commit messages, which git
+states plainly, and one-off bug fixes. Those live in commit messages, which git
 already indexes well.
 
 ## Format
 
 One file per decision, `NNNN-short-title.md`, numbered in the order decided.
-Keep them short — context, decision, consequences, and what was rejected.
+Keep them short: context, decision, consequences, and what was rejected.
 
 Status is one of **Accepted**, **Superseded by NNNN**, or **Reversed**.
 **Never delete or rewrite a superseded ADR**: the record of a decision that was
@@ -41,6 +41,6 @@ reversal being proposed a third time.
 | [0007](0007-tutor-admin-scope.md) | Tutor admin withholds delete, ban and role changes | Accepted |
 | [0008](0008-imagegen-self-heal-layers.md) | Image-gen self-heals in layers: reconcile loop, watchdog, weekly restart | Accepted |
 | [0009](0009-custom-images-published-to-ghcr.md) | Custom images published to GHCR from a pinned commit, amd64-only | Accepted |
-| [0010](0010-llamacpp-for-small-card-hardware.md) | llama.cpp as the LLM backend for single small cards — MoE expert offload | Accepted |
+| [0010](0010-llamacpp-for-small-card-hardware.md) | llama.cpp as the LLM backend for single small cards: MoE expert offload | Accepted |
 | [0011](0011-route-by-decision-not-generation.md) | Route requests by decision, not by generation | Accepted |
 | [0012](0012-localai-as-engine-and-the-catalog.md) | LocalAI as the engine; a catalog for everything else | Accepted |

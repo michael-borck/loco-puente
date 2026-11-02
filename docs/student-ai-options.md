@@ -2,10 +2,9 @@
 
 You have four ways to use an AI assistant for this unit. All are legitimate.
 Pick the one that fits your hardware, your budget, and how private you need your work
-to be — and understand what you are trading away in each case.
+to be, and understand what you are trading away in each case.
 
-There is no option that is simultaneously free, private, and best-in-class. That
-trade-off is the point, and it is worth understanding.
+There is no option that is simultaneously free, private, and best-in-class.
 
 If you only read one line: **use Option 4 (NotebookLM) when you are working from
 readings I have given you**, and one of the others when you are thinking out loud.
@@ -19,9 +18,9 @@ readings I have given you**, and one of the others when you are thinking out lou
 
 ---
 
-## Option 1 — Use my server (easiest, best local model)
+## Option 1: Use my server (easiest, best local model)
 
-**Go to <https://chat.eduserver.au>.** Nothing to install. You will need an account —
+**Go to <https://chat.eduserver.au>.** Nothing to install. You will need an account:
 ask me and I will set one up for you.
 
 This runs on a machine I administer at the university. The models run locally on that
@@ -30,8 +29,8 @@ machine; your conversations are not sent to any AI company.
 | | |
 |---|---|
 | **Cost** | Free |
-| **Install** | None — it's a website |
-| **Account** | Yes — ask me |
+| **Install** | None; it's a website |
+| **Account** | Yes; ask me |
 | **Best model** | `qwen3.5:9b` (a 9-billion-parameter model) |
 | **Privacy** | Your prompts stay on university hardware, but **I can see usage** |
 | **Needs** | Network access |
@@ -44,17 +43,17 @@ not a good idea to rely on it an hour before a deadline.
 
 ---
 
-## Option 2 — Run a model on your own laptop (most private)
+## Option 2: Run a model on your own laptop (most private)
 
 Install one app; it downloads and runs models locally. Nothing leaves your machine, and
 it works offline.
 
-### LM Studio — <https://lmstudio.ai> ← recommended
+### LM Studio: <https://lmstudio.ai> recommended
 
 Free for personal *and* commercial use (they dropped the commercial licence requirement
 in July 2025). So if you later use it in a paid job, you're still fine.
 
-### Msty — <https://msty.ai>
+### Msty: <https://msty.ai>
 
 Comparable app, also free to download, and the easiest of the two to set up.
 
@@ -69,20 +68,20 @@ the option. It is included in the free tier.
 > Coursework is fine. If you use it in **paid work**, you need a licence (Aurum,
 > $149 USD/yr). LM Studio has no such restriction.
 
-### What your laptop can actually run
+### What your laptop can run
 
-This is the part people get wrong. A model needs to fit in memory — ideally GPU memory
-(VRAM), otherwise it runs on the CPU and is very slow.
+This is the part people get wrong. A model needs to fit in memory, ideally GPU memory
+(VRAM); otherwise it runs on the CPU and is very slow.
 
 | Your hardware | Realistic model | Honest verdict |
 |---|---|---|
 | No discrete GPU, 8 GB RAM | `qwen3.5:2b` | Fine for drafting and summarising |
 | No discrete GPU, 16 GB RAM | `qwen3.5:4b` | Usable thinking partner |
 | GPU with 8 GB VRAM | `qwen3.5:9b` | Same as my server |
-| Apple Silicon, 16 GB+ | `qwen3.5:9b` | Works well — unified memory helps |
+| Apple Silicon, 16 GB+ | `qwen3.5:9b` | Works well; unified memory helps |
 
 A 2B model is **not** a small version of a 9B model. It will lose the thread of a long
-argument, and it will state wrong facts confidently. That may be acceptable — see the
+argument, and it will state wrong facts confidently. That may be acceptable; see the
 note on what these models are *for*, below.
 
 | | |
@@ -94,7 +93,7 @@ note on what these models are *for*, below.
 
 ---
 
-## Option 3 — Pay a provider (best models, your data leaves)
+## Option 3: Pay a provider (best models, your data leaves)
 
 A subscription to Claude, ChatGPT, Gemini or similar (~AU$30/month), or bring-your-own-key
 (BYOK) API access where you pay per use.
@@ -117,16 +116,16 @@ sufficient to complete all assessed work.
 
 ---
 
-## Option 4 — NotebookLM, for working *from sources*
+## Option 4: NotebookLM, for working *from sources*
 
-**<https://notebooklm.google.com>** — free, needs a Google account.
+**<https://notebooklm.google.com>**: free, needs a Google account.
 
 This is a different kind of tool, and for a lot of coursework it is the right one.
-You upload your sources — lecture notes, PDFs, papers, a website — and it will only
+You upload your sources (lecture notes, PDFs, papers, a website) and it will only
 answer **from those documents**, with citations pointing back to the passage it used.
 
-That grounding is the point. It makes fabricated facts far easier to catch, because
-every claim comes with a link to where it supposedly came from. (Check the link. It is
+That grounding makes fabricated facts far easier to catch, because every claim
+comes with a link to where it supposedly came from. (Check the link. It is
 still capable of misreading a source.)
 
 ### Free tier limits (as of 2026)
@@ -144,7 +143,7 @@ Useful on the bus. Not a substitute for reading them.
 ### Sign in with your university account, not personal Gmail
 
 Google's own documentation states that free-tier data *"is not used to train NotebookLM
-unless you provide feedback"* — and if you do give feedback, human reviewers may see the
+unless you provide feedback"*; and if you do give feedback, human reviewers may see the
 full context.
 
 **Google Workspace for Education accounts get stronger terms:** uploads, queries and
@@ -156,7 +155,7 @@ So use your Curtin account.
 | | |
 |---|---|
 | **Cost** | Free |
-| **Install** | None — it's a website |
+| **Install** | None; it's a website |
 | **Privacy** | Your sources go to Google. Better terms on a university account. |
 | **Best for** | Working from a fixed set of readings; literature review; revision |
 | **Not for** | Open-ended thinking, coding, anything outside your uploaded sources |
@@ -169,7 +168,7 @@ model's memory. That is most of what a literature review is.
 ## Mixing options
 
 These aren't exclusive. Both LM Studio and Msty can point at a *remote* model, so you can
-install one of them and connect it to my server — your preferred interface, my hardware,
+install one of them and connect it to my server: your preferred interface, my hardware,
 my larger model. Ask me if you want the endpoint details.
 
 ---
@@ -179,14 +178,14 @@ my larger model. Ask me if you want the endpoint details.
 For this unit, I want you using AI as a **thinking partner**, not as an answer machine:
 to argue with, to draft against, to ask "what am I missing?"
 
-That matters for your choice of model. Quantised local models — the compressed versions
-that fit on consumer hardware — lose *factual precision* long before they lose
+That matters for your choice of model. Quantised local models, the compressed versions
+that fit on consumer hardware, lose *factual precision* long before they lose
 *conversational coherence*. A small local model will happily invent a citation. It will
 still push back on a weak argument.
 
-This makes a small local model a **worse oracle and a better interlocutor**. Which,
-for our purposes, is the right way round. You cannot outsource the thinking to it, so
-you have to do the thinking with it.
+This makes a small local model a **worse oracle and a better interlocutor**, which for
+our purposes is the right way round. You cannot outsource the thinking to it, so you
+have to do the thinking with it.
 
 Whichever option you choose: **verify every fact, every citation, and every number.**
 This applies to the frontier models too. They are more fluent, which makes their errors
@@ -197,5 +196,5 @@ harder to spot, not rarer.
 ## Academic integrity
 
 Using AI is permitted in this unit. Passing off its output as your own unaided work is
-not. Follow the university's policy and the unit outline. If in doubt, ask me — asking
+not. Follow the university's policy and the unit outline. If in doubt, ask me. Asking
 is never the wrong move.

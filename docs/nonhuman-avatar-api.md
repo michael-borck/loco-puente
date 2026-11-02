@@ -1,13 +1,13 @@
-# Non-human talking avatars — remote API (LivePortrait animal + Wan2.2-S2V)
+# Non-human talking avatars: remote API (LivePortrait animal + Wan2.2-S2V)
 
 How a **remote app** drives puente's two non-human avatar paths over HTTP. Both run
 as nodes inside the shared ComfyUI instance and are called through ComfyUI's native
-workflow API — there is no separate microservice.
+workflow API. There is no separate microservice.
 
-- **Wan2.2-S2V** — still image + audio → lip-synced video. **No face detector at
+- **Wan2.2-S2V**: still image + audio to lip-synced video. **No face detector at
   all**, so it works on teddy bears, cartoon animals, robots. This is the
   recommended path for non-human subjects. See also [wan-s2v-api.md](wan-s2v-api.md).
-- **LivePortrait (animal mode)** — portrait + driving *video* → reenactment, using
+- **LivePortrait (animal mode)**: portrait + driving *video* to reenactment, using
   animal-trained generator weights. Higher quality *when it works*, but the cropper
   is still human-only, so it needs a manual crop for non-human subjects. See also
   [liveportrait-api.md](liveportrait-api.md).
@@ -24,8 +24,8 @@ workflow API — there is no separate microservice.
 
 **Base URL:** `https://comfyui.locopuente.org` (ComfyUI native API, internal port 8188).
 
-🔑 **Bearer auth is required.** Caddy fronts this host and rejects any request whose
-header is not **exactly** `Authorization: Bearer <token>` with `401` — no exceptions,
+**Bearer auth is required.** Caddy fronts this host and rejects any request whose
+header is not **exactly** `Authorization: Bearer <token>` with `401`, no exceptions,
 including `/upload/image`, `/prompt`, `/history`, `/view` and `/free`. Send the header
 on **every** call below. The token is the value of the `COMFYUI_TOKEN` env var on the
 server (ask Michael for it; it is not in the repo). Treat it as a secret.
@@ -34,14 +34,14 @@ server (ask Michael for it; it is not in the repo). Treat it as a secret.
 Authorization: Bearer $COMFYUI_TOKEN
 ```
 
-Everything below is standard ComfyUI HTTP API — the same four calls for both models,
+Everything below is standard ComfyUI HTTP API, the same four calls for both models,
 each carrying that header:
 
 | Step | Call |
 |---|---|
 | 1. Upload inputs | `POST /upload/image` (multipart; accepts images, audio, video despite the name) |
-| 2. Queue the graph | `POST /prompt` with `{"prompt": <graph>, "client_id": <uuid>}` → returns `{"prompt_id": ...}` |
-| 3. Poll for completion | `GET /history/{prompt_id}` — empty until done, then holds the outputs |
+| 2. Queue the graph | `POST /prompt` with `{"prompt": <graph>, "client_id": <uuid>}`, which returns `{"prompt_id": ...}` |
+| 3. Poll for completion | `GET /history/{prompt_id}`: empty until done, then holds the outputs |
 | 4. Fetch the result | `GET /view?filename=...&subfolder=...&type=output` |
 
 Optional but recommended between runs (see VRAM gotcha for S2V):
@@ -69,7 +69,7 @@ there directly if the app runs on the host, skipping step 1.
 
 ---
 
-## Path A — Wan2.2-S2V (recommended for non-human)
+## Path A: Wan2.2-S2V (recommended for non-human)
 
 **Input:** one still image + one audio clip. **No driving video, no crop, no face
 input.** The reference image goes straight into the VAE as pixels.
@@ -118,21 +118,21 @@ drifts, `GET /object_info/WanSoundImageToVideo` returns the live input schema.
 - **`length` must be `4n+1`.** Wan runs at **16 fps**: 3s ≈ 49, 5s ≈ 81.
 - **`POST /free` before every run.** The 16.4 GB unet stays resident, so the *second*
   run OOMs in `CLIPTextEncode` (not in diffusion). Free models between generations.
-  Peak is ~21 GB of the 3090's 24 GB — little headroom.
-- **Prompt the mouth anatomy explicitly** — there's no detector, so the text prompt is
+  Peak is ~21 GB of the 3090's 24 GB, with little headroom.
+- **Prompt the mouth anatomy explicitly**: there's no detector, so the text prompt is
   how the model learns where the mouth is. An owl has a beak, not lips.
 - **Steps:** 10 is fast but can drift identity / blur frame 1; raise to ~20 to tighten.
-- **Do NOT use `WanAnimateToVideo`** — it's a different pose/face-driven model that
+- **Do NOT use `WanAnimateToVideo`**: it's a different pose/face-driven model that
   reintroduces face detection.
 - Cost: ~4 min for 3s @ 10 steps, 448×608, on the 3090.
 
 ---
 
-## Path B — LivePortrait animal mode (portrait + driving video)
+## Path B: LivePortrait animal mode (portrait + driving video)
 
 Same graph as [liveportrait-api.md](liveportrait-api.md), with **two** changes:
 
-1. **Select animal weights** — set `mode: "animal"` on the model loader node:
+1. **Select animal weights**: set `mode: "animal"` on the model loader node:
 
    ```json
    "1": {"class_type": "DownloadAndLoadLivePortraitModels",
@@ -158,10 +158,10 @@ Same graph as [liveportrait-api.md](liveportrait-api.md), with **two** changes:
    ```
 
    `["3",0]` is your **manually cropped** `LoadImage`. Output 1 of
-   `LivePortraitProcess` is `LP_OUT` — route it through `LivePortraitComposite` before
+   `LivePortraitProcess` is `LP_OUT`. Route it through `LivePortraitComposite` before
    VHS, exactly as in the human graph, or type validation fails.
 
-**Reality check:** animal mode only swaps the generator/motion models — it is a
+**Reality check:** animal mode only swaps the generator/motion models. It is a
 partial answer. If the character isn't a real animal head (a plush toy, a stylised
 cartoon), reenactment quality is unreliable. For anything genuinely non-human,
 **prefer Path A (Wan2.2-S2V)**, which has no detector to fail.
@@ -180,7 +180,7 @@ comfyui:
 ```
 
 `install_wan_s2v` fetches only weights (the nodes are ComfyUI core), so it can't
-disturb the shared numpy-2 / torch-2.6 venv — that safety is why S2V beat LatentSync.
+disturb the shared numpy-2 / torch-2.6 venv. That safety is why S2V beat LatentSync.
 
 ---
 

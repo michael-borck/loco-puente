@@ -1,4 +1,4 @@
-# 0005 — The lab window scopes the Anthropic key, not the app
+# 0005: The lab window scopes the Anthropic key, not the app
 
 **Status:** Accepted (2026-07-23). Supersedes the original stop-the-container
 approach.
@@ -10,7 +10,7 @@ to a class of ~40 students. The exposure needed bounding to scheduled lab hours.
 
 The first implementation had `deploy/chat-window.sh` **stop the container**
 outside those hours. That protected the key, but also took registration and the
-free local Ollama models offline — so the entire class could only sign up during
+free local Ollama models offline, so the entire class could only sign up during
 the first minutes of a lab, from one NATed campus IP.
 
 That directly caused the registration failure: LibreChat rate-limits signup per
@@ -32,8 +32,8 @@ appear in the picker at lab open and vanish at close.
 
 - Registration is available all week, so signups spread out and never hit a
   shared per-IP bucket in one burst.
-- Swapping the key is a **container recreate, not a restart** — environment is
-  baked in at creation (see ADR 0002). Cost: ~10s downtime at each boundary, and
+- Swapping the key is a **container recreate, not a restart**, because
+  environment is baked in at creation (see ADR 0002). Cost: ~10s downtime at each boundary, and
   in-flight chats drop. History lives in Mongo, in a separate always-up
   container, so nothing is lost.
 - The nightly 23:00 `close` became a safety net guaranteeing the key is out if an
@@ -51,7 +51,7 @@ appear in the picker at lab open and vanish at close.
 ## Alternatives rejected
 
 **Keep stopping the container.** Protects the key equally well, but takes
-registration and the free local models down with it — the cause of the incident
+registration and the free local models down with it, which caused the incident
 above.
 
 **Leave the key in place and rely on LibreChat's own permissions.** No per-user

@@ -1,14 +1,14 @@
-# GPU swap: 2060 Super → 3090 (DONE — 2026-07-10)
+# GPU swap: 2060 Super to 3090 (DONE: 2026-07-10)
 
 Replaced the GPU 0 card (RTX 2060 Super, 8 GB, Turing) with an RTX 3090 (24 GB, Ampere),
 keeping a 2060 Super in the second slot.
 
-**Nothing in `puente.yml` needed to change** — the 3090 landed on index 0, as it does
-provided it sits in the lower-numbered PCIe slot. Verified, not assumed (see below).
+**Nothing in `puente.yml` needed to change**, because the 3090 landed on index 0, as
+it does provided it sits in the lower-numbered PCIe slot. Verified, not assumed (see below).
 
 The plan and its rationale are kept for the next box.
 
-> **Superseded since:** GPU 1 is no longer the 2060 Super — it is now an RTX 4060 Ti
+> **Superseded since:** GPU 1 is no longer the 2060 Super, it is now an RTX 4060 Ti
 > (16 GB). References to a 2060 Super below describe the state at the time of this
 > swap and are kept as the record; for current hardware see `host-setup.md`.
 
@@ -19,9 +19,9 @@ is a VRAM wall, not a throughput wall:
 
 | Workload | Today | On 24 GB |
 |---|---|---|
-| LatentSync (best lip-sync) | rejected — needs 20 GB | works |
+| LatentSync (best lip-sync) | rejected: needs 20 GB | works |
 | Wav2Lip, LivePortrait | hand-hardened to fit 8 GB | un-harden |
-| `qwen3.5:27b`, `gemma4:26b` | deleted, 17–18 GB | usable |
+| `qwen3.5:27b`, `gemma4:26b` | deleted, 17 to 18 GB | usable |
 | SDXL + LoRA + ControlNet | tight | headroom |
 | ComfyUI vs Ollama | contend for one card | coexist |
 
@@ -31,14 +31,14 @@ The Ryzen 5 2600 (2018) would also throttle a 4090 on anything not purely GPU-bo
 ## Before you swap
 
 - **PSU headroom.** 3090 is 350 W + 2060 Super 184 W = ~534 W of GPU alone, plus CPU.
-- **Physical clearance.** The 3090 is a 2.5–3 slot card; check it does not foul slot 2.
+- **Physical clearance.** The 3090 is a 2.5 to 3 slot card; check it does not foul slot 2.
 - **Cables.** 3090 needs 2× 8-pin (or 3×, board-dependent).
 
 ## The card ordering trap
 
-`nvidia-smi` numbers by **PCI bus order** (`06:00.0` → 0, `07:00.0` → 1). That index
-is only a *slot position* — it changes if you move a card, add one, or if the host
-re-enumerates. Docker's `device_ids` accepts it, which is how an integer `gpu: 0`
+`nvidia-smi` numbers by **PCI bus order** (`06:00.0` maps to 0, `07:00.0` to 1).
+That index is only a *slot position*. It changes if you move a card, add one, or if
+the host re-enumerates. Docker's `device_ids` accepts it, which is how an integer `gpu: 0`
 ends up pointing at a different physical card after a hardware change.
 
 But **CUDA defaults to `CUDA_DEVICE_ORDER=FASTEST_FIRST`**, so code *inside* a container
@@ -57,7 +57,7 @@ Three rules keep this sane:
    pins still work when they match current hardware, which is why this rule exists
    only in the docs and not as a hard error.
 
-## After the swap — verify before trusting
+## After the swap: verify before trusting
 
 ```bash
 # 1. Confirm the 3090 is index 0 and on the lower bus id
@@ -84,10 +84,10 @@ Verified on the actual swap: 3090 at index 0 / bus `06:00.0`, sm_86, 22.8 GiB fr
 matmul OK; `qwen3.5:9b` loads 100% GPU (~9.5 GB resident) where it would have spilled
 to CPU on 8 GB.
 
-## puente.yml — no change needed (3090 in slot 0)
+## puente.yml: no change needed (3090 in slot 0)
 
 Current assignments already put everything heavy on the 3090. Shown by UUID, which is
-how `puente.yml` now pins them — the card stays identified even if it moves slot:
+how `puente.yml` now pins them: the card stays identified even if it moves slot:
 
 ```yaml
 comfyui:   { gpu: GPU-15c8ed7d-… }   # -> 3090 (24 GB)
@@ -99,7 +99,7 @@ voicebox:  { gpu: GPU-ce79654c-… }   # -> 4060 Ti (16 GB), lazy, ~4-5 GB when 
 
 Ollama is a **host systemd service, not puente-managed**. It is pinned in
 `/etc/systemd/system/ollama.service` via `CUDA_VISIBLE_DEVICES`, set to the card's
-**UUID** rather than an index — see the post-mortem in that drop-in for why the index
+**UUID** rather than an index. See the post-mortem in that drop-in for why the index
 form put a model on the wrong card. No change needed, but note puente cannot manage it.
 
 ## Optional: exploit the 24 GB
@@ -127,7 +127,7 @@ LatentSync (20 GB) was rejected outright. All three can be revisited.
 
 ## What multiple co-resident models does and does not buy
 
-Nothing partitions VRAM — Docker's `device_ids` grants *visibility*, not exclusivity.
+Nothing partitions VRAM: Docker's `device_ids` grants *visibility*, not exclusivity.
 Two models on one card simply both allocate until it fills, then someone OOMs.
 
 - **Buys:** keeping several things *warm*. A parked `qwen3.5:9b` (6.6 GB) plus a resident
@@ -135,14 +135,14 @@ Two models on one card simply both allocate until it fills, then someone OOMs.
   paying the load tax at the start of every interaction. That is a **latency** win.
 - **Does not buy:** speed. Concurrent models time-slice the same SMs. Two busy models
   each get roughly half the GPU. Concurrency buys *availability*, not throughput.
-- **Watch out:** LatentSync alone wants 20 GB. It cannot coexist with a parked LLM —
-  big video jobs need the card to themselves. Budget ~3 GB for KV cache and fragmentation;
+- **Watch out:** LatentSync alone wants 20 GB. It cannot coexist with a parked LLM.
+  Big video jobs need the card to themselves. Budget ~3 GB for KV cache and fragmentation;
   do not plan to fill 24 GB exactly.
 
-## Note on ts_server — tested after the swap: still broken, now a real bug
+## Note on ts_server: tested after the swap: still broken, now a real bug
 
 The 3090 is Ampere (sm_86), which satisfies ts_server's documented "Ampere, ADA or
-Hopper" requirement — unlike the Turing 2060s. Tested, and the picture changed:
+Hopper" requirement, unlike the Turing 2060s. Tested, and the picture changed:
 
 - The old `cuModuleLoadData` failure is **gone**. ts_server opens `/dev/nvidia0`,
   `dlopen`s `libcublasLt.so`, and allocates ~1.6 GB of weights onto the card.
@@ -151,8 +151,8 @@ Hopper" requirement — unlike the Turing 2060s. Tested, and the picture changed
   The CPU path on the same binary and model generates correctly.
 
 **Root cause: ts_server passes `Cdesc = NULL`.** For `gpt2_117M` (12 layers) the first
-48 heuristic calls succeed; the 49th — the final projection to the 50257-token vocab,
-the one matmul with no bias — passes a null `Cdesc`, which cuBLASLt dereferences.
+48 heuristic calls succeed; the 49th (the final projection to the 50257-token vocab,
+the one matmul with no bias) passes a null `Cdesc`, which cuBLASLt dereferences.
 It is **deterministic and structural**, so it should fire on any GPU, not just this one.
 
 **It is not the CUDA version** (identical segfault against cuBLASLt **12.1**, inside the
@@ -168,7 +168,7 @@ that works (torch 2.6+cu124, ComfyUI, LivePortrait, Wav2Lip) and the evidence sa
 would not fix the crash anyway. Nothing here changes the verdict: ts_server cannot do
 SDXL, so it is not replacing the ComfyUI/SwarmUI stack.
 
-Reproduce (binaries are not in the repo — see `eval/ts_server/README.md`):
+Reproduce (binaries are not in the repo; see `eval/ts_server/README.md`):
 
 ```bash
 ./ts_test --cuda -v -l 20 -m gpt2_117M.bin g "The capital of France is"   # exit 139

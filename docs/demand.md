@@ -1,7 +1,7 @@
 # Demand-driven residency
 
-Which models stay in memory, decided by what people are **actually doing** rather
-than by guessing what they might ask next.
+Which models stay in memory, decided by what people are doing instead of a guess
+about what they might ask next.
 
 ## Why demand, not classification
 
@@ -13,14 +13,14 @@ second is better served by evidence:
   resident and when each expires. ComfyUI has a job queue. Caddy has access
   logs. Nothing has to be inferred.
 - **Prediction is speculative.** A router that guesses correctly three turns
-  early has saved nothing — it ran a model that was not being used. One that
+  early has saved nothing: it ran a model that was not being used. One that
   guesses wrong evicts the model somebody was about to use, which on a
   single-card box is the entire cost.
 - **It costs a dependency to be wrong.** Classification needs a model resident
   in order to make load decisions. Observing demand needs a log line.
 
-So classification earns its place *upstream* — deciding which capability a
-request wants before anything is loaded — while residency follows usage.
+So classification earns its place *upstream*, deciding which capability a
+request wants before anything is loaded, while residency follows usage.
 
 ## The asymmetry that shapes everything
 
@@ -30,9 +30,9 @@ differ by two orders of magnitude.
 
 | Backend | Evict mechanism | Cost of an eviction |
 | --- | --- | --- |
-| Ollama | per-request `keep_alive: 0` | **~none** — weights unload, server stays up |
-| llama.cpp | stop the container | minutes — no hot-swap; one server serves one GGUF |
-| Containers | stop the container | minutes — weights reload from disk |
+| Ollama | per-request `keep_alive: 0` | **~none**: weights unload, server stays up |
+| llama.cpp | stop the container | minutes: no hot-swap; one server serves one GGUF |
+| Containers | stop the container | minutes: weights reload from disk |
 
 Ollama evicts cheaply because it already implements a residency TTL natively.
 llama.cpp deliberately does not hot-swap models, so its load/unload is
@@ -62,14 +62,14 @@ Three properties, all deliberate:
 - **Every action carries a reason.** A plan an operator cannot explain is one
   they will not trust to run unattended.
 
-Thresholds are configuration, not hardcoded behaviour — the default is
+Thresholds are configuration, not hardcoded behaviour. The default is
 conservative because a card that cannot hold two models needs a shorter one, and
 an operator should not have to edit source to get it.
 
 ## Not built yet
 
-`residency_plan` decides. Nothing acts on it — there is no scheduler, no
-periodic evaluation, and no adapter that actually evicts. That is deliberate for
+`residency_plan` decides. Nothing acts on it: there is no scheduler, no
+periodic evaluation, and no adapter that evicts. That is deliberate for
 a first slice: the policy is pure and testable without touching a running
 service, and the actuation side wants a real load test before it stops anything
 on a live box.
@@ -84,8 +84,8 @@ from a container without adding one.
   residency. Real counts want an access log or a counter, which Caddy already
   has and nothing reads yet.
 - **"Idle" for a container is an assumption.** ComfyUI's queue is the honest
-  signal; "was the container up" is not, and conflates them would mean never
-  releasing anything.
+signal; "was the container up" is not, and treating them as the same would mean
+never releasing anything.
 - **Release is not the same as unload.** Stopping a container makes the service
   unavailable to the next request. True residency needs a load step that is not
   written yet.

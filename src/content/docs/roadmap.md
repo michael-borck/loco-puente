@@ -2,13 +2,13 @@
 title: "Roadmap"
 ---
 
-LocoPuente's path from a minimal "closing the gap" PoC to faculty-scale deployment. The software stack carries forward unchanged at every stage -- only the hardware changes.
+LocoPuente's path from a minimal "closing the gap" PoC to faculty-scale deployment. The software stack carries forward unchanged at every stage. Only the hardware changes.
 
 ---
 
-## Phase 1: Current PoC -- Single RTX 3090
+## Phase 1: Current PoC: Single RTX 3090
 
-**Hardware:** Puente -- Ryzen 5 2600 desktop with a single NVIDIA RTX 3090 24 GB
+**Hardware:** Puente, a Ryzen 5 2600 desktop with a single NVIDIA RTX 3090 24 GB
 **Capacity:** Small cohort (pilot scale)
 **Status:** Running today
 
@@ -18,8 +18,8 @@ The minimal "closing the gap" PoC. One secondhand consumer GPU running three bac
 |---|---|
 | Ollama 8B Q4_K_M | ~5 GB |
 | Speaches (Whisper + Kokoro) | ~0.7 GB |
-| ComfyUI -- SDXL base + refiner | ~8-10 GB |
-| **Full stack concurrent** | **~14-16 GB -- comfortable** |
+| ComfyUI: SDXL base + refiner | ~8-10 GB |
+| **Full stack concurrent** | **~14-16 GB: comfortable** |
 
 ---
 
@@ -32,9 +32,9 @@ The minimal "closing the gap" PoC. One secondhand consumer GPU running three bac
 - No VRAM constraints for any current workload
 - A machine the institution owns outright, with no ongoing costs
 
-The M3 Ultra is the scale target. The transition from Phase 1 is not a rebuild -- it is a hardware upgrade. Ollama, ComfyUI, Speaches, and the four front-end apps all carry forward unchanged. The operational model is proven on a secondhand consumer GPU; the M3 Ultra simply removes the hardware bottleneck.
+The M3 Ultra is the scale target. The transition from Phase 1 is a hardware upgrade, not a rebuild. Ollama, ComfyUI, Speaches, and the four front-end apps all carry forward unchanged. The operational model is proven on a secondhand consumer GPU; the M3 Ultra simply removes the hardware bottleneck.
 
-**The frontier-capability argument.** On standardised benchmarks the best open-weight models sit roughly 5-10 percentage points behind the best frontier closed models. That gap is real, but it is not decisive -- particularly for the way students actually use AI, which is *dialogic* rather than one-shot. A conversation that iterates, clarifies, and corrects closes most of that gap naturally: the student supplies context, notices errors, and asks again. Phase 2 on an M3 Ultra runs the open-weight models large enough that the residual gap is not a reason to send student data to a commercial provider.
+**The frontier-capability argument.** On standardised benchmarks the best open-weight models sit roughly 5-10 percentage points behind the best frontier closed models. That gap is real, but it is not decisive, particularly because students use AI dialogically, not in one-shot prompts. A conversation that iterates, clarifies, and corrects closes most of that gap naturally: the student supplies context, notices errors, and asks again. Phase 2 on an M3 Ultra runs the open-weight models large enough that the residual gap is not a reason to send student data to a commercial provider.
 
 ---
 

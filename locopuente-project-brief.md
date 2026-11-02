@@ -15,33 +15,32 @@
 
 ## One-Line Description
 
-LocoPuente is the deployment layer of LocoLabo -- a local AI service that bridges the digital divide by bringing privacy-first AI access to anyone who cannot afford a frontier model subscription.
+LocoPuente is the deployment layer of LocoLabo, a local AI service that bridges the digital divide by bringing privacy-first AI access to anyone who cannot afford a frontier model subscription.
 
 The motivation is personal and observational. Teaching a university course makes
 the disparity impossible to miss: some people in the room have a paid assistant
 they can think with, and some do not. The difference shows up in what gets asked
-and what gets attempted. That observation is the origin of this project -- it is
-not a policy position imported from elsewhere, and it is not about students
-specifically. It is about anyone for whom the price of a frontier subscription
-is a real barrier.
+and what gets attempted. That observation is the origin of this project. The
+price of a frontier subscription is a real barrier for anyone who cannot afford
+one, students included.
 
 ---
 
 ## The Problem
 
-Some people have access to powerful AI tools. Some do not. The difference is not aptitude or motivation. It is money.
+Some people have access to powerful AI tools. Some do not. The difference is money, not aptitude or motivation.
 
-Being able to afford a monthly subscription to a premium AI service is now a genuine advantage -- in study, in work, in anything that rewards thinking well. That gap is widening, and it is widening by subscription tier. LocoPuente exists to close it.
+Being able to afford a monthly subscription to a premium AI service is now an advantage in study, work, and anything else that rewards thinking well. That gap is widening by subscription tier. LocoPuente exists to close it.
 
 ---
 
 ## What LocoPuente Is
 
-LocoPuente is not a research project. It is where the research becomes real.
+LocoPuente is where the research becomes real.
 
-Every other project in the LocoLabo family asks the same question from a different angle: what can local AI actually do on modest hardware? LocoPuente takes those answers and turns them into something anyone can open in a browser on a Tuesday afternoon.
+Every other project in the LocoLabo family asks the same question from a different angle: what can local AI do on modest hardware? LocoPuente takes those answers and turns them into something anyone can open in a browser on a Tuesday afternoon.
 
-The name is deliberate. *Puente* is Spanish for bridge -- consistent with the LocoLabo naming family, and accurate about the mission. LocoPuente bridges the gap between those who can afford frontier AI tools and those who cannot, using infrastructure whoever runs it owns and controls.
+The name is deliberate. *Puente* is Spanish for bridge, consistent with the LocoLabo naming family and accurate about the mission. LocoPuente bridges the gap between those who can afford frontier AI tools and those who cannot, using infrastructure whoever runs it owns and controls.
 
 ---
 
@@ -63,7 +62,7 @@ A single on-campus server running a suite of locally hosted AI services, accessi
 
 ## The Deployment Layer
 
-LocoPuente is the convergence point of the LocoLabo research programme. Each sibling project contributes a layer to what the service actually offers.
+LocoPuente is the convergence point of the LocoLabo research programme. Each sibling project contributes a layer to what the service offers.
 
 ```
 LocoPuente
@@ -82,15 +81,15 @@ When fifty students hit the service simultaneously, single-GPU inference becomes
 
 ### LocoLLM provides the intelligence layer
 
-Rather than routing every student request through one large model, LocoLLM's swarm of small specialist models behind a smart router delivers more efficient, more targeted responses at lower VRAM cost. As LocoPuente scales, LocoLLM is the architecture that makes it affordable.
+LocoLLM routes requests across a swarm of small specialist models behind a smart router, which delivers more efficient, more targeted responses at lower VRAM cost than one large model. As LocoPuente scales, LocoLLM is the architecture that makes it affordable.
 
 ### LocoAgente powers the sophisticated tools
 
-DeepTutor, the Curriculum Explainer, the research assistant that can read a PDF and generate a structured summary -- these require more than single-turn chat. LocoAgente's research into agentic scaffolding on small models is what makes these tools viable without frontier hardware.
+DeepTutor, the Curriculum Explainer, and the research assistant that can read a PDF and generate a structured summary all need more than single-turn chat. LocoAgente's research into agentic scaffolding on small models is what makes these tools viable without frontier hardware.
 
 ### LocoEnsayo supplies the experiences
 
-LocoEnsayo builds AI-populated rehearsal environments for professional education. In LocoPuente, those environments become the richest student-facing experiences on offer -- simulated organisations, role-play scenarios, virtual client meetings. The research and the deployment are the same system.
+LocoEnsayo builds AI-populated rehearsal environments for professional education. In LocoPuente, those environments are the most substantial student-facing experiences: simulated organisations, role-play scenarios, virtual client meetings. The research and the deployment are the same system.
 
 ---
 
@@ -121,7 +120,7 @@ This is not a simulation. The machine is running the full stack today. The PoC d
 | DeepTutor | Research and tutoring |
 | OpenNotebook | Podcast generation, quizzes, structured notes (NotebookLM clone without video) |
 
-All backend services expose OpenAI-compatible APIs. All run without internet access. All student data stays on the machine. The RTX 3090's 24 GB VRAM carries the entire stack on one card.
+All backend services expose OpenAI-compatible APIs and run without internet access. All student data stays on the machine. The RTX 3090's 24 GB VRAM carries the entire stack on one card.
 
 ---
 
@@ -129,7 +128,7 @@ All backend services expose OpenAI-compatible APIs. All run without internet acc
 
 The PoC demonstrates the model. The scale target is a single Apple M3 Ultra (512 GB unified memory), which runs the full stack for 50 to 100 concurrent users with comfortable headroom, on a machine the institution owns outright.
 
-The PoC to M3 Ultra transition is not a rebuild. It is a hardware upgrade. The software stack, the architecture, and the operational model carry forward unchanged. The capability jump at Phase 2 matters: on an M3 Ultra the open-weight models can be run large enough that the 5-to-10-point benchmark gap against frontier closed models becomes practically insignificant -- especially in dialogic use, where conversation closes the gap naturally through iteration, clarification, and correction. At that point there is no capability reason to send student data to a commercial provider; the only remaining reasons are habit and licensing, neither of which is a research or pedagogical argument.
+The PoC to M3 Ultra transition is a hardware upgrade, not a rebuild. The software stack, the architecture, and the operational model carry forward unchanged. The capability jump at Phase 2 matters: on an M3 Ultra the open-weight models can be run large enough that the 5-to-10-point benchmark gap against frontier closed models becomes practically insignificant, especially in dialogic use, where conversation closes the gap naturally through iteration, clarification, and correction. At that point there is no capability reason to send student data to a commercial provider; the only remaining reasons are habit and licensing, neither of which is a research or pedagogical argument.
 
 ---
 
@@ -147,10 +146,7 @@ LocoLabo maps the floor of what local AI can do because most people live there a
 
 LocoPuente takes the floor and builds something on it.
 
-The people who need this most are not the ones with premium subscriptions. They
-are the ones who have been quietly making do without -- and who are the least
-likely to know that the gap is not about their ability. LocoPuente is built for
-them.
+The people who need this most are the ones who have been making do without, and who are the least likely to know that the gap is not about their ability. LocoPuente is built for them.
 
 ---
 
@@ -173,7 +169,7 @@ locopuente.org/
 - Dark theme preferred
 - Convergence diagram (the three-layer architecture) should render as a visual, not a code block
 - Mobile responsive
-- No external dependencies -- static site, GitHub Pages hosted
+- No external dependencies: static site, GitHub Pages hosted
 - Tone: plain, direct, purposeful. No corporate AI hype language.
 
 ---

@@ -1,4 +1,4 @@
-# 0004 — Open self-registration, gated by domain allowlist + email verification
+# 0004: Open self-registration, gated by domain allowlist + email verification
 
 **Status:** Accepted (2026-07-22, recorded retrospectively)
 
@@ -12,9 +12,9 @@ password-distribution problems in a lecture theatre.
 
 Leave self-registration open, and gate it with two independent controls:
 
-1. **`allowedDomains`** in `librechat.yaml` — Curtin addresses only. Enforced in
+1. **`allowedDomains`** in `librechat.yaml`: Curtin addresses only. Enforced in
    `registerUser`, returning 403 before any account is created.
-2. **Mandatory email verification** — proves the address is real and reachable.
+2. **Mandatory email verification**: proves the address is real and reachable.
 
 The **per-IP rate limiter is effectively disabled** (`REGISTER_MAX=10000`), on
 purpose. It is not a useful control here and actively harmful: a lab NATs to one
@@ -28,7 +28,7 @@ campus IP, so a whole class shares one bucket.
 - It prevents a whole class of duplicate accounts: without it, a student who
   mistypes their address gets a *working* account on the wrong email, then
   registers again next lab when the correct address reports "user not found".
-- **Never set a limiter to 0** — in `express-rate-limit`, 0 blocks everything.
+- **Never set a limiter to 0**: in `express-rate-limit`, 0 blocks everything.
 - Each 429 calls `logViolation`, feeding the ban layer, so a tight limit can
   escalate beyond its own window.
 - The domain allowlist is exact-suffix. A wrong spelling matches nothing and is
@@ -36,7 +36,7 @@ campus IP, so a whole class shares one bucket.
   weeks while the real domain is `postgrad.curtin.edu.au`, silently rejecting
   every postgraduate student.
 - **A rejected domain surfaces to the student as "You have tried to sign up too
-  many times"** — the same string as the rate limiter. Always confirm against
+  many times"**, the same string as the rate limiter. Always confirm against
   `docker logs puente-librechat | grep 'Registration not allowed'` before
   concluding it is rate limiting.
 - `create`/`invite` (CLI and tutor UI) **bypass both gates** by design, which is
@@ -51,5 +51,5 @@ add/drop period settles, at which point registration closes and `invite` takes
 over.
 
 **Rely on the per-IP rate limiter as the abuse control.** It does not distinguish
-a class from an attacker — NAT makes them identical. It punished exactly the
+a class from an attacker, because NAT makes them identical. It punished exactly the
 users it was meant to serve.

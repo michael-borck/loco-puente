@@ -1,11 +1,11 @@
-# 0006 — Tutor admin: web app in a container, privileged runner on the host
+# 0006: Tutor admin: web app in a container, privileged runner on the host
 
 **Status:** Accepted (2026-07-27)
 
 ## Context
 
-Tutors need to unblock students in LibreChat — resend a verification link,
-force-verify when mail fails, create an account — without a shell account on the
+Tutors need to unblock students in LibreChat (resend a verification link,
+force-verify when mail fails, create an account) without a shell account on the
 machine that also runs Ollama, ComfyUI, SwarmUI and the Anthropic key file.
 
 Two of those actions (`create`, `invite`) are npm scripts *inside* the LibreChat
@@ -20,9 +20,9 @@ privileged container and own the machine.
 
 Split the tool in half:
 
-- **Web app** — a container, puente-managed, reachable from the internet through
+- **Web app**: a container, puente-managed, reachable from the internet through
   Caddy. Talks to Mongo and LibreChat's HTTP API. **No Docker socket.**
-- **Runner** — a host-side systemd service running as the operator, with the
+- **Runner**: a host-side systemd service running as the operator, with the
   socket. **No network listener at all.**
 
 They communicate through a spool directory: the app writes a JSON request, the
@@ -33,12 +33,12 @@ runner validates it independently and executes the npm script.
 - A compromise of the internet-facing app cannot escalate to the host. The worst
   it can do is queue account creations it could already perform legitimately
   through its own UI.
-- The runner cannot be attacked directly — it has no listener, only a directory.
+- The runner cannot be attacked directly, because it has no listener, only a directory.
 - Validation is duplicated (domain allowlist in both halves) on purpose: the
   runner treats anything in the spool as untrusted input regardless of origin.
 - **Cost:** `create` and `invite` need the runner installed and running. If it is
-  stopped they time out with an explicit message. Everything else — list, search,
-  duplicates, resend, force-verify — keeps working, because those go straight to
+  stopped they time out with an explicit message. Everything else (list, search,
+  duplicates, resend, force-verify) keeps working, because those go straight to
   Mongo or LibreChat's HTTP API.
 - Spool files hold plaintext passwords in flight. Mode 0640, owned by the runner
   user, deleted immediately after execution.
@@ -49,7 +49,7 @@ runner validates it independently and executes the npm script.
 reject it is exactly the one above: it converts any bug in an internet-facing web
 service into full host compromise. Not worth a convenience feature.
 
-**Run the runner in a container with the socket mounted.** No real gain — a
+**Run the runner in a container with the socket mounted.** No real gain: a
 container with a writable socket is not meaningfully contained, and it would then
 sit on the same network as the exposed app. Strictly worse than a host process.
 

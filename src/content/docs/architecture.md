@@ -28,21 +28,21 @@ When fifty users hit the service simultaneously, single-GPU inference becomes a 
 
 ### LocoLLM provides the intelligence layer
 
-Rather than routing every request through one large model, LocoLLM's swarm of small specialist models behind a smart router delivers more efficient, more targeted responses at lower VRAM cost. As LocoPuente scales, LocoLLM is the architecture that makes it affordable.
+LocoLLM routes requests across a swarm of small specialist models behind a smart router, which delivers more efficient, more targeted responses at lower VRAM cost than one large model. As LocoPuente scales, LocoLLM is the architecture that makes it affordable.
 
 ### LocoAgente powers the sophisticated tools
 
-DeepTutor, the Curriculum Explainer, the research assistant that can read a PDF and generate a structured summary -- these require more than single-turn chat. LocoAgente's research into agentic scaffolding on small models is what makes these tools viable without frontier hardware.
+DeepTutor, the Curriculum Explainer, and the research assistant that can read a PDF and generate a structured summary all need more than single-turn chat. LocoAgente's research into agentic scaffolding on small models is what makes these tools viable without frontier hardware.
 
 ### LocoEnsayo supplies the experiences
 
-LocoEnsayo builds AI-populated rehearsal environments for professional education. In LocoPuente, those environments become the richest user-facing experiences on offer -- simulated organisations, role-play scenarios, virtual client meetings. The research and the deployment are the same system.
+LocoEnsayo builds AI-populated rehearsal environments for professional education. In LocoPuente, those environments are the most substantial user-facing experiences: simulated organisations, role-play scenarios, virtual client meetings. The research and the deployment are the same system.
 
 ---
 
 ## API-First Design
 
-All core AI services expose OpenAI-compatible APIs, enabling interoperability across the stack.
+All core AI services expose OpenAI-compatible APIs, so components can interoperate across the stack.
 
 | Endpoint | Provided By | Consumed By |
 |---|---|---|

@@ -9,15 +9,15 @@
 
 ## 1. Overview
 
-This document specifies the architecture and infrastructure for the LocoPuente "closing the gap" minimal PoC -- a fully local, privacy-preserving AI stack running on a single secondhand consumer GPU. The stack provides large language model (LLM) inference, image generation, and voice interaction (speech-to-text and text-to-speech) as backend services, with four purposeful front ends sitting on top.
+This document specifies the architecture and infrastructure for the LocoPuente "closing the gap" minimal PoC: a fully local, privacy-preserving AI stack running on a single secondhand consumer GPU. The stack provides large language model (LLM) inference, image generation, and voice interaction (speech-to-text and text-to-speech) as backend services, with four purposeful front ends sitting on top.
 
 The workstation (Puente) hosts a single NVIDIA RTX 3090 24 GB. The 24 GB of VRAM absorbs concurrent LLM inference, image generation, and voice services with comfortable headroom. No second card is required for the minimal PoC.
 
-The four front ends are deliberately chosen. **OpenWebUI** is the general-purpose chat interface, augmented with **ComfyUI** (image generation), **Speaches** (voice in/out), and **OpenTerminal** (coding and terminal workflow) wired in as tools -- so a student gets commercial-chat-equivalent functionality (text, voice, images, code) in a single browser tab. Alongside it sit three companion apps: **Vane** (deep research), **DeepTutor** (research and tutoring), and **OpenNotebook** (podcasts, quizzes, and structured notes -- a NotebookLM clone without video). Together they cover the capability envelope a student actually needs from a local AI service.
+The four front ends are deliberately chosen. **OpenWebUI** is the general-purpose chat interface, augmented with **ComfyUI** (image generation), **Speaches** (voice in/out), and **OpenTerminal** (coding and terminal workflow) wired in as tools, so a student gets commercial-chat-equivalent functionality (text, voice, images, code) in a single browser tab. Alongside it sit three companion apps: **Vane** (deep research), **DeepTutor** (research and tutoring), and **OpenNotebook** (podcasts, quizzes, and structured notes, a NotebookLM clone without video). Together they cover the capability envelope a student needs from a local AI service.
 
-The broader LocoLabo ecosystem -- the NBF Keep Asking research chat tool, AnythingLLM unit RAG chatbots, Perplexica, Stirling PDF, Excalidraw, CiteSight, LocoEnsayo rehearsal chatbots, and the TalkBuddy / StuddyBuddy / Career Compass desktop client apps -- consumes Puente's Ollama and Speaches endpoints where relevant. Those components are documented separately; the minimal PoC is deliberately narrower.
+The broader LocoLabo ecosystem (the NBF Keep Asking research chat tool, AnythingLLM unit RAG chatbots, Perplexica, Stirling PDF, Excalidraw, CiteSight, LocoEnsayo rehearsal chatbots, and the TalkBuddy / StuddyBuddy / Career Compass desktop client apps) consumes Puente's Ollama and Speaches endpoints where relevant. Those components are documented separately; the minimal PoC is deliberately narrower.
 
-The design philosophy follows the LocoLabo 80-20 principle: achieve strong, demonstrable capability through hardware optimisation and open-source tooling rather than expensive infrastructure.
+The design philosophy follows the LocoLabo 80-20 principle: get strong, demonstrable capability from hardware optimisation and open-source tooling, without expensive infrastructure.
 
 ---
 
@@ -58,7 +58,7 @@ The minimal PoC is a single-card configuration. Running the full stack on one 30
 | Speaches STT | Whisper base / small | ~0.5 GB |
 | Speaches TTS | Kokoro 82M (+ Piper fallback) | ~0.2 GB |
 | ComfyUI | SDXL base + refiner | ~8-10 GB |
-| **Full stack concurrent (LLM + voice + SDXL)** | | **~14-16 GB -- comfortable** |
+| **Full stack concurrent (LLM + voice + SDXL)** | | **~14-16 GB: comfortable** |
 
 Larger models fit when image generation is idle:
 
@@ -106,7 +106,7 @@ Larger models fit when image generation is idle:
 
 ### 3.2 Front-End Catalogue
 
-The minimal PoC standardises on four front ends. OpenWebUI is the general chat interface; the other three are purpose-built companions. OpenTerminal is not a separate front end -- it is wired in as an OpenWebUI tool.
+The minimal PoC standardises on four front ends. OpenWebUI is the general chat interface; the other three are purpose-built companions. OpenTerminal is an OpenWebUI tool, not a separate front end.
 
 | App | Purpose | Backend dependencies |
 |---|---|---|
@@ -122,7 +122,7 @@ The catalogue is deliberately short. The minimal PoC is a demonstration, not an 
 ### 3.3 Front-End Components
 
 #### OpenWebUI
-- **Role:** General student AI access -- the primary day-to-day interface; functional equivalent of commercial chat UIs when augmented with the three tool integrations below
+- **Role:** General student AI access: the primary day-to-day interface; functional equivalent of commercial chat UIs when augmented with the three tool integrations below
 - **API compatibility:** Ollama (chat), Speaches (voice tool), ComfyUI (image tool), OpenTerminal (coding tool)
 - **Deployment:** Docker container (port 3000)
 - **Features:** Multi-model switching, conversation history, voice input/output, in-chat image generation, in-chat coding assistance
@@ -135,16 +135,16 @@ The catalogue is deliberately short. The minimal PoC is a demonstration, not an 
 - **Use case:** Code assistance, shell interaction, and script drafting surfaced inside the same OpenWebUI conversation a student is already in
 
 #### Vane
-- **Role:** Deep research -- multi-step search, synthesis, and citation
+- **Role:** Deep research: multi-step search, synthesis, and citation
 - **API compatibility:** Ollama
 
 #### DeepTutor
-- **Role:** Research-and-tutoring assistant -- walks through topics, explains concepts, checks understanding
+- **Role:** Research-and-tutoring assistant: walks through topics, explains concepts, checks understanding
 - **API compatibility:** Ollama
 
 #### OpenNotebook
 - **Role:** Research notebook that transforms uploaded sources (PDFs, links, YouTube transcripts, TXT, PPT) into structured notes, quizzes, and conversational podcasts
-- **Key feature:** NotebookLM-style experience without the video side
+- **Feature:** NotebookLM-style experience without the video side
 - **API compatibility:** Ollama (LLM) + Speaches (podcast audio generation)
 - **Deployment:** Docker container (port 8080)
 - **URL:** https://www.open-notebook.ai
@@ -155,12 +155,12 @@ The catalogue is deliberately short. The minimal PoC is a demonstration, not an 
 
 The broader LocoLabo ecosystem also consumes Puente's Ollama and Speaches endpoints. These are documented in their own project docs and are **not** part of the minimal PoC demonstration:
 
-- **Keep Asking custom chat** (chat.locolabo.org) -- controlled NBF research environment with consent, exit survey, and turn-based logging
-- **Perplexica** -- cited AI web search using SearXNG as the search backend
-- **AnythingLLM** -- unit-specific RAG chatbots embedded in Blackboard
-- **Stirling PDF, Excalidraw, CiteSight** -- supporting productivity tools
-- **LocoEnsayo rehearsal chatbots** -- CloudCore Networks, Pinnacle Tours
-- **TalkBuddy, StuddyBuddy, Career Compass** -- LocoLabo desktop client apps that point at Puente's Ollama and Speaches endpoints
+- **Keep Asking custom chat** (chat.locolabo.org): controlled NBF research environment with consent, exit survey, and turn-based logging
+- **Perplexica**: cited AI web search using SearXNG as the search backend
+- **AnythingLLM**: unit-specific RAG chatbots embedded in Blackboard
+- **Stirling PDF, Excalidraw, CiteSight**: supporting productivity tools
+- **LocoEnsayo rehearsal chatbots**: CloudCore Networks, Pinnacle Tours
+- **TalkBuddy, StuddyBuddy, Career Compass**: LocoLabo desktop client apps that point at Puente's Ollama and Speaches endpoints
 
 ---
 
@@ -198,7 +198,7 @@ CUDA_VISIBLE_DEVICES=0 OLLAMA_HOST=0.0.0.0:11434 ollama serve
 #### Speaches
 - **Role:** Local TTS and STT server
 - **API:** OpenAI Audio API-compatible (port 8000)
-- **GPU assignment:** RTX 3090 (CUDA device 0) -- voice services co-reside on the primary card; their VRAM footprint is negligible relative to LLM and image-gen workloads
+- **GPU assignment:** RTX 3090 (CUDA device 0): voice services co-reside on the primary card; their VRAM footprint is negligible relative to LLM and image-gen workloads
 - **STT engine:** faster-whisper
 - **TTS engines:** Kokoro (primary, ranked #1 TTS Arena), Piper (fallback)
 - **Deployment:** Docker container with GPU passthrough
@@ -211,14 +211,14 @@ environment:
 ```
 
 #### ComfyUI
-- **Role:** Local AI image generation -- dual role as backend API and direct student UI
+- **Role:** Local AI image generation: dual role as backend API and direct student UI
 - **GPU assignment:** RTX 3090 24 GB (CUDA device 0)
 - **Deployment:** Native Python (venv), GPU-accelerated
 - **Port:** 8188
 - **URL:** https://github.com/comfyanonymous/ComfyUI
-- **As backend:** Open WebUI calls the ComfyUI API to provide in-chat image generation -- students never need to open ComfyUI directly for simple image requests
+- **As backend:** Open WebUI calls the ComfyUI API to provide in-chat image generation, so students never need to open ComfyUI directly for simple image requests
 - **As direct UI:** Students who want node-based workflow control, ControlNet, LoRAs, or advanced pipelines access ComfyUI directly in the browser
-- **Note:** Open Notebook AI does not support image generation -- ComfyUI is not connected to it
+- **Note:** Open Notebook AI does not support image generation, so ComfyUI is not connected to it
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python main.py --port 8188
@@ -230,15 +230,15 @@ CUDA_VISIBLE_DEVICES=0 python main.py --port 8188
 
 The following productivity and supporting tools run alongside the minimal PoC on Puente or externally. They are not part of the minimal PoC scope but are listed here for operational reference:
 
-- **SearXNG** -- shared private web search backend (Docker, port 8888); consumed by Perplexica and by OpenWebUI's optional web-search plugin
-- **Stirling PDF** -- self-hosted PDF toolkit (Docker, port 8089)
-- **Excalidraw** -- self-hosted collaborative whiteboard (Docker, port 3333)
-- **CiteSight** -- academic citation verification and writing quality checker, externally hosted at citesight.borck.education (calls Crossref, Semantic Scholar, OpenAlex)
-- **Keep Asking custom chat** -- NBF research environment at chat.locolabo.org, the only interface with participant consent and turn-based logging
-- **Perplexica** -- cited AI web search using SearXNG as its search backend (Docker, port 3001)
-- **AnythingLLM** -- unit-specific RAG chatbots embedded in Blackboard (Docker, port 3002)
-- **LocoEnsayo chatbots** -- CloudCore Networks, Pinnacle Tours (server-side rehearsal scenarios running against Puente's Ollama)
-- **TalkBuddy, StuddyBuddy, Career Compass** -- LocoLabo desktop client apps that point at Puente's Ollama and Speaches endpoints
+- **SearXNG**: shared private web search backend (Docker, port 8888); consumed by Perplexica and by OpenWebUI's optional web-search plugin
+- **Stirling PDF**: self-hosted PDF toolkit (Docker, port 8089)
+- **Excalidraw**: self-hosted collaborative whiteboard (Docker, port 3333)
+- **CiteSight**: academic citation verification and writing quality checker, externally hosted at citesight.borck.education (calls Crossref, Semantic Scholar, OpenAlex)
+- **Keep Asking custom chat**: NBF research environment at chat.locolabo.org, the only interface with participant consent and turn-based logging
+- **Perplexica**: cited AI web search using SearXNG as its search backend (Docker, port 3001)
+- **AnythingLLM**: unit-specific RAG chatbots embedded in Blackboard (Docker, port 3002)
+- **LocoEnsayo chatbots**: CloudCore Networks, Pinnacle Tours (server-side rehearsal scenarios running against Puente's Ollama)
+- **TalkBuddy, StuddyBuddy, Career Compass**: LocoLabo desktop client apps that point at Puente's Ollama and Speaches endpoints
 
 These are documented in their own project docs. The minimal PoC demonstration scope (§8) intentionally covers only the four front ends from §3.2.
 
@@ -295,7 +295,7 @@ All available free from https://civitai.com.
 | SearXNG | 8888 | HTTP | -- | Shared private search backend |
 | Stirling PDF | 8089 | HTTP | -- | PDF toolkit |
 | Excalidraw | 3333 | HTTP | -- | Collaborative whiteboard |
-| CiteSight | external | HTTPS | -- | citesight.borck.education -- citation checker |
+| CiteSight | external | HTTPS | -- | citesight.borck.education: citation checker |
 
 All services bind to localhost by default. For LAN access within LocoLabo, bind to the workstation's local IP address. Do not expose to the public internet without authentication.
 
@@ -356,14 +356,14 @@ External / separately hosted
 | Speaches | ./speaches-data | TTS/STT model cache |
 | Open Notebook | ./open-notebook-data | Notes, sources, embeddings |
 | SearXNG | ./searxng-data | Configuration, engine settings |
-| Stirling PDF | ./stirling-data | Temp processing only -- no persistence needed |
+| Stirling PDF | ./stirling-data | Temp processing only: no persistence needed |
 | ComfyUI | ./ComfyUI/models | Image generation models |
 
 ---
 
 ## 7. API Compatibility
 
-All core AI services expose OpenAI-compatible APIs, enabling interoperability across the stack.
+All core AI services expose OpenAI-compatible APIs, so components can interoperate across the stack.
 
 | Endpoint | Provided by | Consumed by |
 |---|---|---|
@@ -391,7 +391,7 @@ The minimal PoC is demonstrated by these capabilities running on the single RTX 
 | Image generation (in-chat) | OpenWebUI + ComfyUI API | ComfyUI | Ready |
 | Image generation (direct UI, incl. FLUX.1 Dev FP16) | ComfyUI | ComfyUI | Ready |
 | Large-model inference (30B-class Q4) | OpenWebUI | Ollama | Ready (image gen idle) |
-| **Full minimal PoC stack concurrent on one card** | All four front ends | Ollama + ComfyUI + Speaches (+ OpenTerminal as OpenWebUI tool) | **Ready -- the "closing the gap" claim** |
+| **Full minimal PoC stack concurrent on one card** | All four front ends | Ollama + ComfyUI + Speaches (+ OpenTerminal as OpenWebUI tool) | **Ready: the "closing the gap" claim** |
 
 ---
 
@@ -401,7 +401,7 @@ The minimal PoC is demonstrated by these capabilities running on the single RTX 
 - SDXL refiner adds approximately 2-3 GB VRAM overhead. Monitor with `nvidia-smi`.
 - Automatic1111 (A1111) does not support FLUX. Use ComfyUI or Forge for FLUX models.
 - System RAM should be 32 GB minimum to avoid model paging to disk, particularly with large Ollama model contexts.
-- When research participants are running the Keep Asking custom chat tool (chat.locolabo.org, part of the broader ecosystem), that is the only interface with participant consent and turn-based logging -- do not route research participants through OpenWebUI or any other front end.
+- When research participants are running the Keep Asking custom chat tool (chat.locolabo.org, part of the broader ecosystem), that is the only interface with participant consent and turn-based logging. Do not route research participants through OpenWebUI or any other front end.
 
 ---
 
@@ -409,11 +409,11 @@ The minimal PoC is demonstrated by these capabilities running on the single RTX 
 
 This stack forms the foundation for LocoPuente (locopuente.org), the Faculty-facing BridgeAI initiative, and hosts most LocoEnsayo rehearsal chatbots as well. LocoBench benchmarking runs on the dedicated Colmena, Tortuga, and Hormiga machines in the LocoLabo fleet.
 
-The next scale target is a single Apple M3 Ultra (512 GB unified memory), which would run the full stack for 50 to 100 concurrent users with comfortable headroom, on a machine the institution owns outright. The transition from the current RTX 3090 PoC to the M3 Ultra is not a rebuild -- it is a hardware upgrade. Ollama, ComfyUI, Speaches, the OpenWebUI tool integrations, the three companion front ends, and the broader ecosystem endpoints all carry forward unchanged.
+The next scale target is a single Apple M3 Ultra (512 GB unified memory), which would run the full stack for 50 to 100 concurrent users with comfortable headroom, on a machine the institution owns outright. The transition from the current RTX 3090 PoC to the M3 Ultra is a hardware upgrade, not a rebuild. Ollama, ComfyUI, Speaches, the OpenWebUI tool integrations, the three companion front ends, and the broader ecosystem endpoints all carry forward unchanged.
 
-**The frontier-capability argument at Phase 2.** On standardised benchmarks the best open-weight models sit roughly 5-10 percentage points behind the best frontier closed models. That gap is real but not decisive, particularly for the way students actually use AI -- dialogically, in conversation. A conversation that iterates, clarifies, and corrects closes most of that gap naturally: the student supplies context, notices errors, and asks again. On an M3 Ultra the open-weight models run large enough that the residual gap is not a reason to send student data to a commercial provider. The remaining reasons (habit, licensing defaults, integration inertia) are not capability arguments.
+**The frontier-capability argument at Phase 2.** On standardised benchmarks the best open-weight models sit roughly 5-10 percentage points behind the best frontier closed models. That gap is real but not decisive, particularly in the way students use AI: dialogically, in conversation. A conversation that iterates, clarifies, and corrects closes most of that gap naturally: the student supplies context, notices errors, and asks again. On an M3 Ultra the open-weight models run large enough that the residual gap is not a reason to send student data to a commercial provider. The remaining reasons (habit, licensing defaults, integration inertia) are not capability arguments.
 
-A planned LocoBench image-generation study will benchmark SD 1.5 and SDXL across all available GPU tiers at fixed parameters (prompt, seed, step count, resolution) to map the floor of local image-generation performance on consumer hardware -- following the same methodology as the LLM inference benchmarking work.
+A planned LocoBench image-generation study will benchmark SD 1.5 and SDXL across all available GPU tiers at fixed parameters (prompt, seed, step count, resolution) to map the floor of local image-generation performance on consumer hardware, following the same methodology as the LLM inference benchmarking work.
 
 The OpenAI API-compatible design means any component can be swapped or upgraded independently without breaking integrations.
 

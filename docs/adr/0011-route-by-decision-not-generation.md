@@ -1,6 +1,6 @@
-# 0011 — Route by decision, not by generation
+# 0011: Route by decision, not by generation
 
-**Status:** Accepted (2026-10-10) — decision layer shipped; load orchestration not built
+**Status:** Accepted (2026-10-10): decision layer shipped; load orchestration not built
 
 ## Context
 
@@ -16,13 +16,13 @@ request need?" and parse the reply. That is wrong in three ways at once:
 - It **parses**. Free text means retries, malformed output, and a second model
   to fix the first model's formatting.
 - It **cannot decline**. Asked about an ambiguous request, it produces an answer
-  anyway. And starting the wrong capability is expensive — an 18 GB model
+  anyway. And starting the wrong capability is expensive: an 18 GB model
   loading for a chat request, or a student waiting for an image that never
   renders.
 
-None of that is necessary, because deciding which capability a request wants is
-not a generation task. It is classification over a fixed, known option set: chat,
-coding, image, song, voice, research, other.
+None of that is necessary: deciding which capability a request wants is
+classification over a fixed, known option set (chat, coding, image, song, voice,
+research, other), not a generation task.
 
 ## Decision
 
@@ -39,7 +39,7 @@ a first-class result.**
 
 3. **The fallback is chat**, because that is the capability that is *always
    resident*. Declining into it costs nothing; declining into nothing loses the
-   user's request. `decided=False` still means "no real answer" — the capability
+   user's request. `decided=False` still means "no real answer": the capability
    field holds a default, not a conclusion.
 
 4. **Two backends behind one interface, and the caller is told which answered.**
@@ -73,7 +73,7 @@ find some research papers on coral         → research   1.00
 ```
 
 **The 1.00 is not a calibrated probability.** It is a softmax over next-token
-logprobs normalised across the labels — the label-token readout *mechanism*, not
+logprobs normalised across the labels: the label-token readout *mechanism*, not
 a purpose-trained decision head. A general instruct model's distribution should
 be read as "the model was unambiguous", not as a probability. `interfaze-ai/lev`
 (Qwen3.5-4B + LoRA) is the public adapter to try and is untested here.
@@ -84,7 +84,7 @@ be read as "the model was unambiguous", not as a probability. `interfaze-ai/lev`
   `completion_probabilities` (a list parallel to the generated tokens), not
   `completion[0].top_logprobs` as the OpenAI shape does. Reading the wrong path
   returns an empty list, which is indistinguishable from "the model had no
-  opinion" — and silently made every route decline. Found only because the
+  opinion" and silently made every route decline. Found only because the
   backend was tested against a live server.
 
 - **Normalised confidence is always confident.** The lexical backend divided
@@ -105,7 +105,7 @@ by observed demand than by judging text.** Open WebUI and LibreChat already know
 what is being asked and how busy they are; a request classifier adds latency
 and a dependency to answer a question the logs already answer. The decision
 model's clearer job is classifying a request to a capability *before anything is
-loaded* — which is a different question, and the one implemented here.
+loaded*, which is a different question, and the one implemented here.
 
 ## Rejected
 
@@ -113,8 +113,8 @@ loaded* — which is a different question, and the one implemented here.
   retries, and cannot decline.
 - **A purpose-trained decision model as the only backend.** `lev` and its peers
   are the right answer for accuracy, but requiring one means routing does not
-  work until someone has downloaded and configured a model — which breaks
-  "works out of the box". Hence a fallback that admits what it is.
+  work until someone has downloaded and configured a model, which breaks "works
+  out of the box". Hence a fallback that admits what it is.
 - **Routing to a service directly.** The router answers "which capability",
   not "which container". Keeping those separate means a new backend needs no
   routing change, and the answer stays meaningful when a service is disabled.

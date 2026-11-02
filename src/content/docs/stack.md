@@ -38,7 +38,7 @@ Every tool in the LocoPuente minimal PoC, its role, its port, and how it connect
 
 ## Backend Services (on RTX 3090)
 
-### Ollama -- LLM Inference
+### Ollama: LLM Inference
 
 OpenAI-compatible REST API on port 11434. Model format: GGUF (via llama.cpp). Deployed as a native systemd service.
 
@@ -49,7 +49,7 @@ OpenAI-compatible REST API on port 11434. Model format: GGUF (via llama.cpp). De
 | Llama 3.1 13B Q4_K_M | ~8 GB | ~8 GB | Higher-quality responses |
 | 30B-class Q4 | ~18 GB | ~18 GB | Large-model inference when image gen is idle |
 
-### ComfyUI -- Image Generation
+### ComfyUI: Image Generation
 
 Local image generation on port 8188. Deployed as a native Python venv service. Dual role: backend API (called by OpenWebUI for in-chat images) and direct UI (for node-based workflows, ControlNet, LoRAs).
 
@@ -61,7 +61,7 @@ Local image generation on port 8188. Deployed as a native Python venv service. D
 | FLUX.1 Dev GGUF Q8 | ~12 GB | 1024x1024 | Near-full quality |
 | FLUX.1 Dev FP16 | ~16-24 GB | 1024x1024 | Full quality, run standalone |
 
-### Speaches -- Audio
+### Speaches: Audio
 
 OpenAI Audio API-compatible STT and TTS on port 8000. STT via faster-whisper, TTS via Kokoro (primary) with Piper fallback. Deployed as a Docker container with GPU passthrough.
 
@@ -69,9 +69,9 @@ OpenAI Audio API-compatible STT and TTS on port 8000. STT via faster-whisper, TT
 
 ## Front-End Apps
 
-### OpenWebUI -- The General-Purpose Chat Interface
+### OpenWebUI: The General-Purpose Chat Interface
 
-OpenWebUI is the day-to-day chat interface. Text chat, conversation history, multi-model switching -- plus three tool integrations that give it functional equivalence with commercial chat UIs:
+OpenWebUI is the day-to-day chat interface. It has text chat, conversation history, and multi-model switching, plus three tool integrations that give it functional equivalence with commercial chat UIs:
 
 | Tool | Purpose | Backend |
 |---|---|---|
@@ -79,19 +79,19 @@ OpenWebUI is the day-to-day chat interface. Text chat, conversation history, mul
 | **ComfyUI** | In-chat image generation | ComfyUI :8188 |
 | **OpenTerminal** | Coding assistant with shell / editor-style interaction | Ollama :11434 |
 
-The design choice matters: OpenTerminal is wired in as an OpenWebUI tool, not as a separate window the student has to learn. Coding, image generation, and voice live next to the chat they're being used from.
+OpenTerminal is wired in as an OpenWebUI tool, not a separate window the student has to learn. Coding, image generation, and voice live next to the chat they're being used from.
 
 Deployed as a Docker container on port 3000.
 
-### Vane -- Deep Research
+### Vane: Deep Research
 
 Deep-research agent: multi-step search, synthesis, citation. Consumes Ollama as its reasoning engine.
 
-### DeepTutor -- Research and Tutoring
+### DeepTutor: Research and Tutoring
 
 Research-and-tutoring assistant for students. Walks through topics, explains concepts, checks understanding. Consumes Ollama.
 
-### OpenNotebook -- Podcasts, Quizzes, Notes
+### OpenNotebook: Podcasts, Quizzes, Notes
 
 A NotebookLM-style research tool without the video side. Transforms uploaded sources (PDFs, links, YouTube transcripts, TXT, PPT) into:
 
@@ -134,4 +134,4 @@ All services bind to localhost by default. For LAN access, bind to the workstati
 
 ## Broader Ecosystem
 
-Puente's Ollama and Speaches endpoints also serve the wider LocoLabo app ecosystem -- the [Keep Asking](https://keep-asking.locolabo.org) research chat tool, TalkBuddy, StuddyBuddy, Career Compass, and the LocoEnsayo rehearsal chatbots. Those are documented in their own project docs. They are not part of the minimal PoC demonstration scope; they are downstream consumers of the same backend.
+Puente's Ollama and Speaches endpoints also serve the wider LocoLabo app ecosystem: the [Keep Asking](https://keep-asking.locolabo.org) research chat tool, TalkBuddy, StuddyBuddy, Career Compass, and the LocoEnsayo rehearsal chatbots. Those are documented in their own project docs. They are not part of the minimal PoC demonstration scope; they are downstream consumers of the same backend.
