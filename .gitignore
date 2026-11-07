@@ -22,3 +22,7 @@ eval/ts_server/email-draft.md
 # TextSynth Server binaries are non-redistributable (see eval/ts_server/README.md)
 eval/ts_server/*.tar.gz
 eval/ts_server/models/
+
+# macOS + Node hygiene
+.DS_Store
+._*
