@@ -3,6 +3,7 @@
 // intentionally distinct from the Starlight docs theme. Zero-build for the page
 // itself: plain HTML/CSS/JS, no components, no web fonts, no client deps.
 // Mission content lives at /about; docs at /services, /stack, etc.
+import hero from '../assets/art/hero.webp';
 ---
 <!doctype html>
 <html lang="en">
@@ -16,7 +17,7 @@
 <meta property="og:title" content="LocoPuente — Your own AI platform">
 <meta property="og:description" content="A local-first AI orchestrator. Chat, image, speech, search — on your own hardware. Pay a time tax, not a token tax.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.svg">
+<link rel="icon" href="/favicon.png">
 <style>
   :root {
     /* dark is the committed default; light tokens below */
@@ -91,6 +92,10 @@
   .btn:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 
   .hero { position: relative; padding: 74px 0 64px; }
+  .scene { margin: 0 auto 56px; }
+  .scene img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 24px 60px -24px rgb(0 0 0 / .7); }
+  .scene figcaption { margin-top: 12px; font-size: 14px; color: var(--ink-3); text-align: center; }
+  .scene figcaption a { color: var(--teal); }
   .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
   @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
 
@@ -248,6 +253,12 @@
     </div>
   </div>
 </header>
+
+<figure class="scene wrap">
+  <img src={hero.src} width={hero.width} height={hero.height} loading="lazy" decoding="async"
+       alt="A lantern-lit stone bridge at night leading from a small town to a hillside cabin full of computers">
+  <figcaption>The bridge between the hardware you own and the people who need it. <a href="https://locolabo.org/">Part of LocoLabo</a>.</figcaption>
+</figure>
 
 <div class="band">
   <div class="wrap">

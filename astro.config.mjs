@@ -13,10 +13,9 @@ export default defineConfig({
         home: 'https://locopuente.org',
         github: 'loco-puente',
         accent: { low: '#4c0519', main: '#f43f5e', high: '#fecdd3' },
-        favicon: '/favicon.svg',
         logo: {
           alt: 'LocoPuente',
-          src: './src/assets/puente.svg',
+          src: './src/assets/art/icon.png',
           replacesTitle: false,
         },
         sidebar: [
