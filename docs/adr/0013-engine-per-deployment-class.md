@@ -40,6 +40,12 @@ operator can always override in `puente.yml`:
 `ENGINE_CAPABILITIES` in `decide.py` is unchanged (`chat`, `coding` only), and
 `suggest_backend()` becomes class-aware.
 
+On the Apple class, MLX is a **candidate**, not a default: Ollama on macOS is
+llama.cpp with Metal (it does not install MLX underneath), so an `mlx-lm`
+server enters the benchmark (stocktake 2026-11) as the alternative for the M5
+deployment. The metric is seconds to an acceptable answer — quality-weighted
+time — not raw tok/s.
+
 ## Consequences
 
 - ADR0012 is amended: LocalAI is **the concurrency engine**, not *the* engine.

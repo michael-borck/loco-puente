@@ -175,11 +175,40 @@ principle): `nvidia-container-toolkit` is the hardest prerequisite
 not require it. Tier 3 is configuration and wiring of an upstream harness, not
 a new UI.
 
+## The benchmark protocol
+
+Three benchmark pairs are queued: llama.cpp-direct vs Ollama on the 4060 Ti;
+Kindi vs llama.cpp on the spare floor box; and Ollama vs an `mlx-lm` server for
+the M5 class. All three answer one question with one metric: **seconds to an
+acceptable answer** — quality-weighted time.
+
+- **Quality is measured, not vibes.** A fixed set of pilot tasks (quiz from a
+  text, feedback on a paragraph, one small data-analysis question), identical
+  prompts per engine, scored against a rubric. The unit already owns a rubric
+  approach (VET); reuse it rather than inventing an eval harness.
+- **Speed is tok/s at a realistic context**, not a peak short-context number.
+- **The composite is the metric.** A 30 tok/s model that needs three
+  corrections loses to a 6 tok/s model that lands it first: rework dominates
+  past a threshold. "Even high quality is not worth the wait" is the same curve
+  read from the other side.
+- **The Kindi wrinkle.** Its drafters (DSpark/DSpine) claim output-identical
+  decoding, so the *engine's* speed gain does not trade quality. The quality
+  risk sits in the *models* it runs: ternary and low-bit weights (Bonsai,
+  Nemotron Lightning) are exactly where quality drop is likeliest. So the
+  Kindi test scores task quality of those models against a standard Q4 GGUF of
+  similar size, not just tok/s.
+- **The Apple-path fact, recorded so it is not misremembered:** Ollama does not
+  install MLX underneath; on macOS it is llama.cpp with Metal. Choosing MLX
+  for the M5 means adding an `mlx-lm` server (OpenAI-compatible) as an engine
+  option — hence it enters the benchmark as a candidate for the Apple class,
+  not a default (ADR0013).
+
 ## Sequence
 
 1. **Prune** (Decision C list) and wire the B split — small, this week.
-2. **Benchmarks**: llama.cpp-direct vs Ollama on the 4060 Ti; Kindi vs
-   llama.cpp on the floor box — before the pilot consumes the calendar.
+2. **Benchmarks** per the protocol above — llama.cpp vs Ollama on the 4060 Ti,
+   Kindi on the spare box, Ollama vs mlx-lm for the M5 — before the pilot
+   consumes the calendar.
 3. **Tier 1 prototype** — a `puente up --native` path for the trio.
 4. **The pilot** (Decision L, unchanged): OIDC forward-auth, LocalAI+vLLM,
    snapshots, upgrade path. This list is also the M5's prerequisite list.
