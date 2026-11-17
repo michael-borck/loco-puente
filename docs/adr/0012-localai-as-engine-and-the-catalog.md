@@ -1,7 +1,10 @@
 # 0012: LocalAI as the engine; a catalog for everything else
 
 **Status:** Accepted (2026-10-10): engine migration in progress; Tier 3 catalog
-schema landed first
+schema landed first. **Amended by [0013](0013-engine-per-deployment-class.md)
+(2026-11-17):** the engine default is per deployment class; LocalAI is the
+concurrency engine rather than *the* engine. The catalog half of this ADR is
+unchanged and stands.
 
 ## Context
 

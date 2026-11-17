@@ -2,6 +2,10 @@
 
 **Written at the end of the 2026-10-10 session; updated 2026-10-17/18. Read this first when you come back.**
 
+**2026-11-17:** read [the stocktake](stocktake-2026-11.md) alongside this
+document. It resolves Decisions A, B and C, records the Kindi and M5 answers,
+and adds ADR0013 (engine per deployment class) and ADR0014 (deployment tiers).
+
 This is a handover, not a runbook. It answers three questions: what is running
 right now, what is staged but unverified, and what should be decided before
 anything else is built.
