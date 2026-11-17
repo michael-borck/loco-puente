@@ -590,7 +590,7 @@ def check_image_arch(config: PuenteConfig) -> list[Check]:
         ]
 
     # arm64 host. The services carry a `build:` fallback, so a source build
-    # would work — slowly, and for swarmui/fooocus/nodepad that build clones
+    # would work — slowly, and for swarmui/fooocus that build clones
     # upstream at build time, so it tracks moving branches.
     names = ", ".join(n for n, _ in services)
     return [

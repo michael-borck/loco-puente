@@ -8,9 +8,9 @@ or what capability it provides.
 
 So a Tier 3 service is now a **declaration** (ADR0012):
 
-    id: stirling_pdf
-    image: docker.io/stirlingtools/stirling-pdf:2
-    provides: [documents]
+    id: jupyter
+    image: docker.io/jupyter/minimal-notebook:stable
+    provides: [notebooks]
     needs_vram_mb: 0
 
 and `puente/services/__init__.py` materialises a :class:`~puente.services.base.
@@ -92,7 +92,7 @@ class CatalogEntry(BaseModel):
     provides: list[str] = Field(default_factory=list)
 
     #: VRAM this entry needs when it runs a model. Zero for anything CPU-only,
-    #: which is the honest answer for Jupyter, Excalidraw and Stirling PDF.
+    #: which is the honest answer for Jupyter and Presenton.
     needs_vram_mb: int = 0
 
     #: True only when the image genuinely requires CUDA.
@@ -103,7 +103,7 @@ class CatalogEntry(BaseModel):
     #: Programmatic API, if any.
     api: CatalogApi | None = None
 
-    #: Profiles that enable this entry, e.g. ["office"]. See PROFILES.
+    #: Profiles that enable this entry, e.g. ["research"]. See PROFILES.
     profiles: list[str] = Field(default_factory=list)
 
     #: Built from a local context instead of pulled — for images Puente publishes
@@ -162,12 +162,9 @@ class CatalogEntry(BaseModel):
 
 
 #: Named bundles. A profile is just a list of catalog ids; there is no profile
-#: logic beyond that, deliberately — `puente enable --profile office` should do
+#: logic beyond that, deliberately — `puente enable --profile research` should do
 #: nothing a `for` loop would not.
 PROFILES: dict[str, list[str]] = {
-    # The office tools. Deliberately not default: someone who only wants a chat
-    # interface should not end up with a whiteboard and a notebook server.
-    "office": ["stirling_pdf", "excalidraw", "jupyter"],
     # What a research workflow needs: private search and document-grounded notes.
     "research": ["searxng", "anythingllm", "open_notebook"],
     # Everything the stack knows how to declare. For `puente catalog --all`.

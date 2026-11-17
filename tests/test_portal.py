@@ -61,10 +61,10 @@ def test_a_service_may_have_both_surfaces():
 
 
 def test_a_service_may_have_only_an_interface():
-    """Excalidraw is a drawing surface with nothing to automate. Inventing an API
-    endpoint for it would be a lie in the UI."""
-    c = _find(_config(excalidraw={"enabled": True,
-                                 "proxy": {"host": "board.example.org", "auth": "none"}}))
+    """Open Terminal is a sandbox UI with nothing declared to automate. Inventing
+    an API endpoint for it would be a lie in the UI."""
+    c = _find(_config(open_terminal={"enabled": True,
+                                     "proxy": {"host": "term.example.org", "auth": "none"}}))
     assert c.url
     assert c.api_url is None
 
@@ -124,8 +124,8 @@ def test_api_line_is_rendered_with_kind_and_url():
 
 def test_interface_only_service_renders_no_api_line():
     html = generate_portal(
-        _config(excalidraw={"enabled": True,
-                            "proxy": {"host": "board.example.org", "auth": "none"}}),
+        _config(open_terminal={"enabled": True,
+                               "proxy": {"host": "term.example.org", "auth": "none"}}),
         "10.0.0.5",
     )
     assert 'class="card-api-line"' not in html

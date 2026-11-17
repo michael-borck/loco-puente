@@ -262,42 +262,6 @@ services:
       upstream: null
       offline_page: null
       cors_origins: null
-  stirling_pdf:
-    enabled: false
-    install_method: docker
-    port: 8089
-    gpu: null
-    managed: true
-    environment: {}
-    review: false
-    proxy:
-      host: pdf.locopuente.org
-      auth: basic
-      token_env: null
-      basic_group: null
-      forward_user_header: null
-      port: 8089
-      upstream: null
-      offline_page: null
-      cors_origins: null
-  excalidraw:
-    enabled: false
-    install_method: docker
-    port: 3333
-    gpu: null
-    managed: true
-    environment: {}
-    review: false
-    proxy:
-      host: whiteboard.locopuente.org
-      auth: basic
-      token_env: null
-      basic_group: null
-      forward_user_header: null
-      port: 3333
-      upstream: null
-      offline_page: null
-      cors_origins: null
   open_terminal:
     enabled: false
     install_method: docker
@@ -428,14 +392,6 @@ services:
       upstream: null
       offline_page: null
       cors_origins: null
-  nodepad:
-    enabled: false
-    install_method: docker
-    port: 3004
-    gpu: null
-    managed: true
-    environment: {}
-    review: true
     proxy: null
   presenton:
     enabled: false

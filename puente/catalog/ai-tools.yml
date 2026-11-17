@@ -1,36 +1,16 @@
-# Office tools — CPU-only, no VRAM, off by default.
+# AI-adjacent browser tools — CPU-only, no VRAM, off by default.
 #
-# Declared rather than hand-written (ADR0012): each of these is a third-party
-# image plus a port. None needs a GPU, and none is enabled out of the box —
-# someone who only wants a chat interface should not end up running a notebook
-# server. Enable the whole set with `puente enable --profile office`.
+# Enabled by name (`puente enable presenton`, `puente enable jupyter`); there
+# is deliberately no profile for these. Presenton is the AI capability (slide
+# decks, MCP); Jupyter is kept as the large-data backend for the harness's
+# code interpreter. Declared rather than hand-written (ADR0012): each of these
+# is a third-party image plus a port.
+#
+# The old office set (Stirling PDF, Excalidraw, Nodepad) was removed
+# 2026-11-17: pure tools with no AI story, pruned to keep the catalog focused
+# (stocktake 2026-11, Decision C). Nodepad's GHCR build context went with it.
 
 services:
-  - id: stirling_pdf
-    name: Stirling PDF
-    description: PDF tools (merge, split, OCR, convert)
-    image: docker.io/stirlingtools/stirling-pdf:2
-    container_port: 8080
-    default_port: 8089
-    provides: [documents]
-    needs_vram_mb: 0
-    interface: {path: /}
-    api: {path: /api, kind: REST}
-    profiles: [office]
-    repo: https://github.com/Stirling-Tools/Stirling-PDF
-
-  - id: excalidraw
-    name: Excalidraw
-    description: Collaborative whiteboard and diagramming
-    image: docker.io/excalidraw/excalidraw:v0.17.6
-    container_port: 80
-    default_port: 3333
-    provides: [diagramming]
-    needs_vram_mb: 0
-    interface: {path: /}
-    profiles: [office]
-    repo: https://github.com/excalidraw/excalidraw
-
   - id: jupyter
     name: JupyterLab
     description: Browser-based Python notebook (JupyterLab)
@@ -41,7 +21,6 @@ services:
     needs_vram_mb: 0
     interface: {path: /}
     api: {path: /api, kind: REST}
-    profiles: [office]
     volumes:
       /home/jovyan/work: "{data_dir}/jupyter-notebooks"
     # Empty token = no query-string auth. Safe only because the stack binds this
@@ -72,7 +51,6 @@ services:
     needs_vram_mb: 0
     interface: {path: /}
     api: {path: /api/v1, kind: REST + MCP}
-    profiles: [office]
     volumes:
       /app_data: "{data_dir}/presenton"
     extra_hosts:

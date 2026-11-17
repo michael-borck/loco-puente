@@ -83,9 +83,7 @@ def detect_all() -> list[ExistingInstall]:
         "anythingllm": ("anythingllm", 3001),
         "speaches": ("speaches", 8000),
         "open-notebook": ("open-notebook", 8502),
-        "stirling-pdf": ("stirling", 8089),
         "searxng": ("searxng", 8888),
-        "excalidraw": ("excalidraw", 3333),
     }
 
     for service, (pattern, port) in docker_services.items():

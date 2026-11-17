@@ -87,9 +87,7 @@ DISPLAY_NAMES = {
     "vane": "Vane (AI Search)",
     "anythingllm": "AnythingLLM",
     "open_notebook": "Open Notebook AI",
-    "stirling_pdf": "Stirling PDF",
     "presenton": "Presenton",
-    "excalidraw": "Excalidraw",
     "open_terminal": "Open Terminal",
     "citesight": "CiteSight",
     "jupyter": "JupyterLab",
@@ -483,9 +481,9 @@ def enable(
 ):
     """Enable a service in puente.yml without touching other config.
 
-    `@profile` enables a whole group instead — `puente enable @office` turns on
-    the CPU-only document and diagramming tools in one go, rather than three
-    edits to puente.yml.
+    `@profile` enables a whole group instead — `puente enable @research` turns
+    on the private search and RAG set in one go, rather than three edits to
+    puente.yml.
     """
     if service.startswith("@"):
         return _enable_profile(service[1:])

@@ -53,7 +53,6 @@ API_KIND = {
     "citesight": "JSON",
     "deeptutor": "REST",
     "uptime_kuma": "REST",
-    "stirling_pdf": "REST",
     "presenton": "REST + MCP",
     "citesight_alt": "JSON",
 }
@@ -87,9 +86,7 @@ SERVICE_META = {
     "swarmui": ("🖼️", "Image Gen", "Type a prompt, get a picture"),
     "musicgen": ("🎵", "Audio Gen", "MusicGen, AudioGen, Bark, Tortoise, more"),
     "fooocus": ("🪄", "Fooocus", "Alternative image UI — auto-tuned SDXL"),
-    "stirling_pdf": ("📄", "PDF Tools", "Merge, split, OCR, convert"),
     "presenton": ("📽️", "Presenton", "AI slide decks — prompt or document to editable PPTX"),
-    "excalidraw": ("✏️", "Whiteboard", "Collaborative diagrams"),
     "searxng": ("🌐", "Web Search", "Private search engine"),
     "citesight": ("📝", "Citation Checker", "Verify references and writing quality"),
     "jupyter": ("📒", "JupyterLab", "Browser-based Python notebooks"),
@@ -155,8 +152,7 @@ VIEWS = {
             {"label": "Create", "services": ["comfyui", "swarmui", "fooocus", "presenton", "ace_step", "musicgen"]},
             {"label": "Voice", "services": ["voicebox", "speaches", "chatterbox"]},
             {"label": "Inference", "services": ["ollama", "localai", "llama_cpp"]},
-            {"label": "Code & Notes", "services": ["jupyter", "open_terminal", "nodepad"]},
-            {"label": "Documents", "services": ["stirling_pdf", "excalidraw"]},
+            {"label": "Code & Notes", "services": ["jupyter", "open_terminal"]},
             {"label": "Infrastructure", "services": ["glances", "uptime_kuma", "tutor_admin", "caddy"]},
             # Auto-collects any enabled service whose config has `review: true`.
             # Filled at build time so adding/removing review services requires

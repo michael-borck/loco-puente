@@ -16,10 +16,12 @@ for every image it can run. What it owns is split by who writes the code:
 | **2: Capability pipelines** | ComfyUI + node ecosystems, SwarmUI, things no engine ships | `puente/services/` |
 | **3: Catalog** | Pinned third-party images, declared | `puente/catalog/*.yml` |
 
-Tier 3 is the part that changed most. Jupyter, Excalidraw, Stirling PDF, Open
-Notebook and Nodepad were five service classes; they are now five YAML entries.
-`puente catalog` lists them, `puente enable @office` installs the office set, and
-adding a service Puente has never heard of no longer needs a fork.
+Tier 3 is the part that changed most. Jupyter, Presenton and Open Notebook
+were hand-written service classes; they are now YAML entries.
+`puente catalog` lists them, `puente enable @research` installs the
+search-and-RAG set, and adding a service Puente has never heard of no longer
+needs a fork. The old office set (Stirling PDF, Excalidraw, Nodepad) was
+pruned 2026-11-17: pure tools with no AI story (stocktake 2026-11).
 
 ## The opinionated set
 
@@ -74,9 +76,10 @@ pins a different torch build from ComfyUI's ([AceStepConfig](ace-step-api.md)).
 
 ## Tools: all catalog, all CPU-only, all opt-in
 
-`puente enable @office` installs Stirling PDF, Excalidraw and Jupyter.
 `puente enable @research` installs SearXNG, AnythingLLM and Open Notebook.
-Open Terminal (code sandbox) and Nodepad are standalone entries.
+Jupyter (the large-data backend for the harness's code interpreter) and
+Presenton (AI slide decks, MCP) are enabled by name. Open Terminal (code
+sandbox) is a standalone entry.
 
 ## Video and avatar: ComfyUI add-ons, not services
 

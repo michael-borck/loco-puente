@@ -119,12 +119,12 @@ def test_tier3_provides_and_hardware_metadata():
 
 
 def test_generated_service_emits_a_compose_fragment():
-    config = _config(stirling_pdf={"enabled": True})
+    config = _config(presenton={"enabled": True})
     compose = generate_compose(config)
-    svc = compose["services"]["stirling-pdf"]
-    assert svc["image"] == "docker.io/stirlingtools/stirling-pdf:2"
-    assert svc["ports"] == ["8089:8080"]
-    assert svc["container_name"] == "puente-stirling-pdf"
+    svc = compose["services"]["presenton"]
+    assert svc["image"] == "ghcr.io/presenton/presenton:v0.9.11-beta"
+    assert svc["ports"] == ["5001:80"]
+    assert svc["container_name"] == "puente-presenton"
 
 
 def test_generated_service_resolves_templates():
@@ -156,7 +156,7 @@ def test_generated_service_is_absent_when_disabled():
                 searxng={"enabled": False})
     )
     assert "jupyter" not in compose.get("services", {})
-    assert "stirling-pdf" not in compose.get("services", {})
+    assert "presenton" not in compose.get("services", {})
 
 
 def test_generated_service_class_name_is_readable():
@@ -195,9 +195,18 @@ def test_unknown_profile_raises():
         entries_for_profile("offce")
 
 
-def test_office_profile_is_the_three_cpu_tools():
-    ids = {e.id for e in entries_for_profile("office")}
-    assert ids == {"stirling_pdf", "excalidraw", "jupyter"}
+def test_research_profile_is_the_search_and_rag_set():
+    ids = {e.id for e in entries_for_profile("research")}
+    assert ids == {"searxng", "anythingllm", "open_notebook"}
+
+
+def test_pruned_tools_stay_gone():
+    """The office set (Stirling PDF, Excalidraw, Nodepad) was removed
+    2026-11-17 to keep the catalog focused on AI (stocktake 2026-11). This
+    pins the removal: someone re-adding a PDF toolkit entry must do it
+    deliberately, with an AI-adjacent reason, not by restoring old YAML."""
+    ids = set(load_entries())
+    assert {"stirling_pdf", "excalidraw", "nodepad"}.isdisjoint(ids)
 
 
 #: Catalog entries allowed to be on by default. SearXNG predates the catalog,
@@ -275,7 +284,7 @@ def test_malformed_catalog_raises(tmp_path: Path):
 
 def test_catalog_ships_with_the_package():
     """package-data in pyproject must actually include it, or an installed
-    puente silently loses the office profile."""
+    puente silently loses the research profile."""
     assert BUNDLED_CATALOG_DIR.is_dir()
     assert list(BUNDLED_CATALOG_DIR.glob("*.yml"))
 

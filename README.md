@@ -43,7 +43,7 @@ Start with `capabilities`: it reports usable / needs-offload / not-available per
 - **Orchestrates containers** from one committable `puente.yml`.
 - **Coexists with what you already run** (`managed: false`).
 
-Services are HTTP APIs behind a launcher portal, so you can build against them directly. `puente catalog` lists what the catalog declares; `puente enable @office` or `@research` installs a profile.
+Services are HTTP APIs behind a launcher portal, so you can build against them directly. `puente catalog` lists what the catalog declares; `puente enable @research` installs the search-and-RAG profile, or enable any entry by name.
 
 ## Requirements
 

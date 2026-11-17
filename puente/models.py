@@ -490,12 +490,6 @@ class StackConfig(BaseModel):
     open_notebook: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=8502, enabled=False)
     )
-    stirling_pdf: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=8089, enabled=False)
-    )
-    excalidraw: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=3333, enabled=False)
-    )
     open_terminal: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=8100, enabled=False)
     )
@@ -520,10 +514,7 @@ class StackConfig(BaseModel):
     fooocus: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=7865, enabled=False)
     )
-    nodepad: ServiceConfig = Field(
-        default_factory=lambda: ServiceConfig(port=3004, enabled=False)
-    )
-    # Catalog entry (office.yml). The field must exist even though the service
+    # Catalog entry (ai-tools.yml). The field must exist even though the service
     # class is generated: compose, portal, doctor and the CLI all resolve
     # services with getattr(config.services, name, None), and a missing field
     # makes the entry invisible to all of them. test_catalog pins this.
