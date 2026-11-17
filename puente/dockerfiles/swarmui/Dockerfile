@@ -56,8 +56,16 @@ RUN rm -rf /SwarmUI/src/bin /SwarmUI/src/obj
 
 EXPOSE 7801
 
+# Wait-gate for the external ComfyUI backend. SwarmUI only retries its
+# backend connection for ~4s at startup; on unordered restarts (host reboot,
+# daemon restart, docker restart) it beats ComfyUI and latches the backend
+# errored. wait-for-comfyui.sh polls until ComfyUI answers, then execs the
+# canonical entrypoint below. See the script header for the full story.
+COPY wait-for-comfyui.sh /SwarmUI/launchtools/wait-for-comfyui.sh
+RUN chmod +x /SwarmUI/launchtools/wait-for-comfyui.sh
+
 # SwarmUI's canonical container entrypoint. It handles dotnet build,
 # Python venv setup, and SwarmUI startup. We pass host/port overrides
 # via SWARMUI_LAUNCH_MODE so the binary listens on all interfaces
 # inside the container.
-ENTRYPOINT ["bash", "/SwarmUI/launchtools/docker-standard-inner.sh"]
+ENTRYPOINT ["bash", "/SwarmUI/launchtools/wait-for-comfyui.sh"]
