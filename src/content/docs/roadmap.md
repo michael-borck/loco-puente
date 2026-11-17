@@ -2,7 +2,7 @@
 title: "Roadmap"
 ---
 
-LocoPuente's path from a minimal "closing the gap" PoC to faculty-scale deployment. The software stack carries forward unchanged at every stage. Only the hardware changes.
+LocoPuente's path from a minimal "closing the gap" PoC to faculty-scale deployment. Two things scale it: **hardware** (the phases below) and **deployment shape** (three tiers). The architecture carries forward unchanged at every stage.
 
 ---
 
@@ -23,18 +23,32 @@ The minimal "closing the gap" PoC. One secondhand consumer GPU running three bac
 
 ---
 
-## Phase 2: Apple M3 Ultra (512 GB unified memory)
+## Phase 2: Apple M5 Ultra (256-512 GB unified memory)
 
 **What it unlocks:**
 
 - 50-100 concurrent users
 - Multiple large models loaded simultaneously, including the larger open-weight models (70B+) that close the remaining capability gap with frontier cloud services
-- No VRAM constraints for any current workload
+- No VRAM constraints for any current workload — every model resident at once, so load-and-release stops being part of the design on this box
 - A machine the institution owns outright, with no ongoing costs
 
-The M3 Ultra is the scale target. The transition from Phase 1 is a hardware upgrade, not a rebuild. Ollama, ComfyUI, Speaches, and the four front-end apps all carry forward unchanged. The operational model is proven on a secondhand consumer GPU; the M3 Ultra simply removes the hardware bottleneck.
+The M5 Ultra is the scale target. The transition from Phase 1 is a hardware upgrade, not a rebuild. The front ends carry forward unchanged, and the institutional layer — single sign-on, fair-share queueing, snapshots, per-semester pinned models — is exactly what the Campus tier adds (below). The operational model is proven on a secondhand consumer GPU; the M5 Ultra simply removes the hardware bottleneck.
 
 **The frontier-capability argument.** On standardised benchmarks the best open-weight models sit roughly 5-10 percentage points behind the best frontier closed models. That gap is real, but it is not decisive, particularly because students use AI dialogically, not in one-shot prompts. A conversation that iterates, clarifies, and corrects closes most of that gap naturally: the student supplies context, notices errors, and asks again. Phase 2 on an M3 Ultra runs the open-weight models large enough that the residual gap is not a reason to send student data to a commercial provider.
+
+---
+
+## Three Deployment Tiers
+
+The same architecture deploys at three sizes. `puente init` proposes the tier from your hardware; `puente.yml` records it; any service's install method follows its declaration.
+
+| Tier | Shape | For whom |
+|---|---|---|
+| **Suitcase** | No Docker. The engine runs native, Open WebUI installs via pip, Caddy is a single binary. Chat and search: the opinionated minimum | One operator, one classroom, modest hardware |
+| **Stack** | The full container stack: every capability, GPU pinning, the service catalog, the portal | The PoC, the unit pilot, an institution's first server |
+| **Campus** | The Stack plus single sign-on (OIDC), fair-share queueing on shared GPUs, whole-stack snapshots, and a documented upgrade path | The institutional product; what a large deployment runs |
+
+How this maps onto the family ladder: a student's own laptop runs **mochila** (rung 1); a classroom box can run **Suitcase** without Docker; **Stack** is the Phase 1 PoC; **Campus** is where the M5 Ultra deployment lands. The tiers are deployment shapes of one architecture, not three products. Recorded as [ADR0014](https://github.com/michael-borck/loco-puente/blob/main/docs/adr/0014-deployment-tiers-native-quick-start.md).
 
 ---
 
