@@ -158,6 +158,29 @@ engine). Right response when it ships: a catalog entry with the same
 licence-and-hardware-fit metadata, nothing deeper. Single-maintainer bets are
 capped at "opt-in, pinned, removable" — the same exposure rule as Kindi.
 
+## Portable AI Studio: evaluated 2026-11-17, verdict: run beside it
+
+Recorded like the QVAC entry so it is not re-litigated. Source:
+`github.com/techjarves/Portable-Local-Studio` (2k stars, MIT).
+
+What it is: a zero-setup **personal-machine app** — unzip, double-click, one
+GUI (localhost only, no auth by design) with chat, image, STT and TTS over
+bundled llama.cpp, stable-diffusion.cpp, whisper.cpp and Kokoro. Cross-vendor
+hardware (CUDA/ROCm/Vulkan/OpenVINO NPU), one-click model manager, live VRAM
+monitor. Its "text and image engines mutually exclusive" is Puente's residency
+policy rediscovered; its curated model manager is the catalog idea rediscovered.
+
+Verdict: **not adopted, not wrapped — linked.** Extending it to institutional
+needs means rebuilding Puente inside a fork (the opposite of the maintenance
+goal); layering over it fails on shape (single-user, no-auth, localhost —
+"anyone on that network can then use it"). It is the fourth encroacher on
+`capabilities.py`'s turf (after QVAC, Odysseus, Kindi), and for one person on
+their own machine it is better than anything Puente ships. That decides the
+Suitcase tier's job, not Puente's existence: Suitcase stays the classroom-box
+case (a few people, auth, concurrency) — the one thing a portable localhost
+app will never be. Linked from mochila's page as the zero-setup GUI
+alternative to the terminal kit (2026-11-17).
+
 ## The tiers (ADR0014)
 
 The deployment story is three tiers, recorded in
