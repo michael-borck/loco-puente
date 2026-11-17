@@ -167,6 +167,9 @@ import hero from '../assets/art/hero.webp';
   }
   .svc:hover { border-color: var(--line-strong); transform: translateY(-2px); }
   .svc .ico { font-size: 20px; margin-bottom: 10px; display: block; }
+  .svc .ico.rung { font-family: var(--mono); color: var(--amber); font-weight: 700; }
+  .svc a { color: var(--teal); }
+  .svc a:hover { text-decoration: underline; }
   .svc h4 { font-family: var(--display); font-size: 15.5px; margin: 0 0 4px; font-weight: 600; }
   .svc p { font-size: 13px; color: var(--ink-3); margin: 0; }
 
@@ -336,6 +339,39 @@ import hero from '../assets/art/hero.webp';
 <span class="p">$</span> puente <span class="am">init</span>     <span class="cm"># detect hardware, choose services</span>
 <span class="p">$</span> puente <span class="am">install</span>  <span class="cm"># pull images + models</span>
 <span class="p">$</span> puente <span class="am">up</span>       <span class="cm"># your platform is live</span></pre>
+  </div>
+</section>
+
+<section id="ladder">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">The ladder</p>
+      <h2>Four places AI can live when the subscription is the barrier</h2>
+      <p>Every rung speaks an OpenAI-shaped API, so your tools don't change as you climb — what you learn at the bottom still works at the top.</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc">
+        <span class="ico rung">1</span>
+        <h4>Your laptop</h4>
+        <p>Ollama + Pi, no keys, no internet. The kit is <b style="color:var(--ink)">mochila</b> — the AI you carry to class.</p>
+      </div>
+      <div class="svc">
+        <span class="ico rung">2</span>
+        <h4>Cloud, direct</h4>
+        <p>One provider, one model, your key. Simple, and the cost stays visible.</p>
+      </div>
+      <div class="svc">
+        <span class="ico rung">3</span>
+        <h4>Cloud, proxied</h4>
+        <p><a href="https://github.com/michael-borck/frugal">frugal</a> configures 9Router into a verified fallback chain of free models.</p>
+      </div>
+      <div class="svc">
+        <span class="ico rung">4</span>
+        <h4>Shared, on campus</h4>
+        <p>Puente — this site. One server runs the full local stack for a whole cohort.</p>
+      </div>
+    </div>
+    <p style="margin-top:18px;color:var(--ink-2)">Start where you are. Climb as far as you need.</p>
   </div>
 </section>
 
