@@ -1,6 +1,6 @@
 # Every service Puente can run
 
-31 registered, 3 on by default. This is the full list and, more usefully, how it
+26 registered, 3 on by default. This is the full list and, more usefully, how it
 divides, because "30 services" is a misleading number, and since
 [ADR0012](adr/0012-localai-as-engine-and-the-catalog.md) most of them are
 *declarations* rather than code.
@@ -36,13 +36,12 @@ that takes, and how few are currently default-on.
 | | llama.cpp | off | yes | Alternative backend for small cards ([ADR0010](adr/0010-llamacpp-for-small-card-hardware.md)) |
 | | LibreChat | off | no | Alternative chat UI, with login and rooms |
 | **image** | ComfyUI | off | yes | Tier 2: SDXL, FLUX, and the node host for the video/avatar work |
-| | SwarmUI | off | yes | A better ComfyUI UI, drives the *same* ComfyUI |
-| | Fooocus | off | yes | Simpler image UI, fewer knobs |
-| **voice** | Voicebox | off | yes | The active TTS (~5.6 GB) |
+| | SwarmUI | off | yes | The opinionated image door; drives the *same* ComfyUI |
+| | Fooocus | off | yes | **Legacy** catalog entry (first GPU entry); the pre-SwarmUI UI |
+| **voice** | Voicebox | off | yes | The active TTS, voice cloning included (~5.6 GB) |
 | | Speaches | off | yes | Whisper STT + Kokoro TTS, OpenAI-compatible |
-| | Chatterbox | off | yes | **Retired**; Voicebox subsumes it |
 | **song** | ACE-Step | off | yes | Lyrics to song, ~4.7 GB ([docs](ace-step-api.md)) |
-| | MusicGen | off | yes | Instrumental/audio, no vocals, GPL-3.0 image |
+| | MusicGen | off | yes | **Legacy** catalog entry; instrumental audio, GPL-3.0 image |
 | **search** | SearXNG | **on** | no | Private meta-search. The one catalog entry that is default-on |
 
 **The gap:** three of the five capabilities are not on by default. A fresh
@@ -101,9 +100,11 @@ bears, robots. At ~22 GB it needs a 24 GB card to itself.
 - **SwarmUI is not a separate ComfyUI.** It drives `puente-comfyui` by URL. That
   is why `puente-boot.service` waits on ComfyUI's healthcheck, and why ADR0008
   exists.
-- **Four services are opt-in and superseded**: Chatterbox (retired),
-  Fooocus and SwarmUI (UI alternatives to ComfyUI), MusicGen (audio, not song).
-  They cost nothing when off and confuse the inventory when on.
+- **Pruned 2026-11-17** (stocktake, Decision C): Chatterbox deleted (Voicebox
+  subsumes it, voice cloning included); Fooocus and MusicGen moved to
+  [catalog entries](../puente/catalog/legacy.yml) marked legacy — the first
+  GPU catalog entries, the generator now emits their GPU reservation. SwarmUI
+  is *not* superseded: it is the opinionated image door (stocktake 2026-11).
 - **Most services are unreachable by the router today.** `puente/decide.py`
   maps eight capabilities onto six services; the rest are reachable only by
   naming them. That is deliberate for infrastructure (you would not route a user

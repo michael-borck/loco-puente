@@ -1,0 +1,47 @@
+# Legacy capability UIs — GPU services kept as declarations, off by default.
+#
+# Moved out of hand-written service classes on 2026-11-17 (stocktake 2026-11,
+# Decision C): both are superseded by the opinionated picks (SwarmUI drives the
+# same ComfyUI for images; ACE-Step is the song pick), so they cost nothing
+# when off but stay one `puente enable` away. Enable by name.
+#
+# These are the first GPU catalog entries. `needs_gpu` makes the generator emit
+# the same deploy reservation a hand-written service would: pin to config.gpu
+# when set, no deploy block when not (an unpinned container sees every card
+# under the nvidia runtime). Values here are approximate — VRAM honesty is the
+# catalog's job, so bump when a larger model is actually loaded.
+
+services:
+  - id: fooocus
+    name: Fooocus
+    description: Opinionated SDXL image UI with auto-enhancement (legacy; SwarmUI is the image door)
+    image: ghcr.io/michael-borck/puente-fooocus:latest
+    container_port: 7865
+    default_port: 7865
+    provides: [image]
+    needs_gpu: true
+    needs_vram_mb: 8192
+    init: true
+    interface: {path: /}
+    build_context: ./dockerfiles/fooocus
+    puente_published: true
+    volumes:
+      /content/Fooocus/models: "{data_dir}/fooocus/models"
+      /content/Fooocus/outputs: "{data_dir}/fooocus/outputs"
+    repo: https://github.com/lllyasviel/Fooocus
+
+  # GPL-3.0 image (upstream tts-generation-webui is GPL) — fine to self-host
+  # for education; surface if this ever leaves the stack.
+  - id: musicgen
+    name: MusicGen
+    description: Audio generation — MusicGen, AudioGen, Bark, Tortoise (legacy; ACE-Step is the song pick)
+    image: ashleykza/tts-webui:4.1.0
+    container_port: 3001
+    default_port: 3000
+    provides: [audio]
+    needs_gpu: true
+    needs_vram_mb: 6144
+    interface: {path: /}
+    volumes:
+      /workspace: "{data_dir}/musicgen"
+    repo: https://github.com/ashleykleynhans/tts-generation-docker

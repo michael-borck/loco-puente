@@ -38,10 +38,11 @@ These run as their own docker-compose projects or native processes. Puente does
 | **workready-api** | 8001 | `~/workready-api` | Separate app. |
 | LibreChat, ensayo, vc2 | – | own dirs | Other unrelated projects. |
 
-Chatterbox used to live here on `:8004`; it is **retired** (voicebox bundles
-`chatterbox-tts`). AnythingLLM and the reverse proxy have both moved *into*
-Puente: AnythingLLM as `puente-anythingllm` (:3001), and Caddy now owns 80/443
-in place of nginx-proxy-manager. See `caddy-migration.md`.
+Chatterbox used to live here on `:8004`; it was **removed 2026-11-17**
+(voicebox bundles `chatterbox-tts`, voice cloning included). AnythingLLM and
+the reverse proxy have both moved *into* Puente: AnythingLLM as
+`puente-anythingllm` (:3001), and Caddy now owns 80/443 in place of
+nginx-proxy-manager. See `caddy-migration.md`.
 
 ---
 

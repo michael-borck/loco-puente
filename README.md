@@ -49,6 +49,33 @@ Services are HTTP APIs behind a launcher portal, so you can build against them d
 
 Python 3.10+, Docker Compose v2, and an NVIDIA GPU for image/voice/song (chat runs without one). Full details at [locopuente.org](https://locopuente.org).
 
+## Related projects
+
+Puente is the shared/institutional end of a small family. The ladder — four
+places AI can live when the subscription is the barrier, every rung speaking an
+OpenAI-shaped API — is cross-referenced from each project's site:
+
+- **[mochila](https://github.com/michael-borck/mochila)** — the laptop kit:
+  Ollama + the Pi agent + skills in plain text. Rung 1, personal.
+- **[frugal](https://github.com/michael-borck/frugal)** — one command to a
+  working free-cloud setup: 9Router with a verified fallback chain. Rung 3.
+- **[Portable AI Studio](https://github.com/techjarves/Portable-Local-Studio)**
+  (not ours) — a zero-setup GUI studio for one person's machine: chat, images
+  and voice offline. Evaluated 2026-11-17: linked, not adopted, not wrapped
+  ([stocktake](docs/stocktake-2026-11.md)); the single-user, no-auth shape
+  can never serve a classroom, which is Puente's job.
+- **[loco-base](https://github.com/michael-borck/loco-base)** — the foundation
+  layer: NVIDIA drivers, Docker, Ollama and hardening for the lab's Ubuntu
+  boxes. Puente deploys on top of it.
+- **[LocoLabo](https://locolabo.org)** — the research programme this project
+  belongs to. Puente is its deployment layer.
+
+Evaluated and deliberately *not* adopted, recorded so they stay decided:
+Kindi (floor-hardware inference; benchmark pending), QVAC (edge SDK; revisit
+trigger: a mobile companion), Odysseus (harness candidate; side-by-side
+experiment running). See the [stocktake](docs/stocktake-2026-11.md) and
+[handover](docs/handover-2026-10.md).
+
 ## Licence
 
 MIT © Michael Borck. An independent initiative.

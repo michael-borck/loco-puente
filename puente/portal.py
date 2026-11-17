@@ -94,7 +94,6 @@ SERVICE_META = {
     "deeptutor": ("🎓", "DeepTutor", "Personalised learning — quizzes, deep solve, research"),
     "voicebox": ("🗣️", "Voicebox", "Voice cloning + TTS studio"),
     "librechat": ("💬", "LibreChat", "Multi-provider chat UI (evaluating)"),
-    "chatterbox": ("🔊", "Chatterbox", "Voice-cloning TTS server (evaluating)"),
     "glances": ("📊", "System Monitor", "CPU, RAM, disk, GPU, containers"),
     "uptime_kuma": ("🟢", "Uptime Kuma", "Service uptime monitoring + alerts"),
 }
@@ -150,7 +149,7 @@ VIEWS = {
         "sections": [
             {"label": "Search & Research", "services": ["vane", "searxng", "open_notebook", "deeptutor", "citesight"]},
             {"label": "Create", "services": ["comfyui", "swarmui", "fooocus", "presenton", "ace_step", "musicgen"]},
-            {"label": "Voice", "services": ["voicebox", "speaches", "chatterbox"]},
+            {"label": "Voice", "services": ["voicebox", "speaches"]},
             {"label": "Inference", "services": ["ollama", "localai", "llama_cpp"]},
             {"label": "Code & Notes", "services": ["jupyter", "open_terminal"]},
             {"label": "Infrastructure", "services": ["glances", "uptime_kuma", "tutor_admin", "caddy"]},

@@ -8,10 +8,11 @@ Three tiers, split by ownership rather than by whether a service is "AI"
   * **Capability pipelines LocalAI cannot reach** — ComfyUI and its node
     ecosystems (Wan2.2-S2V, LivePortrait, SadTalker, Wav2Lip), SwarmUI.
     Hand-written, because no engine is going to ship these.
-  * **Catalog** — Jupyter, Excalidraw, Stirling PDF and friends. Declarations in
-    `puente/catalog/*.yml`, materialised into ServiceBase subclasses here so
+  * **Catalog** — Jupyter, Presenton, Fooocus, MusicGen and friends. Declarations
+    in `puente/catalog/*.yml`, materialised into ServiceBase subclasses here so
     that compose generation, the portal, `puente doctor` and `puente status` need
-    no special case for any of them.
+    no special case for any of them. GPU entries (`needs_gpu: true`) emit the
+    same reservation a hand-written service would.
 
 Catalog entries marked `implementation: builtin` keep a hand-written class and
 appear in this registry explicitly — they are declared for their metadata, not
@@ -24,16 +25,13 @@ from .ace_step import AceStepService
 from .anythingllm import AnythingLLMService
 from .base import ServiceBase
 from .caddy import CaddyService
-from .chatterbox import ChatterboxService
 from .glances import GlancesService
 from .citesight import CiteSightService
 from .deeptutor import DeepTutorService
 from .comfyui import ComfyUIService
-from .fooocus import FooocusService
 from .llama_cpp import LlamaCppService
 from .librechat import LibreChatService
 from .localai import LocalAIService
-from .musicgen import MusicGenService
 from .ollama import OllamaService
 from .open_terminal import OpenTerminalService
 from .open_webui import OpenWebUIService
@@ -54,15 +52,12 @@ _HANDWRITTEN: dict[str, type[ServiceBase]] = {
     "speaches": SpeachesService,
     "comfyui": ComfyUIService,
     "vane": VaneService,
-    "chatterbox": ChatterboxService,
     "glances": GlancesService,
     "citesight": CiteSightService,
     "open_terminal": OpenTerminalService,
     "deeptutor": DeepTutorService,
-    "musicgen": MusicGenService,
     "librechat": LibreChatService,
     "swarmui": SwarmUIService,
-    "fooocus": FooocusService,
     "tutor_admin": TutorAdminService,
     "llama_cpp": LlamaCppService,
     "ace_step": AceStepService,

@@ -111,6 +111,10 @@ class CatalogEntry(BaseModel):
     build_context: str | None = None
     puente_published: bool = False
 
+    #: True reaps zombie processes (`init: true` in compose). Fooocus's launcher
+    #: leaks children without it; most images do not need this.
+    init: bool = False
+
     #: Container path -> host path template. `{data_dir}` expands to the stack's
     #: data dir; `{port}` to the resolved host port.
     volumes: dict[str, str] = Field(default_factory=dict)
@@ -322,6 +326,18 @@ def _service_class(entry: CatalogEntry) -> type:
 
             if entry.extra_hosts:
                 fragment["extra_hosts"] = list(entry.extra_hosts)
+
+            if entry.init:
+                fragment["init"] = True
+
+            # GPU catalog entries get the same reservation a hand-written
+            # service would emit: pin to config.gpu when set, no deploy block
+            # when not (an unpinned container sees every card under the nvidia
+            # runtime — ServiceBase.gpu_reservation's documented semantics).
+            if entry.needs_gpu:
+                deploy = self.gpu_reservation(config.gpu)
+                if deploy:
+                    fragment["deploy"] = deploy
 
             return {entry.id.replace("_", "-"): fragment}
 

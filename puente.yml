@@ -431,17 +431,6 @@ services:
       cors_origins: null
     build_ref: michael-borck/voicebox@4137a969bf110930ab563a74391517360a804554
     image: ghcr.io/michael-borck/puente-voicebox:latest
-  chatterbox:
-    enabled: false
-    install_method: docker
-    port: 8004
-    gpu: GPU-ce79654c-917a-e928-ad48-aca7c8014f47
-    managed: true
-    environment: {}
-    review: true
-    proxy: null
-    build_context: /home/michael/Chatterbox-TTS-Server
-    hf_token: null
   glances:
     enabled: true
     install_method: docker

@@ -100,17 +100,33 @@ def test_catalog_entry_ids_are_valid_keys():
 def test_tier3_provides_and_hardware_metadata():
     """The point of the catalog: honest hardware fit without running anything.
 
-    Every one of these is CPU-only, and saying so wrongly would offer a service
-    on a box that cannot run it (ADR0001's reason for asking rather than
-    guessing).
+    Saying it wrongly would offer a service on a box that cannot run it
+    (ADR0001's reason for asking rather than guessing). CPU entries declare
+    zero VRAM; GPU entries declare needs_gpu and an approximate figure, and
+    the generator emits the same reservation a hand-written service would.
     """
     entries = load_entries()
     for entry in entries.values():
-        assert entry.needs_vram_mb == 0, (
-            f"{entry.id} declares VRAM but has no catalog-side GPU work; either "
-            f"it is CPU-only or it belongs in a hand-written service"
-        )
         assert entry.provides, f"{entry.id} declares no capability"
+        if not entry.needs_gpu:
+            assert entry.needs_vram_mb == 0, (
+                f"{entry.id} declares VRAM but does not declare needs_gpu; either "
+                f"it is CPU-only or it belongs in a hand-written service"
+            )
+
+
+def test_generated_gpu_service_emits_a_gpu_reservation():
+    """Fooocus and MusicGen moved from hand-written classes to catalog entries
+    (2026-11-17). The generator must not silently drop their GPU request — a
+    catalog entry that starts CPU-only is worse than one that refuses to
+    start, because it looks alive and generates nothing."""
+    config = _config(fooocus={"enabled": True, "gpu": "GPU-abc"})
+    svc = generate_compose(config)["services"]["fooocus"]
+    assert svc["deploy"]["resources"]["reservations"]["devices"] == [
+        {"driver": "nvidia", "device_ids": ["GPU-abc"], "capabilities": ["gpu"]}
+    ]
+    # and the legacy entry keeps its init gate
+    assert svc.get("init") is True
 
 
 # --------------------------------------------------------------------------

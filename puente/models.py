@@ -188,17 +188,6 @@ class VoiceboxConfig(ServiceConfig):
     image: str | None = None
 
 
-class ChatterboxConfig(ServiceConfig):
-    # Chatterbox TTS builds from a local checkout (its Dockerfile pins a tuned
-    # CUDA/torch stack) — there is no image to pull. Set build_context to your
-    # own Chatterbox-TTS-Server checkout; there is no sensible default, so
-    # leaving it unset is an error rather than a path that only exists on one
-    # machine. Superseded by voicebox, which bundles a chatterbox-tts engine.
-    build_context: str | None = None
-    # Optional HuggingFace token (some model pulls benefit from it).
-    hf_token: str | None = None
-
-
 class LibreChatConfig(ServiceConfig):
     # LibreChat needs MongoDB. When install_method is "external", point at an
     # existing LibreChat instead of running app+mongo locally.
@@ -525,9 +514,6 @@ class StackConfig(BaseModel):
     # wants a GPU and its first start compiles from source (see VoiceboxService).
     voicebox: VoiceboxConfig = Field(
         default_factory=lambda: VoiceboxConfig(port=17493, enabled=False, review=False)
-    )
-    chatterbox: ChatterboxConfig = Field(
-        default_factory=lambda: ChatterboxConfig(port=8004, gpu=1, enabled=False, review=True)
     )
     glances: ServiceConfig = Field(
         default_factory=lambda: ServiceConfig(port=61208, enabled=False, review=True)
