@@ -1,5 +1,9 @@
 # Puente
 
+<p align="center">
+  <img src="src/assets/art/hero.webp" alt="Puente" width="640">
+</p>
+
 **Your own AI platform. Runs on your hardware.**
 
 Puente is a local-first AI orchestrator. It stands up a full stack of AI services (chat, image generation, speech, song, search, notebooks) on modest hardware, from one config file. Private by default. Yours to keep.
